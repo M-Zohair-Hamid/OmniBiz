@@ -1,0 +1,17 @@
+# Node.js / frontend
+frontend/node_modules/
+package-lock.json
+
+# Python
+**/__pycache__/
+**/*.pyc
+backend/.env
+backend/instance/
+
+# Builds / output
+dist/
+build/
+
+# Editor / OS
+.vscode/
+.DS_Store
