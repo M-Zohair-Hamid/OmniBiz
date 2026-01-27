@@ -8,6 +8,8 @@ import { formatDate, getCurrentDateForInput } from '../utils/dateUtils';
 
 const OrdersPage = () => {
   const [orders, setOrders] = useState([]);
+  const [filteredOrders, setFilteredOrders] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -29,6 +31,7 @@ const OrdersPage = () => {
     try {
       const response = await getOrders(page, 10);
       setOrders(response.data.data);
+      applyFilters(response.data.data, searchTerm);
       setTotalPages(response.data.pages);
       setCurrentPage(page);
     } catch (error) {
@@ -36,6 +39,20 @@ const OrdersPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  const highlightText = (text) => {
+    const value = String(text ?? '');
+    const term = searchTerm.trim();
+    if (!term) return value;
+
+    const pattern = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+    return value.split(pattern).map((part, idx) => {
+      const match = part.toLowerCase() === term.toLowerCase();
+      return match ? <mark key={idx} className="bg-yellow-200 text-black px-0.5 rounded">{part}</mark> : part;
+    });
   };
 
   const fetchBuyersAndItems = async () => {
@@ -53,6 +70,44 @@ const OrdersPage = () => {
     fetchOrders();
     fetchBuyersAndItems();
   }, []);
+
+  // Apply client-side search for buyer, order number, date, month, or year
+  const applyFilters = (list = orders, term = searchTerm) => {
+    const search = (term || '').trim().toLowerCase();
+    if (!search) {
+      setFilteredOrders(list);
+      return;
+    }
+
+    const result = list.filter(o => {
+      const buyer = (o.buyer_name || '').toLowerCase();
+      const number = String(o.order_number || '').toLowerCase();
+      const formattedDate = (formatDate(o.order_date) || '').toLowerCase();
+
+      const d = new Date(o.order_date);
+      const validDate = !isNaN(d.getTime());
+      const year = validDate ? String(d.getFullYear()) : '';
+      const month = validDate ? String(d.getMonth() + 1).padStart(2, '0') : '';
+      const day = validDate ? String(d.getDate()).padStart(2, '0') : '';
+      const isoDate = validDate ? `${year}-${month}-${day}` : '';
+      const slashDate = validDate ? `${month}/${day}/${year}` : '';
+
+      const matchesBuyer = buyer.includes(search);
+      const matchesNumber = number.includes(search);
+      const matchesMonth = month === search;
+      const matchesYear = year === search;
+      const matchesDate = formattedDate.includes(search) || isoDate.includes(search) || slashDate.includes(search);
+
+      return matchesBuyer || matchesNumber || matchesMonth || matchesYear || matchesDate;
+    });
+
+    setFilteredOrders(result);
+  };
+
+  // Re-apply search when input or data changes
+  useEffect(() => {
+    applyFilters(orders, searchTerm);
+  }, [searchTerm, orders]);
 
   const handleAddOrder = () => {
     setEditingId(null);
@@ -277,9 +332,29 @@ const OrdersPage = () => {
             <button onClick={handleAddOrder} className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-bold transition-all duration-200 shadow-lg hover:shadow-blue-500/50 transform hover:scale-105 active:scale-95 border border-blue-400 border-opacity-30">+ New Order</button>
           </div>
 
+          {/* Search */}
+          <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-2xl shadow-glass-lg border border-white border-opacity-30 p-4 mb-6">
+            <div className="flex flex-col md:flex-row md:items-end gap-3">
+              <div className="flex-1">
+                <label className="block text-blue-700 font-bold mb-1">Search</label>
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Buyer, order #, date (dd-mm-yyyy), month (01), or year (2026)"
+                  className="w-full px-3 py-2 backdrop-blur-sm bg-white bg-opacity-40 border border-blue-200 rounded-lg focus:border-blue-400"
+                />
+              </div>
+              <div className="flex gap-2 md:justify-end">
+                <button onClick={() => applyFilters(orders, searchTerm)} className="flex-1 md:flex-none px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg font-semibold shadow-md">Apply</button>
+                <button onClick={() => { setSearchTerm(''); applyFilters(orders, ''); }} className="flex-1 md:flex-none px-4 py-2 bg-gray-200 hover:bg-gray-300 text-black rounded-lg font-semibold">Clear</button>
+              </div>
+            </div>
+          </div>
+
           {/* Orders Table */}
           <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-2xl shadow-glass-lg border border-white border-opacity-30 overflow-hidden">
-            {loading ? <div className="p-8 text-center">Loading...</div> : orders.length === 0 ? <div className="p-8 text-center text-gray-600">No orders found</div> : (
+            {loading ? <div className="p-8 text-center">Loading...</div> : filteredOrders.length === 0 ? <div className="p-8 text-center text-gray-600">No orders found</div> : (
               <>
                 <div className="flex justify-end gap-2 p-4 bg-gradient-to-r from-blue-50 to-purple-50 border-b border-blue-200">
                   <button onClick={() => exportTableToPDF('ordersTable', 'orders.pdf')} className="px-3 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg text-xs font-bold transition-all duration-200 hover:shadow-lg transform hover:scale-105 active:scale-95">📄 PDF</button>
@@ -298,13 +373,13 @@ const OrdersPage = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {orders.map(order => (
+                      {filteredOrders.map(order => (
                         <tr key={order.id} className="border-b border-blue-100 hover:bg-blue-50 hover:bg-opacity-50 transition-all duration-200 hover:scale-100 hover:shadow-md cursor-pointer">
-                          <td className="px-4 py-2 font-bold text-blue-700">{order.order_number}</td>
-                          <td className="px-4 py-2 text-black font-semibold">{order.buyer_name}</td>
-                          <td className="px-4 py-2 text-black font-semibold">{formatDate(order.order_date)}</td>
+                          <td className="px-4 py-2 font-bold text-blue-700">{highlightText(order.order_number)}</td>
+                          <td className="px-4 py-2 text-black font-semibold">{highlightText(order.buyer_name)}</td>
+                          <td className="px-4 py-2 text-black font-semibold">{highlightText(formatDate(order.order_date))}</td>
                           <td className="px-4 py-2 font-semibold text-black">₨ {order.total_amount.toLocaleString('en-PK', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                          <td className="px-4 py-2"><span className="bg-yellow-300 bg-opacity-30 text-yellow-800 border border-yellow-300 border-opacity-50 px-2 py-1 rounded text-xs font-bold">{order.status}</span></td>
+                          <td className="px-4 py-2"><span className="bg-yellow-300 bg-opacity-30 text-yellow-800 border border-yellow-300 border-opacity-50 px-2 py-1 rounded text-xs font-bold">{highlightText(order.status)}</span></td>
                           <td className="px-4 py-2">
                             <button onClick={() => handleEditOrder(order)} className="bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 transform hover:scale-105 active:scale-95 mr-2">Edit</button>
                             <button onClick={() => handleDeleteOrder(order.id)} className="bg-gradient-to-r from-red-400 to-red-500 hover:from-red-500 hover:to-red-600 text-white px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 transform hover:scale-105 active:scale-95">Delete</button>
@@ -314,13 +389,15 @@ const OrdersPage = () => {
                     </tbody>
                   </table>
                 </div>
-                <div className="flex justify-between items-center p-4 bg-gradient-to-r from-blue-50 to-purple-50">
-                  <span className="text-gray-600">Page {currentPage} of {totalPages}</span>
-                  <div className="flex gap-2">
-                    <button onClick={() => fetchOrders(currentPage - 1)} disabled={currentPage === 1} className="px-4 py-2 bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 disabled:opacity-50 disabled:from-gray-300 disabled:to-gray-300 text-white rounded-lg font-semibold transition-all duration-200">Previous</button>
-                    <button onClick={() => fetchOrders(currentPage + 1)} disabled={currentPage === totalPages} className="px-4 py-2 bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 disabled:opacity-50 disabled:from-gray-300 disabled:to-gray-300 text-white rounded-lg font-semibold transition-all duration-200">Next</button>
+                {(!searchTerm.trim()) && (
+                  <div className="flex justify-between items-center p-4 bg-gradient-to-r from-blue-50 to-purple-50">
+                    <span className="text-gray-600">Page {currentPage} of {totalPages}</span>
+                    <div className="flex gap-2">
+                      <button onClick={() => fetchOrders(currentPage - 1)} disabled={currentPage === 1} className="px-4 py-2 bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 disabled:opacity-50 disabled:from-gray-300 disabled:to-gray-300 text-white rounded-lg font-semibold transition-all duration-200">Previous</button>
+                      <button onClick={() => fetchOrders(currentPage + 1)} disabled={currentPage === totalPages} className="px-4 py-2 bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 disabled:opacity-50 disabled:from-gray-300 disabled:to-gray-300 text-white rounded-lg font-semibold transition-all duration-200">Next</button>
+                    </div>
                   </div>
-                </div>
+                )}
               </>
             )}
           </div>
