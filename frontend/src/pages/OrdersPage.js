@@ -117,14 +117,29 @@ const OrdersPage = () => {
 
     setSubmitting(true);
     try {
+      // Auto-merge duplicate items before submission
+      const itemMap = new Map();
+      for (const item of formData.items) {
+        const itemId = parseInt(item.item_id, 10);
+        const qty = Number.isFinite(parseFloat(item.quantity)) ? parseFloat(item.quantity) : 0;
+        
+        if (itemMap.has(itemId)) {
+          itemMap.set(itemId, itemMap.get(itemId) + qty);
+        } else {
+          itemMap.set(itemId, qty);
+        }
+      }
+      
+      const mergedItems = Array.from(itemMap, ([itemId, qty]) => ({
+        item_id: itemId,
+        quantity: qty
+      }));
+      
       // Prepare data for API - convert string IDs to integers
       const submitData = {
         ...formData,
         buyer_id: formData.buyer_id ? parseInt(formData.buyer_id) : null,
-        items: formData.items.map(item => ({
-          item_id: item.item_id ? parseInt(item.item_id) : null,
-          quantity: item.quantity
-        }))
+        items: mergedItems
       };
 
       console.log('Prepared submit data:', submitData); // Debug log
