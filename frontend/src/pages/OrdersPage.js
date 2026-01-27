@@ -182,10 +182,10 @@ const OrdersPage = () => {
       return;
     }
     
-    // Check if this item already exists in other rows (compare as numbers)
+    // Check if this item already exists in other rows
     const currentItemId = parseInt(currentItem.item_id, 10);
     const existingIndex = formData.items.findIndex((item, i) => 
-      i !== index && parseInt(item.item_id) === currentItemId
+      i !== index && parseInt(item.item_id, 10) === currentItemId
     );
     
     if (existingIndex !== -1) {
@@ -221,22 +221,6 @@ const OrdersPage = () => {
       newItems[index][field] = value === '' ? '' : parseFloat(value) || 0;
     } else if (field === 'item_id') {
       newItems[index][field] = String(value); // Keep as string for select
-      // Auto-merge: check if this item already exists in another row
-      if (value) {
-        const selectedItemId = parseInt(value, 10);
-        const existingIndex = newItems.findIndex((item, i) => i !== index && parseInt(item.item_id, 10) === selectedItemId);
-
-        if (existingIndex !== -1) {
-          // Item already exists - merge quantities and remove current row
-            const currentQty = Number.isFinite(parseFloat(newItems[index].quantity)) ? parseFloat(newItems[index].quantity) : 0;
-            const existingQty = Number.isFinite(parseFloat(newItems[existingIndex].quantity)) ? parseFloat(newItems[existingIndex].quantity) : 0;
-            newItems[index].quantity = currentQty + existingQty;
-            newItems.splice(existingIndex, 1); // Remove the other row, keep current row
-
-          const itemName = items.find(it => String(it.id) === String(selectedItemId))?.name || 'item';
-          showToast(`Auto-merged quantities for "${itemName}"`, 'success');
-        }
-      }
     } else {
       newItems[index][field] = value;
     }
