@@ -214,6 +214,13 @@ const OrdersPage = () => {
     setFormData({...formData, items: formData.items.filter((_, i) => i !== index)});
   };
 
+  const handleItemRowKeyDown = (index, event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      confirmAddItem(index);
+    }
+  };
+
   const updateItemRow = (index, field, value) => {
     const newItems = [...formData.items];
     if (field === 'quantity') {
@@ -334,11 +341,11 @@ const OrdersPage = () => {
                   <div className="border rounded p-3 mb-4 max-h-32 overflow-y-auto">
                     {formData.items.map((item, idx) => (
                       <div key={idx} className="flex gap-2 mb-2">
-                        <select value={String(item.item_id)} onChange={(e) => updateItemRow(idx, 'item_id', e.target.value)} className="flex-1 px-2 py-1 border rounded text-sm">
+                        <select value={String(item.item_id)} onChange={(e) => updateItemRow(idx, 'item_id', e.target.value)} onKeyDown={(e) => handleItemRowKeyDown(idx, e)} className="flex-1 px-2 py-1 border rounded text-sm">
                           <option value="">Select item</option>
                           {items.map(i => <option key={i.id} value={String(i.id)}>{i.name} (₨{i.unit_price})</option>)}
                         </select>
-                        <input type="number" step="0.01" value={item.quantity} onChange={(e) => updateItemRow(idx, 'quantity', e.target.value)} placeholder="Qty" className="w-24 px-2 py-1 border rounded text-sm" />
+                        <input type="number" step="0.01" value={item.quantity} onChange={(e) => updateItemRow(idx, 'quantity', e.target.value)} onKeyDown={(e) => handleItemRowKeyDown(idx, e)} placeholder="Qty" className="w-24 px-2 py-1 border rounded text-sm" />
                         <button type="button" onClick={() => confirmAddItem(idx)} className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-sm font-bold">+</button>
                         <button type="button" onClick={() => removeItemRow(idx)} className="bg-red-500 text-white px-2 py-1 rounded text-sm">×</button>
                       </div>
