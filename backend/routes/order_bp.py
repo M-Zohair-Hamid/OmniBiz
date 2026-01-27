@@ -203,6 +203,7 @@ def update_order(order_id):
         # Store old items BEFORE deleting them - get the items list separately
         old_items_list = list(order.items)
         old_items = {oi.item_id: oi.quantity for oi in old_items_list}
+        print(f"DEBUG: Old items dict: {old_items}")  # Debug
         
         # Delete old order items
         OrderItem.query.filter_by(order_id=order_id).delete()
@@ -222,14 +223,18 @@ def update_order(order_id):
             old_qty = old_items.get(item.id, 0)
             qty_difference = quantity - old_qty  # Positive = add to order, Negative = reduce from order
             
+            print(f"DEBUG: Item {item.name}: old_qty={old_qty}, new_qty={quantity}, difference={qty_difference}, current_stock={item.quantity_in_stock}")  # Debug
+            
             # Check if we have enough stock for the additional quantity
             if qty_difference > 0:  # Increasing quantity
                 if qty_difference > item.quantity_in_stock:
                     db.session.rollback()
                     return jsonify({'error': f'Insufficient stock for {item.name}. Need additional: {qty_difference}, Available: {item.quantity_in_stock}'}), 400
                 item.quantity_in_stock -= qty_difference
+                print(f"DEBUG: Deducted {qty_difference}, new stock: {item.quantity_in_stock}")  # Debug
             elif qty_difference < 0:  # Decreasing quantity
                 item.quantity_in_stock += abs(qty_difference)  # Return to stock
+                print(f"DEBUG: Returned {abs(qty_difference)}, new stock: {item.quantity_in_stock}")  # Debug
             
             unit_price = item.unit_price
             line_total = quantity * unit_price
