@@ -189,20 +189,12 @@ const OrdersPage = () => {
     );
     
     if (existingIndex !== -1) {
-      // Item already exists - merge quantities and remove current row
-      const newItems = formData.items
-        .map((item, i) => {
-          if (i === existingIndex) {
-            const baseQty = Number.isFinite(parseFloat(item.quantity)) ? parseFloat(item.quantity) : 0;
-            const addQty = Number.isFinite(parseFloat(currentItem.quantity)) ? parseFloat(currentItem.quantity) : 0;
-            return { 
-              ...item, 
-              quantity: baseQty + addQty
-            };
-          }
-          return item;
-        })
-        .filter((_, i) => i !== index); // Remove current row
+      // Item already exists - merge quantities into the current row, drop the other row
+      const newItems = [...formData.items];
+      const baseQty = Number.isFinite(parseFloat(newItems[index].quantity)) ? parseFloat(newItems[index].quantity) : 0;
+      const existingQty = Number.isFinite(parseFloat(newItems[existingIndex].quantity)) ? parseFloat(newItems[existingIndex].quantity) : 0;
+      newItems[index].quantity = baseQty + existingQty;
+      newItems.splice(existingIndex, 1); // Remove the other row, keep current row visible
       
       setFormData({...formData, items: newItems});
       const itemName = items.find(it => String(it.id) === String(currentItem.item_id))?.name || 'item';
@@ -236,10 +228,10 @@ const OrdersPage = () => {
 
         if (existingIndex !== -1) {
           // Item already exists - merge quantities and remove current row
-          const currentQty = Number.isFinite(parseFloat(newItems[index].quantity)) ? parseFloat(newItems[index].quantity) : 0;
-          const existingQty = Number.isFinite(parseFloat(newItems[existingIndex].quantity)) ? parseFloat(newItems[existingIndex].quantity) : 0;
-          newItems[existingIndex].quantity = currentQty + existingQty;
-          newItems.splice(index, 1); // Remove current row
+            const currentQty = Number.isFinite(parseFloat(newItems[index].quantity)) ? parseFloat(newItems[index].quantity) : 0;
+            const existingQty = Number.isFinite(parseFloat(newItems[existingIndex].quantity)) ? parseFloat(newItems[existingIndex].quantity) : 0;
+            newItems[index].quantity = currentQty + existingQty;
+            newItems.splice(existingIndex, 1); // Remove the other row, keep current row
 
           const itemName = items.find(it => String(it.id) === String(selectedItemId))?.name || 'item';
           showToast(`Auto-merged quantities for "${itemName}"`, 'success');
