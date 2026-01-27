@@ -250,17 +250,35 @@ const OrdersPage = () => {
                   <table id="ordersTable" className="w-full text-sm">
                     <thead className="bg-gradient-to-r from-blue-50 to-purple-50 border-b border-blue-200">
                       <tr>
-                        <th className="px-4 py-2 text-left font-bold text-blue-700">Order #</th>
-                        <th className="px-4 py-2 text-left font-bold text-blue-700">Buyer</th>
-                        <th className="px-4 py-2 text-left font-bold text-blue-700">Date</th>
-                        <th className="px-4 py-2 text-left font-bold text-blue-700">Total</th>
-                        <th className="px-4 py-2 text-left font-bold text-blue-700">Status</th>
-                        <th className="px-4 py-2 text-left font-bold text-blue-700">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {orders.map(order => (
-                        <tr key={order.id} className="border-b border-blue-100 hover:bg-blue-50 hover:bg-opacity-50 transition-all duration-200 hover:scale-100 hover:shadow-md cursor-pointer">
+                        const updateItemRow = (index, field, value) => {
+                          const newItems = [...formData.items];
+                          if (field === 'quantity') {
+                            newItems[index][field] = value === '' ? '' : parseFloat(value) || 0;
+                          } else if (field === 'item_id') {
+                            newItems[index][field] = String(value); // Keep as string for select
+                            // Auto-merge: check if this item already exists in another row
+                            if (value) {
+                              const selectedItemId = parseInt(value);
+                              const existingIndex = newItems.findIndex((item, i) => 
+                                i !== index && parseInt(item.item_id) === selectedItemId
+                              );
+        
+                              if (existingIndex !== -1) {
+                                // Item already exists - merge quantities and remove current row
+                                const currentQty = parseFloat(newItems[index].quantity || 0);
+                                const existingQty = parseFloat(newItems[existingIndex].quantity || 0);
+                                newItems[existingIndex].quantity = currentQty + existingQty;
+                                newItems.splice(index, 1); // Remove current row
+          
+                                const itemName = items.find(it => it.id === selectedItemId)?.name || 'item';
+                                showToast(`Auto-merged quantities for "${itemName}"`, 'success');
+                              }
+                            }
+                          } else {
+                            newItems[index][field] = value;
+                          }
+                          setFormData({...formData, items: newItems});
+                        };
                           <td className="px-4 py-2 font-bold text-blue-700">{order.order_number}</td>
                           <td className="px-4 py-2 text-black font-semibold">{order.buyer_name}</td>
                           <td className="px-4 py-2 text-black font-semibold">{formatDate(order.order_date)}</td>

@@ -134,10 +134,6 @@ def create_order():
         line_total = quantity * unit_price
         subtotal += line_total
         
-        # Ensure sufficient stock and deduct immediately
-        if quantity > item.quantity_in_stock:
-            return jsonify({'error': f'Insufficient stock for {item.name}. Available: {item.quantity_in_stock}'}), 400
-        item.quantity_in_stock -= quantity
         
         items_list.append({
             'item': item,
@@ -189,8 +185,6 @@ def update_order(order_id):
         return jsonify({'error': 'Order not found'}), 404
     
     data = request.get_json()
-    print(f"DEBUG: Updating order {order_id} with data: {data}") # Debug logging
-    
     # Validate buyer if being updated
     if 'buyer_id' in data:
         buyer = Buyer.query.filter_by(id=int(data['buyer_id']), company_id=company_id).first()
@@ -199,12 +193,9 @@ def update_order(order_id):
     
     # If items are being updated, handle inventory adjustments
     if 'items' in data and data['items']:
-        print(f"DEBUG: Processing items update") # Debug logging
-        
         # Store old items BEFORE deleting them - get the items list separately
         old_items_list = list(order.items)
         old_items = {oi.item_id: oi.quantity for oi in old_items_list}
-        print(f"DEBUG: Old items: {old_items}") # Debug logging
         
         # Delete old order items
         OrderItem.query.filter_by(order_id=order_id).delete()
@@ -226,9 +217,6 @@ def update_order(order_id):
             subtotal += line_total
             
             # Adjust inventory: restore old quantity, deduct new quantity
-            old_qty = old_items.get(item.id, 0)
-            inventory_change = old_qty - quantity
-            item.quantity_in_stock += inventory_change
             
             items_list.append({
                 'item': item,
@@ -279,11 +267,9 @@ def update_order(order_id):
     
     try:
         db.session.commit()
-        print(f"DEBUG: Order {order_id} updated successfully") # Debug logging
         return jsonify({'message': 'Order updated successfully'}), 200
     except Exception as e:
         db.session.rollback()
-        print(f"DEBUG: Error updating order: {str(e)}") # Debug logging
         return jsonify({'error': str(e)}), 500
 
 @bp.route('/<int:order_id>', methods=['DELETE'])
@@ -294,13 +280,10 @@ def delete_order(order_id):
     if not order:
         return jsonify({'error': 'Order not found'}), 404
     
-    # Restore inventory for all items in the order
-    for order_item in order.items:
-        item = Item.query.filter_by(id=order_item.item_id, company_id=company_id).first()
-        if item:
-            item.quantity_in_stock += order_item.quantity
     
     db.session.delete(order)
     db.session.commit()
     
     return jsonify({'message': 'Order deleted successfully and inventory restored'}), 200
+    
+    return jsonify({'message': 'Order deleted successfully'}), 200
