@@ -189,16 +189,18 @@ const OrdersPage = () => {
     );
     
     if (existingIndex !== -1) {
-      // Item already exists - merge quantities
-      const newItems = formData.items.map((item, i) => {
-        if (i === existingIndex) {
-          return { 
-            ...item, 
-            quantity: parseFloat(item.quantity || 0) + parseFloat(currentItem.quantity || 0)
-          };
-        }
-        return item;
-      }).filter((_, i) => i !== index); // Remove current row
+      // Item already exists - merge quantities and remove current row
+      const newItems = formData.items
+        .map((item, i) => {
+          if (i === existingIndex) {
+            return { 
+              ...item, 
+              quantity: parseFloat(item.quantity || 0) + parseFloat(currentItem.quantity || 0)
+            };
+          }
+          return item;
+        })
+        .filter((_, i) => i !== index); // Remove current row
       
       setFormData({...formData, items: newItems});
       const itemName = items.find(it => it.id === currentItem.item_id)?.name || 'item';
@@ -297,6 +299,10 @@ const OrdersPage = () => {
                         <option value="">Select buyer</option>
                         {buyers.map(b => <option key={b.id} value={String(b.id)}>{b.company_name}</option>)}
                       </select>
+                    </div>
+                    <div>
+                      <label className="block text-blue-700 font-bold mb-2">Company Name</label>
+                      <input type="text" value={formData.buyer_id ? (buyers.find(b => b.id === parseInt(formData.buyer_id))?.company_name || '') : ''} readOnly className="w-full px-3 py-2 backdrop-blur-sm bg-white bg-opacity-40 border border-blue-200 rounded-lg focus:border-blue-400 bg-gray-100" />
                     </div>
                     <div>
                       <label className="block text-blue-700 font-bold mb-2">Order Date</label>
