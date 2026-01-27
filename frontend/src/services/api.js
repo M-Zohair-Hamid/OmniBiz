@@ -67,7 +67,6 @@ export const deleteBuyer = (id) => api.delete(`/buyers/${id}`);
 export const getItems = (page = 1, perPage = 10, search = '') =>
   api.get('/items', { params: { page, per_page: perPage, search } });
 export const getItem = (id) => api.get(`/items/${id}`);
-export const getNextItemCode = () => api.get('/items/next-code');
 export const createItem = (data) => api.post('/items', data);
 export const updateItem = (id, data) => api.put(`/items/${id}`, data);
 export const deleteItem = (id) => api.delete(`/items/${id}`);

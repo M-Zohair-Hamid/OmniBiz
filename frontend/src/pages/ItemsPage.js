@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import Sidebar from '../components/Sidebar';
-import { getItems, getNextItemCode, createItem, updateItem, deleteItem } from '../services/api';
+import { getItems, createItem, updateItem, deleteItem } from '../services/api';
 import { ToastContext } from '../context/ToastContext';
 import { AuthContext } from '../context/AuthContext';
 import { exportTableToPDF, exportChartToImage } from '../utils/exportUtils';
@@ -13,7 +13,6 @@ const ItemsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [isAutoCode, setIsAutoCode] = useState(false);
   
   const [formData, setFormData] = useState({
     code: '', name: '', description: '', unit: 'PCS', unit_price: 0, quantity_in_stock: 0
@@ -46,31 +45,23 @@ const ItemsPage = () => {
     fetchItems(1, e.target.value);
   };
 
-  const handleAddItem = async () => {
+  const handleAddItem = () => {
     setEditingId(null);
-    setIsAutoCode(true);
-    try {
-      const resp = await getNextItemCode();
-      const nextCode = resp.data?.next_code || 'HS-1000';
-      setFormData({ code: nextCode, name: '', description: '', unit: 'PCS', unit_price: 0, quantity_in_stock: 0 });
-    } catch {
-      setFormData({ code: 'HS-1000', name: '', description: '', unit: 'PCS', unit_price: 0, quantity_in_stock: 0 });
-    }
+    setFormData({ code: '', name: '', description: '', unit: 'PCS', unit_price: 0, quantity_in_stock: 0 });
     setShowForm(true);
   };
 
   const handleEditItem = (item) => {
     setFormData(item);
     setEditingId(item.id);
-    setIsAutoCode(false);
     setShowForm(true);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.name || !formData.unit_price) {
-      showToast('Please fill required fields: Name, Unit Price', 'warning');
+    if (!formData.code || !formData.name || !formData.unit_price) {
+      showToast('Please fill required fields: Code, Name, Unit Price', 'warning');
       return;
     }
 
@@ -268,8 +259,8 @@ const ItemsPage = () => {
                 <form onSubmit={handleSubmit}>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
-                      <label className="block text-blue-700 font-bold mb-2">Code (auto)</label>
-                      <input type="text" value={formData.code} onChange={(e) => setFormData({...formData, code: e.target.value})} disabled={isAutoCode} readOnly={isAutoCode} placeholder="HS-XXXX" className="w-full px-3 py-2 backdrop-blur-sm bg-white bg-opacity-40 border border-blue-200 rounded-lg focus:border-blue-400" />
+                      <label className="block text-blue-700 font-bold mb-2">Code *</label>
+                      <input type="text" value={formData.code} onChange={(e) => setFormData({...formData, code: e.target.value})} placeholder="Enter item code" className="w-full px-3 py-2 backdrop-blur-sm bg-white bg-opacity-40 border border-blue-200 rounded-lg focus:border-blue-400" required />
                     </div>
                     <div>
                       <label className="block text-blue-700 font-bold mb-2">Name *</label>

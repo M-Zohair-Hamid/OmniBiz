@@ -10,29 +10,6 @@ def verify_company_access():
     """Verify user has access to the company"""
     return get_company_id_from_token()
 
-# Helper: compute next auto code (HS-<number>) starting at 1000
-AUTO_CODE_PREFIX = 'HS-'
-AUTO_CODE_START = 1000
-
-def get_next_item_code(company_id):
-    """Get the next auto-incremented item code (HS-1000, HS-1001, etc.)"""
-    # Query all items for company and find max HS number
-    items = Item.query.filter_by(company_id=company_id).all()
-    max_num = AUTO_CODE_START - 1
-    
-    for item in items:
-        code = (item.code or '').strip()
-        if code.startswith(AUTO_CODE_PREFIX):
-            try:
-                num = int(code[len(AUTO_CODE_PREFIX):])
-                if num > max_num:
-                    max_num = num
-            except (ValueError, IndexError):
-                continue
-    
-    next_num = max_num + 1
-    return f"{AUTO_CODE_PREFIX}{next_num}"
-
 @bp.route('', methods=['GET'])
 def get_items():
     company_id = verify_company_access()
@@ -68,11 +45,6 @@ def get_items():
         'current_page': page
     }), 200
 
-@bp.route('/next-code', methods=['GET'])
-def next_code():
-    company_id = verify_company_access()
-    return jsonify({'next_code': get_next_item_code(company_id)}), 200
-
 @bp.route('/<int:item_id>', methods=['GET'])
 def get_item(item_id):
     company_id = verify_company_access()
@@ -99,12 +71,12 @@ def create_item():
     company_id = verify_company_access()
     data = request.get_json()
     
-    if not data.get('name') or not data.get('unit_price'):
-        return jsonify({'error': 'Missing required fields: name, unit_price'}), 400
+    if not data.get('name') or not data.get('unit_price') or not data.get('code'):
+        return jsonify({'error': 'Missing required fields: code, name, unit_price'}), 400
     
     code = (data.get('code') or '').strip()
     if not code:
-        code = get_next_item_code(company_id)
+        return jsonify({'error': 'Item code is required'}), 400
     
     try:
         item = Item(
