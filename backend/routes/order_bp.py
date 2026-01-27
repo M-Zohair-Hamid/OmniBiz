@@ -12,22 +12,22 @@ def verify_company_access():
     return get_company_id_from_token()
 
 def generate_order_number(company_name, order_date):
-    """Generate unique order number: CompanyName_YYYY-MM-DD_AUTO_ID
+    """Generate unique order number: CompanyName_YYYY-MM-DD_ID1000
     Auto ID starts from 1000 and increments per day per company"""
     date_str = order_date.strftime('%Y-%m-%d')
     
     # Query all orders for this company on this date
     from models import Company
     existing_orders = Order.query.filter(
-        Order.order_number.like(f'{company_name}_{date_str}_%')
+        Order.order_number.like(f'{company_name}_{date_str}_ID%')
     ).all()
     
     # Extract max number
     max_num = 999
     for order in existing_orders:
         try:
-            # Format: CompanyName_YYYY-MM-DD_1000, CompanyName_YYYY-MM-DD_1001, etc
-            parts = order.order_number.split('_')
+            # Format: CompanyName_YYYY-MM-DD_ID1000, CompanyName_YYYY-MM-DD_ID1001, etc
+            parts = order.order_number.split('_ID')
             num = int(parts[-1])
             if num > max_num:
                 max_num = num
@@ -35,7 +35,7 @@ def generate_order_number(company_name, order_date):
             continue
     
     next_num = max_num + 1
-    return f"{company_name}_{date_str}_{next_num}"
+    return f"{company_name}_{date_str}_ID{next_num}"
 
 @bp.route('', methods=['GET'])
 def get_orders():
