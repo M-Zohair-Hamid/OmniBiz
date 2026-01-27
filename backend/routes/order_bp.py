@@ -130,10 +130,14 @@ def create_order():
             return jsonify({'error': f'Item {item_data["item_id"]} not found'}), 404
         
         quantity = float(item_data['quantity'])
+        
+        # Validate stock availability
+        if quantity > item.quantity_in_stock:
+            return jsonify({'error': f'Insufficient stock for {item.name}. Requested: {quantity}, Available: {item.quantity_in_stock}'}), 400
+        
         unit_price = item.unit_price
         line_total = quantity * unit_price
         subtotal += line_total
-        
         
         items_list.append({
             'item': item,
@@ -212,6 +216,12 @@ def update_order(order_id):
                 return jsonify({'error': f'Item {item_data["item_id"]} not found'}), 404
             
             quantity = float(item_data['quantity'])
+            
+            # Validate stock availability
+            if quantity > item.quantity_in_stock:
+                db.session.rollback()
+                return jsonify({'error': f'Insufficient stock for {item.name}. Requested: {quantity}, Available: {item.quantity_in_stock}'}), 400
+            
             unit_price = item.unit_price
             line_total = quantity * unit_price
             subtotal += line_total

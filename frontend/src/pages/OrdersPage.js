@@ -182,6 +182,22 @@ const OrdersPage = () => {
       return;
     }
     
+    // Get item details and check stock
+    const itemDetail = items.find(i => String(i.id) === String(currentItem.item_id));
+    if (!itemDetail) {
+      showToast('Item not found', 'error');
+      return;
+    }
+    
+    const requestedQty = Number.isFinite(parseFloat(currentItem.quantity)) ? parseFloat(currentItem.quantity) : 0;
+    const availableStock = Number.isFinite(parseFloat(itemDetail.quantity_in_stock)) ? parseFloat(itemDetail.quantity_in_stock) : 0;
+    
+    // Check stock availability
+    if (requestedQty > availableStock) {
+      showToast(`Insufficient stock for ${itemDetail.name}. Available: ${availableStock}`, 'warning');
+      return;
+    }
+    
     // Check if this item already exists in other rows
     const currentItemId = parseInt(currentItem.item_id, 10);
     const existingIndex = formData.items.findIndex((item, i) => 
@@ -193,12 +209,19 @@ const OrdersPage = () => {
       const newItems = [...formData.items];
       const baseQty = Number.isFinite(parseFloat(newItems[index].quantity)) ? parseFloat(newItems[index].quantity) : 0;
       const existingQty = Number.isFinite(parseFloat(newItems[existingIndex].quantity)) ? parseFloat(newItems[existingIndex].quantity) : 0;
-      newItems[index].quantity = baseQty + existingQty;
+      const mergedQty = baseQty + existingQty;
+      
+      // Check merged total doesn't exceed stock
+      if (mergedQty > availableStock) {
+        showToast(`Total quantity ${mergedQty} exceeds available stock ${availableStock}`, 'warning');
+        return;
+      }
+      
+      newItems[index].quantity = mergedQty;
       newItems.splice(existingIndex, 1); // Remove the other row, keep current row visible
       
       setFormData({...formData, items: newItems});
-      const itemName = items.find(it => String(it.id) === String(currentItem.item_id))?.name || 'item';
-      showToast(`Merged quantities for "${itemName}"`, 'success');
+      showToast(`Merged quantities for "${itemDetail.name}"`, 'success');
     } else {
       showToast('Item added', 'success');
     }
