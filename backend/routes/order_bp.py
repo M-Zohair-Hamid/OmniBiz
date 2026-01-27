@@ -135,6 +135,9 @@ def create_order():
         if quantity > item.quantity_in_stock:
             return jsonify({'error': f'Insufficient stock for {item.name}. Requested: {quantity}, Available: {item.quantity_in_stock}'}), 400
         
+        # Deduct stock immediately when creating order
+        item.quantity_in_stock -= quantity
+        
         unit_price = item.unit_price
         line_total = quantity * unit_price
         subtotal += line_total
@@ -216,17 +219,21 @@ def update_order(order_id):
                 return jsonify({'error': f'Item {item_data["item_id"]} not found'}), 404
             
             quantity = float(item_data['quantity'])
+            old_qty = old_items.get(item.id, 0)
+            qty_difference = quantity - old_qty  # Positive = add to order, Negative = reduce from order
             
-            # Validate stock availability
-            if quantity > item.quantity_in_stock:
-                db.session.rollback()
-                return jsonify({'error': f'Insufficient stock for {item.name}. Requested: {quantity}, Available: {item.quantity_in_stock}'}), 400
+            # Check if we have enough stock for the additional quantity
+            if qty_difference > 0:  # Increasing quantity
+                if qty_difference > item.quantity_in_stock:
+                    db.session.rollback()
+                    return jsonify({'error': f'Insufficient stock for {item.name}. Need additional: {qty_difference}, Available: {item.quantity_in_stock}'}), 400
+                item.quantity_in_stock -= qty_difference
+            elif qty_difference < 0:  # Decreasing quantity
+                item.quantity_in_stock += abs(qty_difference)  # Return to stock
             
             unit_price = item.unit_price
             line_total = quantity * unit_price
             subtotal += line_total
-            
-            # Adjust inventory: restore old quantity, deduct new quantity
             
             items_list.append({
                 'item': item,
@@ -234,6 +241,13 @@ def update_order(order_id):
                 'unit_price': unit_price,
                 'line_total': line_total
             })
+        
+        # Handle items that were removed from order (restore their stock)
+        for old_item_id, old_qty in old_items.items():
+            if not any(int(item_data['item_id']) == old_item_id for item_data in data['items']):
+                item = Item.query.filter_by(id=old_item_id, company_id=company_id).first()
+                if item:
+                    item.quantity_in_stock += old_qty
         
         # Restore inventory for items that were removed from order
         for old_item_id, old_qty in old_items.items():
@@ -290,10 +304,15 @@ def delete_order(order_id):
     if not order:
         return jsonify({'error': 'Order not found'}), 404
     
+    # Restore stock for all items in the order
+    for order_item in order.items:
+        item = Item.query.filter_by(id=order_item.item_id, company_id=company_id).first()
+        if item:
+            item.quantity_in_stock += order_item.quantity
     
     db.session.delete(order)
     db.session.commit()
     
-    return jsonify({'message': 'Order deleted successfully and inventory restored'}), 200
+    return jsonify({'message': 'Order deleted successfully and stock restored'}), 200
     
     return jsonify({'message': 'Order deleted successfully'}), 200
