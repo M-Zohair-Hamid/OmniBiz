@@ -11,22 +11,22 @@ bp = Blueprint('orders', __name__, url_prefix='/api/orders')
 def verify_company_access():
     return get_company_id_from_token()
 
-def generate_order_number(company_name, order_date):
-    """Generate unique order number: CompanyName_YYYY-MM-DD_ID1000
-    Auto ID starts from 1000 and increments per day per company"""
+def generate_order_number(buyer_name, order_date):
+    """Generate unique order number: BuyerName_YYYY-MM-DD_ID1000
+    Auto ID starts from 1000 and increments per day per buyer"""
     date_str = order_date.strftime('%Y-%m-%d')
     
-    # Query all orders for this company on this date
+    # Query all orders for this buyer on this date
     from models import Company
     existing_orders = Order.query.filter(
-        Order.order_number.like(f'{company_name}_{date_str}_ID%')
+        Order.order_number.like(f'{buyer_name}_{date_str}_ID%')
     ).all()
     
     # Extract max number
     max_num = 999
     for order in existing_orders:
         try:
-            # Format: CompanyName_YYYY-MM-DD_ID1000, CompanyName_YYYY-MM-DD_ID1001, etc
+            # Format: BuyerName_YYYY-MM-DD_ID1000, BuyerName_YYYY-MM-DD_ID1001, etc
             parts = order.order_number.split('_ID')
             num = int(parts[-1])
             if num > max_num:
@@ -35,7 +35,7 @@ def generate_order_number(company_name, order_date):
             continue
     
     next_num = max_num + 1
-    return f"{company_name}_{date_str}_ID{next_num}"
+    return f"{buyer_name}_{date_str}_ID{next_num}"
 
 @bp.route('', methods=['GET'])
 def get_orders():
@@ -114,11 +114,11 @@ def create_order():
     if not buyer:
         return jsonify({'error': 'Buyer not found'}), 404
     
-    # Get company name
+    # Get buyer name and generate order number
     from models import Company
     company = Company.query.get(company_id)
     order_date = datetime.fromisoformat(data.get('order_date')) if data.get('order_date') else datetime.utcnow()
-    order_number = generate_order_number(company.name, order_date)
+    order_number = generate_order_number(buyer.company_name, order_date)
     
     # Calculate totals
     subtotal = 0
