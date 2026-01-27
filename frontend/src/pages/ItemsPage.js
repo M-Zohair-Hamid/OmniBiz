@@ -15,7 +15,7 @@ const ItemsPage = () => {
   const [totalPages, setTotalPages] = useState(1);
   
   const [formData, setFormData] = useState({
-    code: '', name: '', description: '', unit: 'PCS', unit_price: 0, quantity_in_stock: 0
+    code: '', name: '', description: '', unit: 'PCS', unit_price: 0, quantity_in_stock: 0, add_stock: 0
   });
 
   const { showToast } = useContext(ToastContext);
@@ -47,7 +47,7 @@ const ItemsPage = () => {
 
   const handleAddItem = () => {
     setEditingId(null);
-    setFormData({ code: '', name: '', description: '', unit: 'PCS', unit_price: 0, quantity_in_stock: 0 });
+    setFormData({ code: '', name: '', description: '', unit: 'PCS', unit_price: 0, quantity_in_stock: 0, add_stock: 0 });
     setShowForm(true);
   };
 
@@ -66,14 +66,20 @@ const ItemsPage = () => {
     }
 
     try {
+      // If adding stock, update quantity_in_stock
+      const submitData = { ...formData };
+      if (formData.add_stock && formData.add_stock > 0) {
+        submitData.quantity_in_stock = parseFloat(formData.quantity_in_stock) + parseFloat(formData.add_stock);
+        submitData.add_stock = 0; // Reset add_stock after using it
+      }
+      
       if (editingId) {
-        await updateItem(editingId, formData);
+        await updateItem(editingId, submitData);
         showToast('Item updated successfully', 'success');
       } else {
-        const resp = await createItem(formData);
-        // Capture server-generated code (if any)
+        const resp = await createItem(submitData);
         if (resp?.data?.code) {
-          setFormData({ ...formData, code: resp.data.code });
+          setFormData({ ...submitData, code: resp.data.code });
         }
         showToast('Item created successfully', 'success');
       }
@@ -282,6 +288,10 @@ const ItemsPage = () => {
                     <div>
                       <label className="block text-blue-700 font-bold mb-2">Stock Quantity</label>
                       <input type="number" step="0.01" value={formData.quantity_in_stock} onChange={(e) => setFormData({...formData, quantity_in_stock: parseFloat(e.target.value)})} className="w-full px-3 py-2 backdrop-blur-sm bg-white bg-opacity-40 border border-blue-200 rounded-lg focus:border-blue-400" />
+                    </div>
+                    <div>
+                      <label className="block text-blue-700 font-bold mb-2">Add Stock</label>
+                      <input type="number" step="0.01" value={formData.add_stock} onChange={(e) => setFormData({...formData, add_stock: parseFloat(e.target.value) || 0})} placeholder="Enter amount to add" className="w-full px-3 py-2 backdrop-blur-sm bg-white bg-opacity-40 border border-blue-200 rounded-lg focus:border-blue-400" />
                     </div>
                     <div className="md:col-span-2">
                       <label className="block text-blue-700 font-bold mb-2">Description</label>
