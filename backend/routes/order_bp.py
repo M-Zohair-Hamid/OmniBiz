@@ -11,10 +11,31 @@ bp = Blueprint('orders', __name__, url_prefix='/api/orders')
 def verify_company_access():
     return get_company_id_from_token()
 
-def generate_order_number(company_code):
-    """Generate unique order number"""
-    random_suffix = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
-    return f"ORD-{company_code}-{datetime.utcnow().strftime('%Y%m%d')}-{random_suffix}"
+def generate_order_number(company_name, order_date):
+    """Generate unique order number: CompanyName_YYYY-MM-DD_AUTO_ID
+    Auto ID starts from 1000 and increments per day per company"""
+    date_str = order_date.strftime('%Y-%m-%d')
+    
+    # Query all orders for this company on this date
+    from models import Company
+    existing_orders = Order.query.filter(
+        Order.order_number.like(f'{company_name}_{date_str}_%')
+    ).all()
+    
+    # Extract max number
+    max_num = 999
+    for order in existing_orders:
+        try:
+            # Format: CompanyName_YYYY-MM-DD_1000, CompanyName_YYYY-MM-DD_1001, etc
+            parts = order.order_number.split('_')
+            num = int(parts[-1])
+            if num > max_num:
+                max_num = num
+        except (ValueError, IndexError):
+            continue
+    
+    next_num = max_num + 1
+    return f"{company_name}_{date_str}_{next_num}"
 
 @bp.route('', methods=['GET'])
 def get_orders():
@@ -93,10 +114,11 @@ def create_order():
     if not buyer:
         return jsonify({'error': 'Buyer not found'}), 404
     
-    # Get company code
+    # Get company name
     from models import Company
     company = Company.query.get(company_id)
-    order_number = generate_order_number(company.code)
+    order_date = datetime.fromisoformat(data.get('order_date')) if data.get('order_date') else datetime.utcnow()
+    order_number = generate_order_number(company.name, order_date)
     
     # Calculate totals
     subtotal = 0
