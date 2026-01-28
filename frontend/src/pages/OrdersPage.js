@@ -18,6 +18,8 @@ const OrdersPage = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [buyers, setBuyers] = useState([]);
   const [items, setItems] = useState([]);
+  const [showOptionsModal, setShowOptionsModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
   
   const [formData, setFormData] = useState({
     buyer_id: '', order_date: getCurrentDateForInput(), status: 'pending', tax_rate: 0, notes: '', items: [{ item_id: '', quantity: 1 }]
@@ -240,6 +242,29 @@ const OrdersPage = () => {
     }
   };
 
+  const handleOpenOptions = (order) => {
+    setSelectedOrder(order);
+    setShowOptionsModal(true);
+  };
+
+  const handleGenerateInvoice = () => {
+    setShowOptionsModal(false);
+    showToast('Generate Sales Tax Invoice - Coming soon', 'info');
+    // TODO: Implement invoice generation
+  };
+
+  const handleGenerateBill = () => {
+    setShowOptionsModal(false);
+    showToast('Generate Bill - Coming soon', 'info');
+    // TODO: Implement bill generation
+  };
+
+  const handleRecordPayment = () => {
+    setShowOptionsModal(false);
+    showToast('Record Payment - Coming soon', 'info');
+    // TODO: Implement payment recording
+  };
+
   const addItemRow = () => {
     setFormData({...formData, items: [...formData.items, { item_id: '', quantity: 1 }]});
   };
@@ -353,7 +378,7 @@ const OrdersPage = () => {
           </div>
 
           {/* Orders Table */}
-          <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-2xl shadow-glass-lg border border-white border-opacity-30 overflow-hidden">
+          <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-2xl shadow-glass-lg border border-white border-opacity-30">
             {loading ? <div className="p-8 text-center">Loading...</div> : filteredOrders.length === 0 ? <div className="p-8 text-center text-gray-600">No orders found</div> : (
               <>
                 <div className="flex justify-end gap-2 p-4 bg-gradient-to-r from-blue-50 to-purple-50 border-b border-blue-200">
@@ -381,8 +406,11 @@ const OrdersPage = () => {
                           <td className="px-4 py-2 font-semibold text-black">₨ {order.total_amount.toLocaleString('en-PK', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                           <td className="px-4 py-2"><span className="bg-yellow-300 bg-opacity-30 text-yellow-800 border border-yellow-300 border-opacity-50 px-2 py-1 rounded text-xs font-bold">{highlightText(order.status)}</span></td>
                           <td className="px-4 py-2">
-                            <button onClick={() => handleEditOrder(order)} className="bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 transform hover:scale-105 active:scale-95 mr-2">Edit</button>
-                            <button onClick={() => handleDeleteOrder(order.id)} className="bg-gradient-to-r from-red-400 to-red-500 hover:from-red-500 hover:to-red-600 text-white px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 transform hover:scale-105 active:scale-95">Delete</button>
+                            <div className="flex gap-2 items-center">
+                              <button onClick={() => handleEditOrder(order)} className="bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 transform hover:scale-105 active:scale-95">Edit</button>
+                              <button onClick={() => handleDeleteOrder(order.id)} className="bg-gradient-to-r from-red-400 to-red-500 hover:from-red-500 hover:to-red-600 text-white px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 transform hover:scale-105 active:scale-95">Delete</button>
+                              <button onClick={() => handleOpenOptions(order)} className="bg-gradient-to-r from-green-400 to-green-500 hover:from-green-500 hover:to-green-600 text-white px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 transform hover:scale-105 active:scale-95">Options</button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -457,6 +485,41 @@ const OrdersPage = () => {
                     <button type="button" onClick={() => setShowForm(false)} className="flex-1 bg-gray-300 hover:bg-gray-400 px-4 py-2 rounded font-semibold">Cancel</button>
                   </div>
                 </form>
+              </div>
+            </div>
+          )}
+
+          {/* Options Modal */}
+          {showOptionsModal && selectedOrder && (
+            <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+              <div className="backdrop-blur-xl bg-white bg-opacity-40 border border-white border-opacity-30 rounded-2xl shadow-glass-lg p-8 max-w-md w-full">
+                <h2 className="text-2xl font-bold mb-6 text-blue-700 text-center">Order Options</h2>
+                <div className="flex flex-col gap-3">
+                  <button 
+                    onClick={handleGenerateInvoice}
+                    className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-blue-500/50 transform hover:scale-105 active:scale-95"
+                  >
+                    📄 Sales Tax Invoice
+                  </button>
+                  <button 
+                    onClick={handleGenerateBill}
+                    className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-purple-500/50 transform hover:scale-105 active:scale-95"
+                  >
+                    📃 Generate Bill
+                  </button>
+                  <button 
+                    onClick={handleRecordPayment}
+                    className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-green-500/50 transform hover:scale-105 active:scale-95"
+                  >
+                    💰 Record Payment
+                  </button>
+                  <button 
+                    onClick={() => setShowOptionsModal(false)}
+                    className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-red-500/50 transform hover:scale-105 active:scale-95 mt-2"
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
             </div>
           )}
