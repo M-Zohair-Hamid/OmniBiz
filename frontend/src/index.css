@@ -57,9 +57,79 @@ code {
   color: white;
 }
 
+table {
+  background-color: transparent !important;
+}
+
+thead {
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+thead tr {
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+thead th {
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+tbody {
+  background-color: transparent !important;
+}
+
+tbody tr {
+  background-color: transparent !important;
+}
+
+tbody td {
+  background-color: transparent !important;
+}
+
+tr {
+  background-color: transparent !important;
+}
+
+td {
+  background-color: transparent !important;
+}
+
+th {
+  background-color: transparent !important;
+}
+
+tbody tr:hover {
+  background-color: rgba(255, 165, 0, 0.1) !important;
+}
+
 .sidebar {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #7f1d1d 0%, #dc2626 50%, #991b1b 100%);
+}
+
+input[type="text"],
+input[type="email"],
+input[type="number"],
+input[type="date"],
+select,
+textarea {
+  color: black !important;
+}
+
+input[type="text"]::placeholder,
+input[type="email"]::placeholder,
+input[type="number"]::placeholder,
+input[type="date"]::placeholder,
+textarea::placeholder {
+  color: #666 !important;
+}
+
+/* Override Tailwind gradient backgrounds on thead */
+thead.bg-gradient-to-r {
+  background-image: none !important;
+  background-color: transparent !important;
 }
 
 .dashboard-bg {

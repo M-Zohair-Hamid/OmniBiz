@@ -57,10 +57,9 @@ const ReportsPage = () => {
 
   if (loading || !reportData) {
     return (
-      <div className="flex min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-blue-100" style={{ backgroundImage: 'url(/imgs/1.jpg)', backgroundSize: 'cover', backgroundAttachment: 'fixed', backgroundPosition: 'center' }}>
-        <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+      <div className="flex min-h-screen bg-gradient-to-br from-orange-600 via-orange-500 to-red-700">
         <Sidebar companyName={user?.full_name || 'User'} />
-        <div className="flex-1 ml-64 p-8 relative z-10"><div className="text-center text-blue-600 font-semibold">Loading reports...</div></div>
+        <div className="flex-1 ml-64 p-8 relative z-10"><div className="text-center text-orange-600 font-semibold">Loading reports...</div></div>
       </div>
     );
   }
@@ -84,19 +83,19 @@ const ReportsPage = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-blue-100" style={{ backgroundImage: 'url(/imgs/1.jpg)', backgroundSize: 'cover', backgroundAttachment: 'fixed', backgroundPosition: 'center' }}>
-      <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+    <div className="flex min-h-screen bg-gradient-to-br from-orange-600 via-orange-500 to-red-700 relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-amber-900 via-red-800 to-red-900 opacity-80"></div>
       <Sidebar companyName={user?.full_name || 'User'} />
       
       <div className="flex-1 ml-64 relative z-10">
         <div className="p-8">
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent mb-8">Reports & Analytics</h1>
+          <h1 className="text-5xl font-bold text-white mb-8">Reports & Analytics</h1>
 
           {/* Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-2xl shadow-glass-lg p-6 border border-white border-opacity-30 hover:bg-opacity-60 transition-all duration-300 hover:shadow-xl hover:scale-105 hover:-translate-y-1 cursor-pointer transform">
-              <h3 className="text-blue-600 text-sm font-bold mb-3 uppercase tracking-wide">Total Sales</h3>
-              <p className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">₨ {reportData.total_sales.toLocaleString('en-PK', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+              <h3 className="text-orange-600 text-sm font-bold mb-3 uppercase tracking-wide">Total Sales</h3>
+              <p className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-orange-700 bg-clip-text text-transparent">₨ {reportData.total_sales.toLocaleString('en-PK', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
             </div>
             <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-2xl shadow-glass-lg p-6 border border-white border-opacity-30 hover:bg-opacity-60 transition-all duration-300 hover:shadow-xl hover:scale-105 hover:-translate-y-1 cursor-pointer transform">
               <h3 className="text-red-600 text-sm font-bold mb-3 uppercase tracking-wide">Pending Payments</h3>
@@ -112,8 +111,8 @@ const ReportsPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-2xl shadow-glass-lg p-6 border border-white border-opacity-30">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">Buyer-Wise Sales</h2>
-                <button onClick={() => exportChartToImage('buyerChart', 'buyer-sales.png')} className="px-2 py-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg text-xs font-bold transition-all duration-200 hover:shadow-lg transform hover:scale-105 active:scale-95">📊 PNG</button>
+                <h2 className="text-lg font-bold text-black">Buyer-Wise Sales</h2>
+                <button onClick={() => exportChartToImage('buyerChart', 'buyer-sales.png')} className="px-2 py-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-black rounded-lg text-xs font-bold transition-all duration-200 hover:shadow-lg transform hover:scale-105 active:scale-95">📋 PNG</button>
               </div>
               <div id="buyerChart">
                 <Bar data={buyerChartData} options={{ responsive: true }} />
@@ -121,8 +120,8 @@ const ReportsPage = () => {
             </div>
             <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-2xl shadow-glass-lg p-6 border border-white border-opacity-30">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">Item-Wise Sales</h2>
-                <button onClick={() => exportChartToImage('itemChart', 'item-sales.png')} className="px-2 py-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg text-xs font-bold transition-all duration-200 hover:shadow-lg transform hover:scale-105 active:scale-95">📊 PNG</button>
+                <h2 className="text-lg font-bold text-black">Item-Wise Sales</h2>
+                <button onClick={() => exportChartToImage('itemChart', 'item-sales.png')} className="px-2 py-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-black rounded-lg text-xs font-bold transition-all duration-200 hover:shadow-lg transform hover:scale-105 active:scale-95">📊 PNG</button>
               </div>
               <div id="itemChart">
                 <Bar data={itemChartData} options={{ responsive: true }} />
@@ -134,24 +133,24 @@ const ReportsPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-2xl shadow-glass-lg p-6 border border-white border-opacity-30">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">Buyer-Wise Summary</h2>
-                <button onClick={() => exportChartToImage('buyerSummaryTable', 'buyer-summary.png')} className="px-2 py-1 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-lg text-xs font-bold transition-all duration-200 hover:shadow-lg transform hover:scale-105 active:scale-95">🖼️ PNG</button>
+                <h2 className="text-lg font-bold text-black">Buyer-Wise Summary</h2>
+                <button onClick={() => exportChartToImage('buyerSummaryTable', 'buyer-summary.png')} className="px-2 py-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-black rounded-lg text-xs font-bold transition-all duration-200 hover:shadow-lg transform hover:scale-105 active:scale-95">🖼️ PNG</button>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-gradient-to-r from-blue-50 to-purple-50 border-b border-blue-200">
                     <tr>
-                      <th className="px-3 py-2 text-left font-bold text-blue-700">Buyer</th>
-                      <th className="px-3 py-2 text-left font-bold text-blue-700">Orders</th>
-                      <th className="px-3 py-2 text-left font-bold text-blue-700">Total</th>
+                      <th className="px-3 py-2 text-left font-bold text-black">Buyer</th>
+                      <th className="px-3 py-2 text-left font-bold text-black">Orders</th>
+                      <th className="px-3 py-2 text-left font-bold text-black">Total</th>
                     </tr>
                   </thead>
                   <tbody>
                     {buyerData.map((buyer, idx) => (
                       <tr key={idx} className="border-b border-blue-100 hover:bg-blue-50 hover:bg-opacity-50 transition-all duration-200 hover:scale-100 hover:shadow-md cursor-pointer">
-                        <td className="px-3 py-2 font-semibold text-gray-800">{buyer.buyer_name}</td>
-                        <td className="px-3 py-2 text-gray-700">{buyer.order_count}</td>
-                        <td className="px-3 py-2 font-bold text-blue-600">₨ {buyer.total_orders.toLocaleString('en-PK', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td className="px-3 py-2 font-semibold text-black">{buyer.buyer_name}</td>
+                        <td className="px-3 py-2 text-black">{buyer.order_count}</td>
+                        <td className="px-3 py-2 font-bold text-black">₨ {buyer.total_orders.toLocaleString('en-PK', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -161,24 +160,24 @@ const ReportsPage = () => {
 
             <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-2xl shadow-glass-lg p-6 border border-white border-opacity-30">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">Item-Wise Summary</h2>
-                <button onClick={() => exportChartToImage('itemSummaryTable', 'item-summary.png')} className="px-2 py-1 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-lg text-xs font-bold transition-all duration-200 hover:shadow-lg transform hover:scale-105 active:scale-95">🖼️ PNG</button>
+                <h2 className="text-lg font-bold text-black">Item-Wise Summary</h2>
+                <button onClick={() => exportChartToImage('itemSummaryTable', 'item-summary.png')} className="px-2 py-1 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-black rounded-lg text-xs font-bold transition-all duration-200 hover:shadow-lg transform hover:scale-105 active:scale-95">🖼️ PNG</button>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-gradient-to-r from-blue-50 to-purple-50 border-b border-blue-200">
                     <tr>
-                      <th className="px-3 py-2 text-left font-bold text-blue-700">Item</th>
-                      <th className="px-3 py-2 text-left font-bold text-blue-700">Qty</th>
-                      <th className="px-3 py-2 text-left font-bold text-blue-700">Value</th>
+                      <th className="px-3 py-2 text-left font-bold text-black">Item</th>
+                      <th className="px-3 py-2 text-left font-bold text-black">Qty</th>
+                      <th className="px-3 py-2 text-left font-bold text-black">Value</th>
                     </tr>
                   </thead>
                   <tbody>
                     {itemData.map((item, idx) => (
                       <tr key={idx} className="border-b border-blue-100 hover:bg-blue-50 hover:bg-opacity-50 transition-all duration-200 hover:scale-100 hover:shadow-md cursor-pointer">
-                        <td className="px-3 py-2 font-semibold text-gray-800">{item.item_name}</td>
-                        <td className="px-3 py-2 text-gray-700">{item.total_quantity}</td>
-                        <td className="px-3 py-2 font-bold text-blue-600">₨ {item.total_value.toLocaleString('en-PK', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td className="px-3 py-2 font-semibold text-black">{item.item_name}</td>
+                        <td className="px-3 py-2 text-black">{item.total_quantity}</td>
+                        <td className="px-3 py-2 font-bold text-black">₨ {item.total_value.toLocaleString('en-PK', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                       </tr>
                     ))}
                   </tbody>

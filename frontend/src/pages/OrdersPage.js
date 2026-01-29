@@ -53,7 +53,7 @@ const OrdersPage = () => {
     const pattern = new RegExp(`(${escapeRegExp(term)})`, 'gi');
     return value.split(pattern).map((part, idx) => {
       const match = part.toLowerCase() === term.toLowerCase();
-      return match ? <mark key={idx} className="bg-yellow-200 text-black px-0.5 rounded">{part}</mark> : part;
+      return match ? <mark key={idx} className="bg-yellow-300 text-gray-900 px-0.5 rounded">{part}</mark> : part;
     });
   };
 
@@ -346,68 +346,68 @@ const OrdersPage = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-blue-100" style={{ backgroundImage: 'url(/imgs/1.jpg)', backgroundSize: 'cover', backgroundAttachment: 'fixed', backgroundPosition: 'center' }}>
-      <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+    <div className="flex min-h-screen bg-gradient-to-br from-orange-600 via-orange-500 to-red-700 relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-amber-900 via-red-800 to-red-900 opacity-80"></div>
       <Sidebar companyName={user?.full_name || 'User'} />
       
       <div className="flex-1 ml-64 relative z-10">
         <div className="p-8">
           <div className="flex justify-between items-center mb-8">
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">Orders Management</h1>
-            <button onClick={handleAddOrder} className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-bold transition-all duration-200 shadow-lg hover:shadow-blue-500/50 transform hover:scale-105 active:scale-95 border border-blue-400 border-opacity-30">+ New Order</button>
+            <h1 className="text-5xl font-bold text-white">Orders Management</h1>
+            <button onClick={handleAddOrder} className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white px-6 py-3 rounded-xl font-bold transition-all duration-200 shadow-lg hover:shadow-orange-500/50 transform hover:scale-105 active:scale-95 border border-orange-400 border-opacity-30">+ New Order</button>
           </div>
 
           {/* Search */}
           <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-2xl shadow-glass-lg border border-white border-opacity-30 p-4 mb-6">
             <div className="flex flex-col md:flex-row md:items-end gap-3">
               <div className="flex-1">
-                <label className="block text-blue-700 font-bold mb-1">Search</label>
+                <label className="block text-orange-700 font-bold mb-1">Search</label>
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Buyer, order #, date (dd-mm-yyyy), month (01), or year (2026)"
-                  className="w-full px-3 py-2 backdrop-blur-sm bg-white bg-opacity-40 border border-blue-200 rounded-lg focus:border-blue-400"
+                  className="w-full px-3 py-2 backdrop-blur-sm bg-white bg-opacity-40 border border-orange-200 rounded-lg focus:border-orange-400"
                 />
               </div>
               <div className="flex gap-2 md:justify-end">
-                <button onClick={() => applyFilters(orders, searchTerm)} className="flex-1 md:flex-none px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg font-semibold shadow-md">Apply</button>
-                <button onClick={() => { setSearchTerm(''); applyFilters(orders, ''); }} className="flex-1 md:flex-none px-4 py-2 bg-gray-200 hover:bg-gray-300 text-black rounded-lg font-semibold">Clear</button>
+                <button onClick={() => applyFilters(orders, searchTerm)} className="flex-1 md:flex-none px-4 py-2 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white rounded-lg font-semibold shadow-md">Apply</button>
+                <button onClick={() => { setSearchTerm(''); applyFilters(orders, ''); }} className="flex-1 md:flex-none px-4 py-2 bg-gray-400 hover:bg-gray-500 text-white rounded-lg font-semibold">Clear</button>
               </div>
             </div>
           </div>
 
           {/* Orders Table */}
           <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-2xl shadow-glass-lg border border-white border-opacity-30">
-            {loading ? <div className="p-8 text-center">Loading...</div> : filteredOrders.length === 0 ? <div className="p-8 text-center text-gray-600">No orders found</div> : (
+            {loading ? <div className="p-8 text-center text-white">Loading...</div> : filteredOrders.length === 0 ? <div className="p-8 text-center text-gray-200">No orders found</div> : (
               <>
-                <div className="flex justify-end gap-2 p-4 bg-gradient-to-r from-blue-50 to-purple-50 border-b border-blue-200">
+                <div className="flex justify-end gap-2 p-4 border-b border-red-600">
                   <button onClick={() => exportTableToPDF('ordersTable', 'orders.pdf')} className="px-3 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg text-xs font-bold transition-all duration-200 hover:shadow-lg transform hover:scale-105 active:scale-95">📄 PDF</button>
-                  <button onClick={() => exportChartToImage('ordersTable', 'orders.png')} className="px-3 py-2 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-lg text-xs font-bold transition-all duration-200 hover:shadow-lg transform hover:scale-105 active:scale-95">🖼️ PNG</button>
+                  <button onClick={() => exportChartToImage('ordersTable', 'orders.png')} className="px-3 py-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg text-xs font-bold transition-all duration-200 hover:shadow-lg transform hover:scale-105 active:scale-95">🖼️ PNG</button>
                 </div>
                 <div className="overflow-x-auto">
                   <table id="ordersTable" className="w-full text-sm">
-                    <thead className="bg-gradient-to-r from-blue-50 to-purple-50 border-b border-blue-200">
+                    <thead className="border-b border-red-600">
                       <tr>
-                        <th className="px-4 py-2 text-left font-bold text-blue-700">Order #</th>
-                        <th className="px-4 py-2 text-left font-bold text-blue-700">Buyer</th>
-                        <th className="px-4 py-2 text-left font-bold text-blue-700">Date</th>
-                        <th className="px-4 py-2 text-left font-bold text-blue-700">Total</th>
-                        <th className="px-4 py-2 text-left font-bold text-blue-700">Status</th>
-                        <th className="px-4 py-2 text-left font-bold text-blue-700">Actions</th>
+                        <th className="px-4 py-2 text-left font-bold text-red-700">Order #</th>
+                        <th className="px-4 py-2 text-left font-bold text-red-700">Buyer</th>
+                        <th className="px-4 py-2 text-left font-bold text-red-700">Date</th>
+                        <th className="px-4 py-2 text-left font-bold text-red-700">Total</th>
+                        <th className="px-4 py-2 text-left font-bold text-red-700">Status</th>
+                        <th className="px-4 py-2 text-left font-bold text-red-700">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredOrders.map(order => (
-                        <tr key={order.id} className="border-b border-blue-100 hover:bg-blue-50 hover:bg-opacity-50 transition-all duration-200 hover:scale-100 hover:shadow-md cursor-pointer">
-                          <td className="px-4 py-2 font-bold text-blue-700">{highlightText(order.order_number)}</td>
+                        <tr key={order.id} className="border-b border-red-600 hover:bg-orange-50 hover:bg-opacity-50 transition-all duration-200 hover:scale-100 hover:shadow-md cursor-pointer">
+                          <td className="px-4 py-2 font-bold text-black">{highlightText(order.order_number)}</td>
                           <td className="px-4 py-2 text-black font-semibold">{highlightText(order.buyer_name)}</td>
                           <td className="px-4 py-2 text-black font-semibold">{highlightText(formatDate(order.order_date))}</td>
                           <td className="px-4 py-2 font-semibold text-black">₨ {order.total_amount.toLocaleString('en-PK', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                           <td className="px-4 py-2"><span className="bg-yellow-300 bg-opacity-30 text-yellow-800 border border-yellow-300 border-opacity-50 px-2 py-1 rounded text-xs font-bold">{highlightText(order.status)}</span></td>
                           <td className="px-4 py-2">
                             <div className="flex gap-2 items-center">
-                              <button onClick={() => handleEditOrder(order)} className="bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 transform hover:scale-105 active:scale-95">Edit</button>
+                              <button onClick={() => handleEditOrder(order)} className="bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 transform hover:scale-105 active:scale-95">Edit</button>
                               <button onClick={() => handleDeleteOrder(order.id)} className="bg-gradient-to-r from-red-400 to-red-500 hover:from-red-500 hover:to-red-600 text-white px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 transform hover:scale-105 active:scale-95">Delete</button>
                               <button onClick={() => handleOpenOptions(order)} className="bg-gradient-to-r from-green-400 to-green-500 hover:from-green-500 hover:to-green-600 text-white px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 transform hover:scale-105 active:scale-95">Options</button>
                             </div>
@@ -418,11 +418,11 @@ const OrdersPage = () => {
                   </table>
                 </div>
                 {(!searchTerm.trim()) && (
-                  <div className="flex justify-between items-center p-4 bg-gradient-to-r from-blue-50 to-purple-50">
-                    <span className="text-gray-600">Page {currentPage} of {totalPages}</span>
+                  <div className="flex justify-between items-center p-4">
+                    <span className="text-black">Page {currentPage} of {totalPages}</span>
                     <div className="flex gap-2">
-                      <button onClick={() => fetchOrders(currentPage - 1)} disabled={currentPage === 1} className="px-4 py-2 bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 disabled:opacity-50 disabled:from-gray-300 disabled:to-gray-300 text-white rounded-lg font-semibold transition-all duration-200">Previous</button>
-                      <button onClick={() => fetchOrders(currentPage + 1)} disabled={currentPage === totalPages} className="px-4 py-2 bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 disabled:opacity-50 disabled:from-gray-300 disabled:to-gray-300 text-white rounded-lg font-semibold transition-all duration-200">Next</button>
+                      <button onClick={() => fetchOrders(currentPage - 1)} disabled={currentPage === 1} className="px-4 py-2 bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 disabled:opacity-50 disabled:from-gray-300 disabled:to-gray-300 text-white rounded-lg font-semibold transition-all duration-200">Previous</button>
+                      <button onClick={() => fetchOrders(currentPage + 1)} disabled={currentPage === totalPages} className="px-4 py-2 bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 disabled:opacity-50 disabled:from-gray-300 disabled:to-gray-300 text-white rounded-lg font-semibold transition-all duration-200">Next</button>
                     </div>
                   </div>
                 )}
@@ -434,27 +434,27 @@ const OrdersPage = () => {
           {showForm && (
             <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
               <div className="backdrop-blur-xl bg-white bg-opacity-40 border border-white border-opacity-30 rounded-2xl shadow-glass-lg p-8 max-w-5xl w-full max-h-[90vh] overflow-y-auto">
-                <h2 className="text-2xl font-bold mb-4 text-blue-700">{editingId ? 'Edit Order' : 'New Order'}</h2>
+                <h2 className="text-2xl font-bold mb-4 text-black">{editingId ? 'Edit Order' : 'New Order'}</h2>
                 <form onSubmit={handleSubmit}>
                   <div className="grid grid-cols-2 gap-4 mb-4">
                     <div>
-                      <label className="block text-blue-700 font-bold mb-2">Buyer *</label>
-                      <select value={String(formData.buyer_id)} onChange={(e) => setFormData({...formData, buyer_id: e.target.value})} className="w-full px-3 py-2 backdrop-blur-sm bg-white bg-opacity-40 border border-blue-200 rounded-lg focus:border-blue-400">
+                      <label className="block text-orange-700 font-bold mb-2">Buyer *</label>
+                      <select value={String(formData.buyer_id)} onChange={(e) => setFormData({...formData, buyer_id: e.target.value})} className="w-full px-3 py-2 backdrop-blur-sm bg-white bg-opacity-40 border border-orange-200 rounded-lg focus:border-orange-400">
                         <option value="">Select buyer</option>
                         {buyers.map(b => <option key={b.id} value={String(b.id)}>{b.company_name}</option>)}
                       </select>
                     </div>
                     <div>
-                      <label className="block text-blue-700 font-bold mb-2">Company Name</label>
-                      <input type="text" value={formData.buyer_id ? (buyers.find(b => b.id === parseInt(formData.buyer_id))?.company_name || '') : ''} readOnly className="w-full px-3 py-2 backdrop-blur-sm bg-white bg-opacity-40 border border-blue-200 rounded-lg focus:border-blue-400 bg-gray-100" />
+                      <label className="block text-orange-700 font-bold mb-2">Company Name</label>
+                      <input type="text" value={formData.buyer_id ? (buyers.find(b => b.id === parseInt(formData.buyer_id))?.company_name || '') : ''} readOnly className="w-full px-3 py-2 backdrop-blur-sm bg-white bg-opacity-40 border border-orange-200 rounded-lg focus:border-orange-400 bg-gray-100" />
                     </div>
                     <div>
-                      <label className="block text-blue-700 font-bold mb-2">Order Date</label>
-                      <input type="date" value={formData.order_date} onChange={(e) => setFormData({...formData, order_date: e.target.value})} className="w-full px-3 py-2 backdrop-blur-sm bg-white bg-opacity-40 border border-blue-200 rounded-lg focus:border-blue-400" />
+                      <label className="block text-orange-700 font-bold mb-2">Order Date</label>
+                      <input type="date" value={formData.order_date} onChange={(e) => setFormData({...formData, order_date: e.target.value})} className="w-full px-3 py-2 backdrop-blur-sm bg-white bg-opacity-40 border border-orange-200 rounded-lg focus:border-orange-400" />
                     </div>
                     <div>
-                      <label className="block text-blue-700 font-bold mb-2">Tax Rate (%)</label>
-                      <input type="number" step="0.01" value={formData.tax_rate} onChange={(e) => setFormData({...formData, tax_rate: parseFloat(e.target.value)})} className="w-full px-3 py-2 backdrop-blur-sm bg-white bg-opacity-40 border border-blue-200 rounded-lg focus:border-blue-400" />
+                      <label className="block text-orange-700 font-bold mb-2">Tax Rate (%)</label>
+                      <input type="number" step="0.01" value={formData.tax_rate} onChange={(e) => setFormData({...formData, tax_rate: parseFloat(e.target.value)})} className="w-full px-3 py-2 backdrop-blur-sm bg-white bg-opacity-40 border border-orange-200 rounded-lg focus:border-orange-400" />
                     </div>
                   </div>
 
@@ -472,13 +472,13 @@ const OrdersPage = () => {
                       </div>
                     ))}
                   </div>
-                  <button type="button" onClick={addItemRow} className="mb-4 text-black hover:text-gray-800 font-semibold text-sm">+ Add Item</button>
+                  <button type="button" onClick={addItemRow} className="mb-4 text-white hover:text-gray-200 font-semibold text-sm">+ Add Item</button>
 
                   <div className="flex gap-4">
                     <button 
                       type="submit" 
                       disabled={submitting}
-                      className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-4 py-2 rounded font-semibold transition-all"
+                      className="flex-1 bg-gradient-to-r from-orange-600 to-red-700 hover:from-orange-700 hover:to-red-800 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-4 py-2 rounded font-semibold transition-all"
                     >
                       {submitting ? 'Saving...' : (editingId ? 'Update Order' : 'Create Order')}
                     </button>
@@ -493,17 +493,17 @@ const OrdersPage = () => {
           {showOptionsModal && selectedOrder && (
             <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
               <div className="backdrop-blur-xl bg-white bg-opacity-40 border border-white border-opacity-30 rounded-2xl shadow-glass-lg p-8 max-w-md w-full">
-                <h2 className="text-2xl font-bold mb-6 text-blue-700 text-center">Order Options</h2>
+                <h2 className="text-2xl font-bold mb-6 text-orange-700 text-center">Order Options</h2>
                 <div className="flex flex-col gap-3">
                   <button 
                     onClick={handleGenerateInvoice}
-                    className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-blue-500/50 transform hover:scale-105 active:scale-95"
+                    className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-orange-500/50 transform hover:scale-105 active:scale-95"
                   >
                     📄 Sales Tax Invoice
                   </button>
                   <button 
                     onClick={handleGenerateBill}
-                    className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-purple-500/50 transform hover:scale-105 active:scale-95"
+                    className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-orange-500/50 transform hover:scale-105 active:scale-95"
                   >
                     📃 Generate Bill
                   </button>

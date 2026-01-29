@@ -88,26 +88,26 @@ const LedgerPage = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-blue-100" style={{ backgroundImage: 'url(/imgs/1.jpg)', backgroundSize: 'cover', backgroundAttachment: 'fixed', backgroundPosition: 'center' }}>
-      <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+    <div className="flex min-h-screen bg-gradient-to-br from-orange-600 via-orange-500 to-red-700 relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-amber-900 via-red-800 to-red-900 opacity-80"></div>
       <Sidebar companyName={user?.full_name || 'User'} />
       
       <div className="flex-1 ml-64 relative z-10">
         <div className="p-8">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent mb-2">Party Ledger</h1>
-            <p className="text-gray-600">View detailed transaction history for each buyer/party</p>
+            <h1 className="text-5xl font-bold text-white mb-2">Party Ledger</h1>
+            <p className="text-gray-200">View detailed transaction history for each buyer/party</p>
           </div>
 
           {/* Filters Card */}
           <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-2xl shadow-glass-lg border border-white border-opacity-30 p-6 mb-6">
-            <h2 className="text-xl font-bold text-blue-600 mb-4">Generate Ledger</h2>
+            <h2 className="text-xl font-bold text-orange-600 mb-4">Generate Ledger</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               {/* Buyer Selection */}
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Select Buyer/Party *</label>
+                <label className="block text-sm font-bold text-white mb-2">Select Buyer/Party *</label>
                 <select
                   value={selectedBuyer}
                   onChange={(e) => setSelectedBuyer(e.target.value)}
@@ -125,7 +125,7 @@ const LedgerPage = () => {
 
               {/* Start Date */}
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Start Date (Optional)</label>
+                <label className="block text-sm font-bold text-white mb-2">Start Date (Optional)</label>
                 <input
                   type="date"
                   value={startDate}
@@ -136,7 +136,7 @@ const LedgerPage = () => {
 
               {/* End Date */}
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">End Date (Optional)</label>
+                <label className="block text-sm font-bold text-white mb-2">End Date (Optional)</label>
                 <input
                   type="date"
                   value={endDate}
@@ -150,7 +150,7 @@ const LedgerPage = () => {
                 <button
                   onClick={handleGenerateLedger}
                   disabled={loading}
-                  className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-2 rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-blue-500/50 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white px-6 py-2 rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-orange-500/50 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Generating...' : '📊 Generate'}
                 </button>
@@ -165,17 +165,17 @@ const LedgerPage = () => {
               <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-2xl shadow-glass-lg border border-white border-opacity-30 p-6 mb-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <h3 className="text-lg font-bold text-blue-600 mb-3">Account Details</h3>
-                    <p className="text-gray-700"><strong>Company:</strong> {ledgerData.buyer.company_name}</p>
-                    <p className="text-gray-700"><strong>Address:</strong> {ledgerData.buyer.address || 'N/A'}, {ledgerData.buyer.city || ''}</p>
-                    <p className="text-gray-700"><strong>Phone:</strong> {ledgerData.buyer.phone}</p>
-                    <p className="text-gray-700"><strong>Email:</strong> {ledgerData.buyer.email}</p>
+                    <h3 className="text-lg font-bold text-orange-600 mb-3">Account Details</h3>
+                    <p className="text-white"><strong>Company:</strong> {ledgerData.buyer.company_name}</p>
+                    <p className="text-white"><strong>Address:</strong> {ledgerData.buyer.address || 'N/A'}, {ledgerData.buyer.city || ''}</p>
+                    <p className="text-white"><strong>Phone:</strong> {ledgerData.buyer.phone}</p>
+                    <p className="text-white"><strong>Email:</strong> {ledgerData.buyer.email}</p>
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-blue-600 mb-3">Tax Information</h3>
-                    <p className="text-gray-700"><strong>GST Number:</strong> {ledgerData.buyer.gst_number || 'N/A'}</p>
-                    <p className="text-gray-700"><strong>NTN Number:</strong> {ledgerData.buyer.ntn_number || 'N/A'}</p>
-                    <p className="text-gray-700 mt-4"><strong>Date Range:</strong> {ledgerData.date_range.start !== 'All' ? `${ledgerData.date_range.start} to ${ledgerData.date_range.end}` : 'All Transactions'}</p>
+                    <h3 className="text-lg font-bold text-orange-600 mb-3">Tax Information</h3>
+                    <p className="text-white"><strong>GST Number:</strong> {ledgerData.buyer.gst_number || 'N/A'}</p>
+                    <p className="text-white"><strong>NTN Number:</strong> {ledgerData.buyer.ntn_number || 'N/A'}</p>
+                    <p className="text-white mt-4"><strong>Date Range:</strong> {ledgerData.date_range.start !== 'All' ? `${ledgerData.date_range.start} to ${ledgerData.date_range.end}` : 'All Transactions'}</p>
                   </div>
                 </div>
               </div>
@@ -190,7 +190,7 @@ const LedgerPage = () => {
                 </button>
                 <button
                   onClick={handleExportPNG}
-                  className="px-5 py-2 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-lg text-sm font-bold transition-all duration-200 hover:shadow-lg transform hover:scale-105 active:scale-95"
+                  className="px-5 py-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg text-sm font-bold transition-all duration-200 hover:shadow-lg transform hover:scale-105 active:scale-95"
                 >
                   🖼️ Export PNG
                 </button>
@@ -200,7 +200,7 @@ const LedgerPage = () => {
               <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-2xl shadow-glass-lg border border-white border-opacity-30 overflow-hidden mb-6">
                 <div className="overflow-x-auto">
                   <table className="w-full" id="ledgerTable">
-                    <thead className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+                    <thead className="bg-gradient-to-r from-orange-500 to-red-600 text-white">
                       <tr>
                         <th className="px-4 py-3 text-left text-sm font-bold">Date</th>
                         <th className="px-4 py-3 text-left text-sm font-bold">Bill No</th>
@@ -222,7 +222,7 @@ const LedgerPage = () => {
                           <td className="px-4 py-3 text-sm text-black font-semibold">
                             {formatDate(entry.date)}
                           </td>
-                          <td className="px-4 py-3 text-sm font-medium text-blue-600">
+                          <td className="px-4 py-3 text-sm font-medium text-orange-600">
                             {entry.invoice_number}
                           </td>
                           <td className="px-4 py-3 text-sm text-black font-semibold">
@@ -240,7 +240,7 @@ const LedgerPage = () => {
                           <td className="px-4 py-3 text-sm text-right text-black font-semibold">
                             {entry.tax > 0 ? `₨ ${entry.tax.toLocaleString('en-PK', {minimumFractionDigits: 2})}` : '-'}
                           </td>
-                          <td className={`px-4 py-3 text-sm text-right font-bold ${entry.type === 'credit' ? 'text-green-600' : 'text-blue-600'}`}>
+                          <td className={`px-4 py-3 text-sm text-right font-bold ${entry.type === 'credit' ? 'text-green-600' : 'text-orange-600'}`}>
                             {entry.type === 'credit' ? '-' : ''}₨ {entry.total.toLocaleString('en-PK', {minimumFractionDigits: 2})}
                           </td>
                           <td className={`px-4 py-3 text-sm text-right font-bold ${entry.balance > 0 ? 'text-red-600' : 'text-green-600'}`}>
@@ -255,17 +255,17 @@ const LedgerPage = () => {
 
               {/* Summary Card */}
               <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-2xl shadow-glass-lg border border-white border-opacity-30 p-6">
-                <h3 className="text-xl font-bold text-blue-600 mb-4">Summary</h3>
+                <h3 className="text-xl font-bold text-orange-600 mb-4">Summary</h3>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="bg-blue-50 bg-opacity-60 rounded-lg p-4">
+                  <div className="bg-orange-50 bg-opacity-60 rounded-lg p-4">
                     <p className="text-sm text-gray-600 mb-1">Opening Balance</p>
-                    <p className="text-2xl font-bold text-blue-600">
+                    <p className="text-2xl font-bold text-orange-600">
                       ₨ {ledgerData.summary.opening_balance.toLocaleString('en-PK', {minimumFractionDigits: 2})}
                     </p>
                   </div>
-                  <div className="bg-blue-50 bg-opacity-60 rounded-lg p-4">
+                  <div className="bg-orange-50 bg-opacity-60 rounded-lg p-4">
                     <p className="text-sm text-gray-600 mb-1">Total Sales (Debits)</p>
-                    <p className="text-2xl font-bold text-blue-600">
+                    <p className="text-2xl font-bold text-orange-600">
                       ₨ {ledgerData.summary.total_debits.toLocaleString('en-PK', {minimumFractionDigits: 2})}
                     </p>
                   </div>
@@ -290,7 +290,7 @@ const LedgerPage = () => {
           {!ledgerData && !loading && (
             <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-2xl shadow-glass-lg border border-white border-opacity-30 p-12 text-center">
               <div className="text-6xl mb-4">📊</div>
-              <h3 className="text-xl font-bold text-gray-700 mb-2">No Ledger Generated</h3>
+              <h3 className="text-xl font-bold text-white mb-2">No Ledger Generated</h3>
               <p className="text-gray-600">Select a buyer and click "Generate" to view ledger details</p>
             </div>
           )}
