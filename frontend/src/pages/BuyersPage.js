@@ -114,8 +114,8 @@ const BuyersPage = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-orange-600 via-orange-500 to-red-700 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-amber-900 via-red-800 to-red-900 opacity-80"></div>
+    <div className="flex min-h-screen bg-gradient-to-br from-[#17144B] via-[#3A3F8C] to-[#17144B] relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-[#17144B] via-[#3A3F8C] to-[#17144B] opacity-80"></div>
       <Sidebar companyName={user?.full_name || 'User'} />
       
       <div className="flex-1 ml-64 relative z-10">
@@ -124,7 +124,7 @@ const BuyersPage = () => {
             <h1 className="text-5xl font-bold text-white">Buyers Management</h1>
             <button
               onClick={handleAddBuyer}
-              className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white px-6 py-3 rounded-xl font-bold transition-all duration-200 shadow-lg hover:shadow-orange-500/50 transform hover:scale-105 active:scale-95 border border-orange-400 border-opacity-30"
+              className="bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] text-[#17144B] px-6 py-3 rounded-xl font-bold transition-all duration-200 shadow-lg hover:shadow-[#00D4FF]/50 transform hover:scale-105 active:scale-95 border border-[#00D4FF] border-opacity-30"
             >
               + Add Buyer
             </button>
@@ -137,7 +137,7 @@ const BuyersPage = () => {
               placeholder="Search buyers..."
               value={searchTerm}
               onChange={handleSearch}
-              className="w-full px-4 py-3 backdrop-blur-sm bg-white bg-opacity-40 border-2 border-white border-opacity-30 rounded-xl focus:outline-none focus:border-orange-300 focus:bg-opacity-60 transition-all duration-200 text-gray-800 placeholder-gray-500"
+              className="w-full px-4 py-3 backdrop-blur-sm bg-white bg-opacity-40 border-2 border-white border-opacity-30 rounded-xl focus:outline-none focus:border-[#00D4FF] focus:bg-opacity-60 transition-all duration-200 text-gray-800 placeholder-gray-500"
             />
           </div>
 
@@ -149,36 +149,36 @@ const BuyersPage = () => {
               <div className="p-8 text-center text-gray-600">No buyers found</div>
             ) : (
               <>
-                <div className="flex justify-end gap-2 p-4 border-b border-red-600">
-                  <button onClick={() => exportTableToPDF('buyersTable', 'buyers.pdf')} className="px-3 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg text-xs font-bold transition-all duration-200 hover:shadow-lg transform hover:scale-105 active:scale-95">📄 PDF</button>
-                  <button onClick={() => exportChartToImage('buyersTable', 'buyers.png')} className="px-3 py-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg text-xs font-bold transition-all duration-200 hover:shadow-lg transform hover:scale-105 active:scale-95">🖼️ PNG</button>
+                <div className="flex justify-end gap-2 p-4 border-b border-[#17144B]">
+                  <button onClick={() => exportTableToPDF('buyersTable', 'buyers.pdf')} className="px-3 py-2 bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] text-[#17144B] rounded-lg text-xs font-bold transition-all duration-200 hover:shadow-lg transform hover:scale-105 active:scale-95">📄 PDF</button>
+                  <button onClick={() => exportChartToImage('buyersTable', 'buyers.png')} className="px-3 py-2 bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] text-[#17144B] rounded-lg text-xs font-bold transition-all duration-200 hover:shadow-lg transform hover:scale-105 active:scale-95">🖼️ PNG</button>
                 </div>
                 <div className="overflow-x-auto">
                   <table id="buyersTable" className="w-full">
-                    <thead className="border-b border-red-600">
+                    <thead className="border-b border-[#17144B]">
                       <tr>
-                        <th className="px-6 py-3 text-left font-bold text-red-700">Company Name</th>
-                        <th className="px-6 py-3 text-left font-bold text-red-700">Email</th>
-                        <th className="px-6 py-3 text-left font-bold text-red-700">Phone</th>
-                        <th className="px-6 py-3 text-left font-bold text-red-700">Actions</th>
+                        <th className="px-6 py-3 text-left font-bold text-[#17144B]">Company Name</th>
+                        <th className="px-6 py-3 text-left font-bold text-[#17144B]">Email</th>
+                        <th className="px-6 py-3 text-left font-bold text-[#17144B]">Phone</th>
+                        <th className="px-6 py-3 text-left font-bold text-[#17144B]">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {buyers.map(buyer => (
-                        <tr key={buyer.id} className="border-b border-red-600 hover:bg-orange-50 hover:bg-opacity-50 transition-all duration-200 hover:scale-100 hover:shadow-md cursor-pointer">
+                        <tr key={buyer.id} className="border-b border-[#3A3F8C] hover:bg-[#3A3F8C] hover:bg-opacity-50 transition-all duration-200 hover:scale-100 hover:shadow-md cursor-pointer">
                           <td className="px-6 py-3 font-semibold text-black">{buyer.company_name}</td>
                           <td className="px-6 py-3 text-black">{buyer.email}</td>
                           <td className="px-6 py-3 text-black">{buyer.phone}</td>
                           <td className="px-6 py-3">
                             <button
                               onClick={() => handleEditBuyer(buyer)}
-                              className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded mr-2 text-sm transition-all duration-200 hover:scale-105 active:scale-95"
+                              className="bg-[#00D4FF] hover:bg-[#00B8E0] text-[#17144B] px-3 py-1 rounded mr-2 text-sm transition-all duration-200 hover:scale-105 active:scale-95"
                             >
                               Edit
                             </button>
                             <button
                               onClick={() => handleDeleteBuyer(buyer.id)}
-                              className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm transition-all duration-200 hover:scale-105 active:scale-95"
+                              className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-3 py-1 rounded text-sm transition-all duration-200 hover:scale-105 active:scale-95"
                             >
                               Delete
                             </button>
@@ -196,14 +196,14 @@ const BuyersPage = () => {
                     <button
                       onClick={() => fetchBuyers(currentPage - 1, searchTerm)}
                       disabled={currentPage === 1}
-                      className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition-all duration-200 hover:shadow-lg transform hover:scale-105 active:scale-95"
+                      className="px-4 py-2 bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] disabled:opacity-50 disabled:cursor-not-allowed text-[#17144B] rounded-lg font-semibold transition-all duration-200 hover:shadow-lg transform hover:scale-105 active:scale-95"
                     >
                       Previous
                     </button>
                     <button
                       onClick={() => fetchBuyers(currentPage + 1, searchTerm)}
                       disabled={currentPage === totalPages}
-                      className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition-all duration-200 hover:shadow-lg transform hover:scale-105 active:scale-95"
+                      className="px-4 py-2 bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] disabled:opacity-50 disabled:cursor-not-allowed text-[#17144B] rounded-lg font-semibold transition-all duration-200 hover:shadow-lg transform hover:scale-105 active:scale-95"
                     >
                       Next
                     </button>
@@ -221,20 +221,20 @@ const BuyersPage = () => {
                 <form onSubmit={handleSubmit}>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
-                      <label className="block font-bold text-red-600 mb-2">Company Name *</label>
-                      <input type="text" value={formData.company_name} onChange={(e) => setFormData({...formData, company_name: e.target.value})} className="w-full px-4 py-3 border border-red-300 rounded-lg text-base" />
+                      <label className="block font-bold text-[#17144B] mb-2">Company Name *</label>
+                      <input type="text" value={formData.company_name} onChange={(e) => setFormData({...formData, company_name: e.target.value})} className="w-full px-4 py-3 border border-[#3A3F8C] rounded-lg text-base" />
                     </div>
                     <div>
-                      <label className="block font-bold text-red-600 mb-2">GST Number *</label>
-                      <input type="text" value={formData.gst_number} onChange={(e) => setFormData({...formData, gst_number: ensurePrefix(e.target.value, 'GST-')})} className="w-full px-4 py-3 border border-red-300 rounded-lg text-base" placeholder="GST-XXXX-XXXX" />
+                      <label className="block font-bold text-[#17144B] mb-2">GST Number *</label>
+                      <input type="text" value={formData.gst_number} onChange={(e) => setFormData({...formData, gst_number: ensurePrefix(e.target.value, 'GST-')})} className="w-full px-4 py-3 border border-[#3A3F8C] rounded-lg text-base" placeholder="GST-XXXX-XXXX" />
                     </div>
                     <div>
-                      <label className="block font-bold text-red-600 mb-2">NTN Number *</label>
-                      <input type="text" value={formData.ntn_number} onChange={(e) => setFormData({...formData, ntn_number: ensurePrefix(e.target.value, 'NTN-')})} className="w-full px-4 py-3 border border-red-300 rounded-lg text-base" placeholder="NTN-XXXXXXX" />
+                      <label className="block font-bold text-[#17144B] mb-2">NTN Number *</label>
+                      <input type="text" value={formData.ntn_number} onChange={(e) => setFormData({...formData, ntn_number: ensurePrefix(e.target.value, 'NTN-')})} className="w-full px-4 py-3 border border-[#3A3F8C] rounded-lg text-base" placeholder="NTN-XXXXXXX" />
                     </div>
                     <div className="md:col-span-3">
-                      <label className="block font-bold text-red-600 mb-2">Address *</label>
-                      <textarea value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} className="w-full px-4 py-3 border border-red-300 rounded-lg text-base" rows="2" />
+                      <label className="block font-bold text-[#17144B] mb-2">Address *</label>
+                      <textarea value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} className="w-full px-4 py-3 border border-[#3A3F8C] rounded-lg text-base" rows="2" />
                     </div>
                     <div>
                       <label className="block text-gray-700 font-semibold mb-2">Contact Person</label>
@@ -254,8 +254,8 @@ const BuyersPage = () => {
                     </div>
                   </div>
                   <div className="flex gap-4 mt-8">
-                    <button type="submit" className="flex-1 bg-gradient-to-r from-orange-600 to-red-700 hover:from-orange-700 hover:to-red-800 text-white px-4 py-3 rounded-lg font-semibold text-lg">Save</button>
-                    <button type="button" onClick={() => setShowForm(false)} className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-3 rounded-lg font-semibold text-lg">Cancel</button>
+                    <button type="submit" className="flex-1 bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] text-[#17144B] px-4 py-3 rounded-lg font-semibold text-lg">Save</button>
+                    <button type="button" onClick={() => setShowForm(false)} className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-3 rounded-lg font-semibold text-lg transition-all duration-200">Cancel</button>
                   </div>
                 </form>
               </div>

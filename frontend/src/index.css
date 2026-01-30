@@ -106,7 +106,7 @@ tbody tr:hover {
 
 .sidebar {
   min-height: 100vh;
-  background: linear-gradient(135deg, #7f1d1d 0%, #dc2626 50%, #991b1b 100%);
+  background: linear-gradient(135deg, #17144B 0%, #3A3F8C 50%, #17144B 100%);
 }
 
 input[type="text"],

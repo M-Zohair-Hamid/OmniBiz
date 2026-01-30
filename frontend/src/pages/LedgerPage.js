@@ -88,8 +88,8 @@ const LedgerPage = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-orange-600 via-orange-500 to-red-700 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-amber-900 via-red-800 to-red-900 opacity-80"></div>
+    <div className="flex min-h-screen bg-gradient-to-br from-[#17144B] via-[#3A3F8C] to-[#17144B] relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-[#17144B] via-[#3A3F8C] to-[#17144B] opacity-80"></div>
       <Sidebar companyName={user?.full_name || 'User'} />
       
       <div className="flex-1 ml-64 relative z-10">
@@ -102,7 +102,7 @@ const LedgerPage = () => {
 
           {/* Filters Card */}
           <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-2xl shadow-glass-lg border border-white border-opacity-30 p-6 mb-6">
-            <h2 className="text-xl font-bold text-orange-600 mb-4">Generate Ledger</h2>
+            <h2 className="text-xl font-bold text-[#00D4FF] mb-4">Generate Ledger</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               {/* Buyer Selection */}
@@ -150,7 +150,7 @@ const LedgerPage = () => {
                 <button
                   onClick={handleGenerateLedger}
                   disabled={loading}
-                  className="w-full bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white px-6 py-2 rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-orange-500/50 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] text-[#17144B] px-6 py-2 rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-[#00D4FF]/50 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Generating...' : '📊 Generate'}
                 </button>
@@ -165,14 +165,14 @@ const LedgerPage = () => {
               <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-2xl shadow-glass-lg border border-white border-opacity-30 p-6 mb-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <h3 className="text-lg font-bold text-orange-600 mb-3">Account Details</h3>
+                    <h3 className="text-lg font-bold text-[#00D4FF] mb-3">Account Details</h3>
                     <p className="text-white"><strong>Company:</strong> {ledgerData.buyer.company_name}</p>
                     <p className="text-white"><strong>Address:</strong> {ledgerData.buyer.address || 'N/A'}, {ledgerData.buyer.city || ''}</p>
                     <p className="text-white"><strong>Phone:</strong> {ledgerData.buyer.phone}</p>
                     <p className="text-white"><strong>Email:</strong> {ledgerData.buyer.email}</p>
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-orange-600 mb-3">Tax Information</h3>
+                    <h3 className="text-lg font-bold text-[#00D4FF] mb-3">Tax Information</h3>
                     <p className="text-white"><strong>GST Number:</strong> {ledgerData.buyer.gst_number || 'N/A'}</p>
                     <p className="text-white"><strong>NTN Number:</strong> {ledgerData.buyer.ntn_number || 'N/A'}</p>
                     <p className="text-white mt-4"><strong>Date Range:</strong> {ledgerData.date_range.start !== 'All' ? `${ledgerData.date_range.start} to ${ledgerData.date_range.end}` : 'All Transactions'}</p>
@@ -184,13 +184,13 @@ const LedgerPage = () => {
               <div className="flex justify-end gap-3 mb-4">
                 <button
                   onClick={handleExportPDF}
-                  className="px-5 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg text-sm font-bold transition-all duration-200 hover:shadow-lg transform hover:scale-105 active:scale-95"
+                  className="px-5 py-2 bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] text-[#17144B] rounded-lg text-sm font-bold transition-all duration-200 hover:shadow-lg transform hover:scale-105 active:scale-95"
                 >
                   📄 Export PDF
                 </button>
                 <button
                   onClick={handleExportPNG}
-                  className="px-5 py-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg text-sm font-bold transition-all duration-200 hover:shadow-lg transform hover:scale-105 active:scale-95"
+                  className="px-5 py-2 bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] text-[#17144B] rounded-lg text-sm font-bold transition-all duration-200 hover:shadow-lg transform hover:scale-105 active:scale-95"
                 >
                   🖼️ Export PNG
                 </button>
@@ -200,7 +200,7 @@ const LedgerPage = () => {
               <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-2xl shadow-glass-lg border border-white border-opacity-30 overflow-hidden mb-6">
                 <div className="overflow-x-auto">
                   <table className="w-full" id="ledgerTable">
-                    <thead className="bg-gradient-to-r from-orange-500 to-red-600 text-white">
+                    <thead className="bg-gradient-to-r from-[#17144B] to-[#3A3F8C] text-white">
                       <tr>
                         <th className="px-4 py-3 text-left text-sm font-bold">Date</th>
                         <th className="px-4 py-3 text-left text-sm font-bold">Bill No</th>
@@ -222,7 +222,7 @@ const LedgerPage = () => {
                           <td className="px-4 py-3 text-sm text-black font-semibold">
                             {formatDate(entry.date)}
                           </td>
-                          <td className="px-4 py-3 text-sm font-medium text-orange-600">
+                          <td className="px-4 py-3 text-sm font-medium text-[#00D4FF]">
                             {entry.invoice_number}
                           </td>
                           <td className="px-4 py-3 text-sm text-black font-semibold">
@@ -255,17 +255,17 @@ const LedgerPage = () => {
 
               {/* Summary Card */}
               <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-2xl shadow-glass-lg border border-white border-opacity-30 p-6">
-                <h3 className="text-xl font-bold text-orange-600 mb-4">Summary</h3>
+                <h3 className="text-xl font-bold text-[#00D4FF] mb-4">Summary</h3>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="bg-orange-50 bg-opacity-60 rounded-lg p-4">
+                  <div className="bg-[#3A3F8C] bg-opacity-60 rounded-lg p-4">
                     <p className="text-sm text-gray-600 mb-1">Opening Balance</p>
-                    <p className="text-2xl font-bold text-orange-600">
+                    <p className="text-2xl font-bold text-[#00D4FF]">
                       ₨ {ledgerData.summary.opening_balance.toLocaleString('en-PK', {minimumFractionDigits: 2})}
                     </p>
                   </div>
-                  <div className="bg-orange-50 bg-opacity-60 rounded-lg p-4">
+                  <div className="bg-[#3A3F8C] bg-opacity-60 rounded-lg p-4">
                     <p className="text-sm text-gray-600 mb-1">Total Sales (Debits)</p>
-                    <p className="text-2xl font-bold text-orange-600">
+                    <p className="text-2xl font-bold text-[#00D4FF]">
                       ₨ {ledgerData.summary.total_debits.toLocaleString('en-PK', {minimumFractionDigits: 2})}
                     </p>
                   </div>

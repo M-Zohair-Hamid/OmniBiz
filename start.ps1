@@ -89,11 +89,6 @@ if (-not (Test-Path (Join-Path $Frontend 'node_modules'))) {
 Write-Host "[OK] Frontend server starting..." -ForegroundColor Green
 Start-Sleep -Seconds 5
 
-# Open browser to application
-Write-Host "`n=== Opening Application ===" -ForegroundColor Cyan
-Start-Process "http://localhost:3000"
-Write-Host "[OK] Browser opened to http://localhost:3000" -ForegroundColor Green
-
 # Summary
 Write-Host ""
 Write-Host "=============================================" -ForegroundColor Cyan

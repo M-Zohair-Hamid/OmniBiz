@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f8f8f8;
+            padding: 15px;
+            line-height: 1.4;
+        }
+
+        /* Watermark */
+        .watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 999;
+            pointer-events: none;
+            user-select: none;
+            mix-blend-mode: multiply;
+        }
+
+        .watermark img {
+            max-width: 600px;
+            max-height: 600px;
+        }
+
+        .invoice-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        /* Header */
+        .invoice-header {
+            position: relative;
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid rgb(23, 20, 75);
+        }
+
+        .company-logo {
+            position: absolute;
+            left: 0;
+            top: 0;
+            max-width: 100px;
+            max-height: 60px;
+        }
+
+        .company-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .company-info {
+            text-align: center;
+            font-size: 11px;
+        }
+
+        .company-info h1 {
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            color: #17144B;
+            letter-spacing: 2px;
+        }
+
+        .company-info p {
+            margin: 2px 0;
+            color: #333;
+            font-size: 10px;
+        }
+
+        .company-info p.address {
+            font-weight: 600;
+            font-size: 11px;
+        }
+
+        /* Invoice Title */
+        .invoice-title {
+            font-family: 'Montserrat', Arial, sans-serif;
+            text-align: center;
+            font-size: 26px;
+            font-weight: 800;
+            color: #17144B;
+            margin: 15px 0;
+            text-transform: uppercase;
+        }
+
+        /* Two Column Layout */
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .details-section {
+            border: 1px solid #e5e7eb;
+            padding: 12px;
+            border-radius: 4px;
+        }
+
+        .details-section h3 {
+            font-size: 11px;
+            font-weight: bold;
+            color: #17144B;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 5px;
+        }
+
+        .details-section p {
+            font-size: 10px;
+            color: #374151;
+            margin: 3px 0;
+        }
+
+        .details-section .label {
+            font-weight: bold;
+            display: inline-block;
+            width: 80px;
+        }
+
+        /* Table */
+        .invoice-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 10px;
+        }
+
+        .invoice-table thead {
+            background: linear-gradient(135deg, #17144B, #0d0a2e);
+            color: white;
+        }
+
+        .invoice-table th {
+            padding: 10px 8px;
+            text-align: left;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 10px;
+        }
+
+        .invoice-table th.center {
+            text-align: center;
+        }
+
+        .invoice-table th.right {
+            text-align: right;
+        }
+
+        .invoice-table td {
+            padding: 8px;
+            border-bottom: 1px solid #e5e7eb;
+            color: #374151;
+        }
+
+        .invoice-table td.center {
+            text-align: center;
+        }
+
+        .invoice-table td.right {
+            text-align: right;
+        }
+
+        .invoice-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        /* Summary */
+        .summary-section {
+            width: 100%;
+            margin-top: 10px;
+            border: 2px solid #17144B;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            font-size: 11px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .summary-row.subtotal {
+            background: #f9fafb;
+        }
+
+        .summary-row.total {
+            background: linear-gradient(135deg, #17144B, #0d0a2e);
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            border-bottom: none;
+        }
+
+        /* Footer */
+        .invoice-footer {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 2px solid #e5e7eb;
+            font-size: 9px;
+            color: #6b7280;
+        }
+
+        .invoice-footer p {
+            margin: 3px 0;
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .invoice-container {
+                box-shadow: none;
+                padding: 20px;
+            }
+            .watermark img {
+                max-width: 600px;
+                max-height: 600px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Watermark -->
+    <div class="watermark">
+        <img src="umarsons/watermark.png" alt="Watermark">
+    </div>
+
+    <div class="invoice-container">
+        <!-- Header -->
+        <div class="invoice-header">
+            <div class="company-logo">
+                <img src="umarsons/logo.png" alt="Company Logo">
+            </div>
+            <div class="company-info">
+                <h1>UMARSONS</h1>
+                <p class="address">P-5284, ST#09 REHMATABAD, SHEIKUPURA ROAD FAISALABAD.</p>
+            </div>
+        </div>
+
+        <!-- Invoice Title -->
+        <div class="invoice-title">Invoice</div>
+
+        <!-- Details Grid -->
+        <div class="details-grid">
+            <div class="details-section">
+                <h3>Bill To:</h3>
+                <p><strong>Customer Name</strong></p>
+                <p>456 Customer Street</p>
+                <p>City, State 54321</p>
+                <p><strong>NTN:</strong> 7654321-0</p>
+                <p><strong>Tel:</strong> (987) 654-3210</p>
+            </div>
+            <div class="details-section">
+                <h3>Invoice Details:</h3>
+                <p><span class="label">Invoice #:</span> INV-2026-001</p>
+                <p><span class="label">Date:</span> January 30, 2026</p>
+                <p><span class="label">Due Date:</span> February 28, 2026</p>
+                <p><span class="label">Payment Terms:</span> Net 30 Days</p>
+                <p><span class="label">Reference:</span> PO-12345</p>
+            </div>
+        </div>
+
+        <!-- Items Table -->
+        <table class="invoice-table">
+            <thead>
+                <tr>
+                    <th style="width: 5%;">#</th>
+                    <th style="width: 50%;">Description</th>
+                    <th class="center" style="width: 10%;">Qty</th>
+                    <th class="right" style="width: 15%;">Rate</th>
+                    <th class="right" style="width: 20%;">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>Product Item A - High Quality Material</td>
+                    <td class="center">5</td>
+                    <td class="right">$200.00</td>
+                    <td class="right">$1,000.00</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>Service Package B - Installation & Setup</td>
+                    <td class="center">1</td>
+                    <td class="right">$500.00</td>
+                    <td class="right">$500.00</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>Product Item C - Premium Edition</td>
+                    <td class="center">3</td>
+                    <td class="right">$150.00</td>
+                    <td class="right">$450.00</td>
+                </tr>
+                <tr>
+                    <td>4</td>
+                    <td>Maintenance Service - Annual Contract</td>
+                    <td class="center">1</td>
+                    <td class="right">$800.00</td>
+                    <td class="right">$800.00</td>
+                </tr>
+                <tr>
+                    <td>5</td>
+                    <td>Spare Parts Kit - Complete Set</td>
+                    <td class="center">2</td>
+                    <td class="right">$75.00</td>
+                    <td class="right">$150.00</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Summary -->
+        <div class="summary-section">
+            <div class="summary-row subtotal">
+                <span>Subtotal:</span>
+                <span>$2,900.00</span>
+            </div>
+            <div class="summary-row">
+                <span>Discount (5%):</span>
+                <span>-$145.00</span>
+            </div>
+            <div class="summary-row">
+                <span>Additional Charges:</span>
+                <span>$50.00</span>
+            </div>
+            <div class="summary-row total">
+                <span>TOTAL AMOUNT:</span>
+                <span>$2,805.00</span>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="invoice-footer">
+            <p><strong>Thank you for your business!</strong></p>
+            <p>Bank: ABC Bank | Account: 1234-5678-9012 | Branch: Main Branch</p>
+            <p>For questions, contact: info@umarsons.com | www.umarsons.com</p>
+            <p>© 2026 Umar & Sons. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

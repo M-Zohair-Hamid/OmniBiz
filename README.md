@@ -1,6 +1,21 @@
-# PaperCone Business Management System
+# Multi-Company Business Management System
 
-A modern, fully responsive web application for managing textile industry paper cone orders. The system handles multi-company orders, invoices, payments, and analytics with company-specific dashboards.
+A modern, fully responsive web application for managing multi-company business operations. The system handles orders, invoices, payments, and analytics with company-specific dashboards and a sophisticated indigo/cyan color theme.
+
+## 🎨 Design System
+
+The application features a professional **Deep Indigo & Electric Cyan** color palette:
+
+- **Primary (Deep Indigo):** `#17144B` - Backgrounds, main layouts, borders
+- **Secondary (Muted Slate Blue):** `#3A3F8C` - Cards, elevated surfaces
+- **Accent (Electric Cyan):** `#00D4FF` - Buttons, links, highlights, hover states
+- **Text (Soft Off-White):** `#EBEEF5` - Primary text, high contrast readability
+
+This cinematic color scheme provides:
+- ✅ High contrast for accessibility
+- ✅ Professional, modern appearance
+- ✅ Consistent visual hierarchy
+- ✅ Electric cyan accents for interactive elements
 
 ## 🚀 Quick Start
 
@@ -17,7 +32,7 @@ A modern, fully responsive web application for managing textile industry paper c
 The script will:
 - ✅ Start Flask backend (Port 5000)
 - ✅ Start React frontend (Port 3000)
-- ✅ Open browser automatically
+- ✅ Open browser automatically (once)
 
 **Login:**
 - Click **UmarSons** button (Company in Faisalabad)
@@ -29,7 +44,7 @@ The script will:
 ## 🛠️ Utility Scripts
 
 - **INSTALLER.bat** - Complete first-time setup (run this first on new computers)
-- **start.bat** - Start the application (backend + frontend)
+- **start.bat / start.ps1** - Start the application (backend + frontend)
 - **stop.bat** - Stop all services
 - **check-status.bat** - Verify system status and dependencies
 - **reinstall-dependencies.bat** - Fix corrupted packages
@@ -40,7 +55,9 @@ See `README.txt` for detailed instructions on each script.
 
 ---
 
-**Project Date**: January 25, 2026  
+## 📁 Project Structure
+
+**Project Date**: January 31, 2026  
 
 ```
 Project-CS-L/
@@ -49,101 +66,209 @@ Project-CS-L/
 │   │   └── imgs/            # Company background images
 │   ├── src/
 │   │   ├── components/      # Reusable React components
+│   │   │   ├── Sidebar.js   # Navigation with indigo gradient
+│   │   │   ├── Toast.js     # Notification system
+│   │   │   └── ProtectedRoute.js
 │   │   ├── context/         # React Context (Auth, Toast)
-│   │   ├── pages/           # Page components
+│   │   ├── pages/           # Page components with indigo/cyan theme
+│   │   │   ├── DashboardPage.js
+│   │   │   ├── OrdersPage.js
+│   │   │   ├── ItemsPage.js
+│   │   │   ├── BuyersPage.js
+│   │   │   ├── ReportsPage.js
+│   │   │   ├── PaymentsPage.js
+│   │   │   ├── InvoicesPage.js
+│   │   │   ├── LedgerPage.js
+│   │   │   └── LoginPage.js
 │   │   ├── services/        # API service client
+│   │   ├── utils/           # Utilities (export, date)
 │   │   ├── App.js           # Main app component
 │   │   ├── index.js         # React entry point
-│   │   └── index.css        # Tailwind styles
+│   │   └── index.css        # Tailwind + custom styles
 │   ├── package.json
 │   └── tailwind.config.js
 │
 ├── backend/                  # Python Flask backend
-   - Add/Edit/Delete buyers with unique constraint protection
-   - Comprehensive duplicate prevention with user-friendly errors
 │   ├── app.py               # Flask application
 │   ├── models.py            # Database models
-   - Product catalog management with auto-generated codes (HS-XXXX from 1000)
-   - Unique item codes and names (prevents duplicates)
+│   ├── utils.py             # Utility functions
+│   ├── requirements.txt     # Python dependencies
+│   ├── routes/              # API route blueprints
+│   │   ├── auth_bp.py       # Authentication
+│   │   ├── buyer_bp.py      # Buyer management
+│   │   ├── item_bp.py       # Item/Product management
+│   │   ├── order_bp.py      # Order management
+│   │   ├── invoice_bp.py    # Invoice generation
+│   │   ├── payment_bp.py    # Payment tracking
+│   │   ├── ledger_bp.py     # Party ledger
+│   │   ├── report_bp.py     # Reports & analytics
+│   │   └── dashboard_bp.py  # Dashboard data
+│   └── instance/            # SQLite databases
+│       ├── umarsons.db      # Company 1 database
+│       └── makkah_packages.db # Company 2 database
+│
+└── assets/                   # Design assets
+    └── templates/            # Invoice templates
+        ├── invoice.html      # Regular invoice (indigo theme)
+        ├── sales-tax-invoice.html  # Sales tax invoice (indigo theme)
+        └── umarsons/         # Company branding
+            ├── logo.png      # Company logo
+            └── watermark.png # Invoice watermark
+```
 
-## Technology Stack
+## ✨ Key Features
 
-✅ Mock token-based multi-company system  
-✅ Direct dashboard access (no password)
-✅ Company-specific data isolation (UmarSons, Makkah Packages)
-✅ GST/NTN number support for companies and buyers
-✅ Auto-generated item codes (HS-1000+) with unique constraints
-✅ Auto-prefixed buyer GST-/NTN- fields
-✅ Unique constraint error handling (409 Conflict responses)
-✅ Duplicate prevention with field-specific error messages
-✅ Responsive sidebar navigation  
-✅ Real-time dashboard with Chart.js analytics  
-✅ Buyer management with CRUD operations and duplicate prevention
-✅ Item/Product management with auto-code generation
-✅ Dynamic order creation with automatic totals  
-✅ Professional invoice PDF generation (Rs. format)  
-✅ Invoice filename: `invoice-YYYY-MM-DD-BuyerName.pdf`
-✅ Party ledger with running balance
-✅ Ledger PDF export with date filtering
-✅ Payment tracking with multiple methods  
-✅ Advanced reporting & analytics  
-✅ Excel/CSV export functionality  
-✅ Pagination and search  
-✅ Toast notifications  
-✅ Axios interceptor for automatic token handling
-✅ Complete installer and utility scripts with full dependency checking
-✅ Database backup system  
-   - Payment status distribution
-   - Buyer-wise and item-wise analytics
+### UI/UX Features
+- ✅ **Modern Indigo/Cyan Theme** - Professional deep indigo with electric cyan accents
+- ✅ **Fully Responsive Design** - Works on desktop, tablet, and mobile
+- ✅ **Glassmorphism Effects** - Backdrop blur and transparency for modern look
+- ✅ **Dark Theme Sidebar** - Indigo gradient navigation with smooth transitions
+- ✅ **Color-Coded Buttons** - Red for destructive actions (Delete, Cancel, Logout)
+- ✅ **Large, Readable Charts** - Black text with 14-16px fonts for accessibility
+- ✅ **Toast Notifications** - Real-time feedback for user actions
+- ✅ **Smooth Animations** - Hover effects, scale transforms, transitions
+- ✅ **Consistent Typography** - Montserrat font for headers and titles
+
+### Business Features
+
+1. **Multi-Company System**
+   - Company-specific data isolation (UmarSons, Makkah Packages)
+   - Separate databases per company
+   - Mock token-based authentication
+   - Direct dashboard access (no password required)
+
+2. **Dashboard & Analytics**
+   - Real-time Chart.js visualizations with black text indicators
+   - Buyer-wise sales analytics
+   - Item-wise sales breakdown
+   - Payment status distribution (Doughnut chart)
    - Recent orders overview
+   - Summary cards with key metrics
+   - Large font sizes (14-16px) for readability
 
 3. **Buyer Management**
-   - Add/Edit/Delete buyers
+   - Add/Edit/Delete buyers with unique constraint protection
+   - GST/NTN number support
    - Credit limit tracking
    - Contact information management
    - Search and pagination
+   - Duplicate prevention with user-friendly errors
 
 4. **Item Management**
-   - Product catalog management
+   - Product catalog management with auto-generated codes (HS-XXXX from 1000)
+   - Unique item codes and names (prevents duplicates)
    - Pricing and stock tracking
    - Unit configuration (PCS, KG, MTR, BOX)
    - Inventory management
+   - Stock quantity display with dark green indicators
 
 5. **Order Management**
    - Create dynamic orders with multiple items
-   - Automatic tax calculation
+   - Automatic tax calculation (18% GST)
    - Order status tracking
    - Delivery date management
+   - Real-time total updates
+   - Item quantity and rate management
 
 6. **Invoice Management**
+   - Professional HTML invoice templates (indigo theme)
+   - Regular invoice and Sales Tax Invoice templates
+   - Company logo and watermark support
    - Auto-generate invoices from orders
    - Tax calculation and formatting
    - PDF export capability
    - Invoice status tracking
+   - Filename format: `invoice-YYYY-MM-DD-BuyerName.pdf`
 
 7. **Payment Management**
    - Record partial/full payments
    - Multiple payment methods (bank, cash, check)
    - Auto-calculate balances
-   - Payment tracking
+   - Payment tracking with status indicators
 
-8. **Reports & Analytics**
-   - Buyer-wise sales reports
-   - Item-wise sales analysis
+8. **Ledger System**
+   - Party ledger with running balance
+   - Date range filtering
+   - PDF export with company branding
+   - Transaction history
+   - Credit/debit color coding
+
+9. **Reports & Analytics**
+   - Buyer-wise sales reports with bar charts
+   - Item-wise sales analysis with horizontal bars
    - Filterable date ranges
    - CSV export functionality
+   - Summary statistics
+   - Payment status breakdown
+   - PNG export for charts
 
-### UI/UX Features
+## 🛠️ Technology Stack
 
-- ✅ Fully responsive design (desktop, tablet, mobile)
-- ✅ Modern Tailwind CSS styling
-- ✅ Company-specific dashboard backgrounds
-- ✅ Color-coded status indicators
-- ✅ Toast notifications for feedback
-- ✅ Collapsible sidebar navigation
-- ✅ Dynamic table pagination
-- ✅ Real-time data visualization
-- ✅ PKR currency formatting
+### Frontend
+- **React 18.x** - Modern UI with functional components
+- **Tailwind CSS 3.x** - Utility-first styling with custom indigo/cyan theme
+- **Chart.js** - Data visualization with customized black text (14-16px fonts)
+- **Axios** - HTTP client with JWT token interceptors
+- **React Router** - SPA navigation
+- **Google Fonts** - Montserrat font family
+
+### Backend
+- **Flask 2.3+** - Python web framework
+- **Flask-SQLAlchemy** - ORM for database operations
+- **Flask-CORS** - Cross-origin resource sharing
+- **SQLite** - Lightweight database (separate per company)
+- **JWT** - Token-based authentication
+
+### Dev Tools
+- **PowerShell** - Automation scripts (start.ps1, INSTALLER.bat)
+- **Batch Scripts** - Windows utilities (backup-database.bat, check-status.bat)
+- **npm** - Frontend package management
+- **pip** - Python package management
+
+### Invoice Templates
+- **HTML/CSS** - Professional invoice templates with Montserrat font
+  - `sales-tax-invoice.html` - Sales tax invoice with GST breakdown
+  - `invoice.html` - Regular invoice without tax details
+- **Theme Colors** - Indigo (#17144B) borders and headers
+- **Assets** - Company logo and watermark support
+
+## 🎨 Color Palette Reference
+
+The application uses a professional indigo/cyan color scheme:
+
+```css
+/* Primary Colors */
+--deep-indigo: #17144B;     /* Backgrounds, borders, cards */
+--slate-blue: #3A3F8C;      /* Secondary backgrounds, elevated sections */
+--electric-cyan: #00D4FF;   /* Primary buttons, links, accents */
+--off-white: #EBEEF5;       /* Text, light backgrounds */
+
+/* Semantic Colors */
+--red-500: #ef4444;         /* Delete, Cancel, Logout buttons */
+--emerald-700: #047857;     /* Success messages, stock indicators */
+--black: #000000;           /* Chart text, body text */
+```
+
+### Usage in Components
+- **Sidebar**: Indigo gradient (`bg-gradient-to-b from-[#17144B] via-[#3A3F8C]`)
+- **Primary Buttons**: Cyan gradient (`bg-gradient-to-r from-[#00D4FF] to-[#3A3F8C]`)
+- **Destructive Actions**: Red gradient (`bg-gradient-to-r from-red-500 to-red-600`)
+- **Tables**: Indigo borders (`border-[#17144B]`)
+- **Cards**: Slate blue backgrounds (`bg-[#3A3F8C]`)
+
+### Chart Configuration
+Charts use black text for better readability:
+```javascript
+chartOptions = {
+  plugins: {
+    legend: { labels: { color: '#000000', font: { size: 16 } } }
+  },
+  scales: {
+    x: { ticks: { color: '#000000', font: { size: 14 } } },
+    y: { ticks: { color: '#000000', font: { size: 14 } } }
+  }
+}
+```
 
 ## Installation & Setup
 
@@ -319,16 +444,17 @@ The frontend automatically connects to `http://localhost:5000/api`. To change th
 ## Usage Guide
 
 ### Login Process
-1. Run `start.bat` (or use desktop shortcut)
-2. Browser opens to `http://localhost:3000`
+1. Run `start.bat` or `start.ps1` (opens browser once automatically)
+2. Browser navigates to `http://localhost:3000`
 3. Click company button (UmarSons or Makkah Packages)
 4. Dashboard loads instantly - no password needed!
 
 ### Navigation
-- Use sidebar to navigate between modules
+- Use sidebar to navigate between modules (indigo theme with cyan highlights)
 - Click module names to view/manage data
-- Use "+ Add" buttons to create new records
-- Edit and delete options available in tables
+- Use "+ Add" buttons (cyan gradient) to create new records
+- Delete/Cancel buttons are red for clarity
+- Edit options available in tables
 
 ### Creating Orders
 1. Go to Orders section
@@ -382,8 +508,12 @@ All components resize dynamically based on screen size.
 ✅ Pagination and search  
 ✅ Toast notifications  
 ✅ Axios interceptor for automatic token handling
-✅ Complete installer and utility scripts
-✅ Database backup system  
+✅ Professional indigo/cyan color theme (#17144B, #3A3F8C, #00D4FF)  
+✅ Large, readable chart text (14-16px, black color)  
+✅ Red buttons for destructive actions (Delete/Cancel/Logout)  
+✅ Dark green stock indicators for better contrast  
+✅ Invoice templates with Montserrat font and company branding  
+✅ Glassmorphism login page with gradient backgrounds  
 
 ## Future Enhancements
 
