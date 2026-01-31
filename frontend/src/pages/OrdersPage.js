@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import { getOrders, getOrder, createOrder, updateOrder, deleteOrder, getBuyers, getItems } from '../services/api';
 import { ToastContext } from '../context/ToastContext';
@@ -7,6 +8,7 @@ import { exportTableToPDF, exportChartToImage } from '../utils/exportUtils';
 import { formatDate, getCurrentDateForInput } from '../utils/dateUtils';
 
 const OrdersPage = () => {
+  const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -247,10 +249,14 @@ const OrdersPage = () => {
     setShowOptionsModal(true);
   };
 
-  const handleGenerateInvoice = () => {
+  const handleGenerateInvoice = async () => {
+    if (!selectedOrder) return;
+    
     setShowOptionsModal(false);
-    showToast('Generate Sales Tax Invoice - Coming soon', 'info');
-    // TODO: Implement invoice generation
+    showToast('Opening Sales Tax Invoice...', 'info');
+    
+    // Navigate to invoice page with order ID
+    navigate(`/invoice/${selectedOrder.id}`);
   };
 
   const handleGenerateBill = () => {
@@ -348,7 +354,7 @@ const OrdersPage = () => {
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-[#17144B] via-[#3A3F8C] to-[#17144B] relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-[#17144B] via-[#3A3F8C] to-[#17144B] opacity-80"></div>
-      <Sidebar companyName={user?.full_name || 'User'} />
+      <Sidebar companyName={user?.company_name || 'Business'} />
       
       <div className="flex-1 ml-64 relative z-10">
         <div className="p-8">
@@ -515,7 +521,7 @@ const OrdersPage = () => {
                   </button>
                   <button 
                     onClick={() => setShowOptionsModal(false)}
-                    className="w-full bg-gradient-to-r from-[#17144B] to-[#3A3F8C] hover:from-[#3A3F8C] hover:to-[#17144B] text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-[#17144B]/50 transform hover:scale-105 active:scale-95 mt-2"
+                    className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-red-500/50 transform hover:scale-105 active:scale-95 mt-2"
                   >
                     Cancel
                   </button>

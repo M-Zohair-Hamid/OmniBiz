@@ -4,8 +4,11 @@ from models import db, Order, Buyer, Item, OrderItem
 from utils import get_company_id_from_token, format_date_display
 from datetime import datetime, timedelta
 from sqlalchemy import func
+from sqlalchemy.orm import joinedload
 import csv
 import io
+import os
+import tempfile
 
 bp = Blueprint('reports', __name__, url_prefix='/api/reports')
 
@@ -170,3 +173,442 @@ def export_orders_csv():
         as_attachment=True,
         download_name=f'orders_report_{datetime.utcnow().strftime("%Y%m%d")}.csv'
     )
+
+@bp.route('/orders/<int:order_id>/generate-sti-pdf', methods=['GET'])
+@jwt_required()
+def generate_sti_pdf(order_id):
+    """Generate Sales Tax Invoice PDF for an order"""
+    company_id = verify_company_access()
+    
+    # Fetch the order with eager loading
+    order = Order.query.options(joinedload(Order.buyer), joinedload(Order.company)).filter_by(id=order_id, company_id=company_id).first()
+    if not order:
+        return jsonify({'error': 'Order not found'}), 404
+    
+    # Get buyer from the order relationship
+    buyer = order.buyer
+    if not buyer:
+        return jsonify({'error': 'Buyer not found'}), 404
+    
+    # Get order items with eager loading of Item relationship
+    order_items = OrderItem.query.options(joinedload(OrderItem.item)).filter_by(order_id=order_id).all()
+    
+    # Get company name
+    company_name = order.company.name if order.company else 'UMARSONS'
+    
+    # Calculate due date (30 days from order date)
+    due_date = (order.order_date + timedelta(days=30)).strftime('%B %d, %Y')
+    order_date_str = order.order_date.strftime('%B %d, %Y')
+    
+    # Build HTML content for the invoice
+    items_rows = ''
+    subtotal = 0
+    for i, item in enumerate(order_items, 1):
+        amount_before_tax = item.line_total
+        tax_amount = amount_before_tax * (order.tax_rate / 100)
+        amount_after_tax = amount_before_tax + tax_amount
+        subtotal += amount_before_tax
+        
+        items_rows += f"""
+        <tr>
+            <td>{i}</td>
+            <td>{item.item.name if hasattr(item, 'item') else 'Item'}</td>
+            <td class="center">{item.quantity}</td>
+            <td class="right">₨ {item.item.unit_price:,.2f}</td>
+            <td class="center">{order.tax_rate}%</td>
+            <td class="right">₨ {amount_before_tax:,.2f}</td>
+            <td class="right">₨ {amount_after_tax:,.2f}</td>
+        </tr>
+        """
+    
+    total_tax = subtotal * (order.tax_rate / 100)
+    total_amount = subtotal + total_tax
+    
+    html_content = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{buyer.company_name}_{order.order_date.strftime('%Y-%m-%d')}_ID{order.id}.pdf</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
+        <style>
+            * {{
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }}
+            
+            body {{
+                font-family: Arial, Helvetica, sans-serif;
+                background: #f8f8f8;
+                padding: 15px;
+                line-height: 1.4;
+            }}
+            
+            .invoice-container {{
+                max-width: 800px;
+                margin: 0 auto;
+                background: white;
+                padding: 30px;
+                position: relative;
+                z-index: 1;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            }}
+            
+            .invoice-header {{
+                position: relative;
+                text-align: center;
+                margin-bottom: 20px;
+                padding-bottom: 15px;
+                border-bottom: 3px solid #17144B;
+            }}
+            
+            .company-logo {{
+                position: absolute;
+                left: 0;
+                top: 0;
+                max-width: 100px;
+                max-height: 60px;
+            }}
+            
+            .company-logo img {{
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+            }}
+            
+            .company-info {{
+                text-align: center;
+                font-size: 11px;
+            }}
+            
+            .company-info h1 {{
+                font-family: 'Montserrat', Arial, sans-serif;
+                font-size: 28px;
+                font-weight: 800;
+                margin-bottom: 8px;
+                color: #17144B;
+                letter-spacing: 2px;
+            }}
+            
+            .company-info p {{
+                margin: 2px 0;
+                color: #333;
+                font-size: 10px;
+            }}
+            
+            .company-info p.address {{
+                font-weight: 600;
+                font-size: 11px;
+            }}
+            
+            .invoice-title {{
+                font-family: 'Montserrat', Arial, sans-serif;
+                text-align: center;
+                font-size: 26px;
+                font-weight: 800;
+                color: #17144B;
+                margin: 15px 0;
+                text-transform: uppercase;
+            }}
+            
+            .details-grid {{
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 20px;
+                margin-bottom: 20px;
+            }}
+            
+            .details-section {{
+                border: 1px solid #e5e7eb;
+                padding: 12px;
+                border-radius: 4px;
+            }}
+            
+            .details-section h3 {{
+                font-size: 11px;
+                font-weight: bold;
+                color: #17144B;
+                margin-bottom: 8px;
+                text-transform: uppercase;
+                border-bottom: 1px solid #e5e7eb;
+                padding-bottom: 5px;
+            }}
+            
+            .details-section p {{
+                font-size: 10px;
+                color: #374151;
+                margin: 3px 0;
+            }}
+            
+            .details-section .label {{
+                font-weight: bold;
+                display: inline-block;
+                width: 80px;
+            }}
+            
+            .invoice-table {{
+                width: 100%;
+                border-collapse: collapse;
+                margin: 20px 0;
+                font-size: 10px;
+            }}
+            
+            .invoice-table thead {{
+                background: linear-gradient(135deg, #17144B, #0d0a2e);
+                color: white;
+            }}
+            
+            .invoice-table th {{
+                padding: 10px 8px;
+                text-align: left;
+                font-weight: bold;
+                text-transform: uppercase;
+                font-size: 10px;
+            }}
+            
+            .invoice-table th.center {{
+                text-align: center;
+            }}
+            
+            .invoice-table th.right {{
+                text-align: right;
+            }}
+            
+            .invoice-table td {{
+                padding: 8px;
+                border-bottom: 1px solid #e5e7eb;
+                color: #374151;
+            }}
+            
+            .invoice-table td.center {{
+                text-align: center;
+            }}
+            
+            .invoice-table td.right {{
+                text-align: right;
+            }}
+            
+            .summary-section {{
+                width: 100%;
+                margin-top: 10px;
+                border: 2px solid #17144B;
+                border-radius: 4px;
+                overflow: hidden;
+            }}
+            
+            .summary-row {{
+                display: flex;
+                justify-content: space-between;
+                padding: 8px 12px;
+                font-size: 11px;
+                border-bottom: 1px solid #e5e7eb;
+            }}
+            
+            .summary-row.subtotal {{
+                background: #f9fafb;
+            }}
+            
+            .summary-row.tax {{
+                background: #fef3c7;
+                font-weight: 600;
+            }}
+            
+            .summary-row.total {{
+                background: linear-gradient(135deg, #17144B, #0d0a2e);
+                color: white;
+                font-weight: bold;
+                font-size: 14px;
+                border-bottom: none;
+            }}
+            
+            .amount-in-words {{
+                margin-top: 15px;
+                padding: 10px 12px;
+                background: #e8e7f5;
+                border-left: 4px solid #17144B;
+                border-radius: 4px;
+                font-size: 11px;
+                color: #17144B;
+                font-weight: 600;
+            }}
+            
+            .tax-breakdown {{
+                margin-top: 20px;
+                padding: 15px;
+                background: #e8e7f5;
+                border-left: 4px solid #17144B;
+                border-radius: 4px;
+            }}
+            
+            .tax-breakdown h4 {{
+                font-size: 12px;
+                font-weight: bold;
+                color: #17144B;
+                margin-bottom: 10px;
+                text-transform: uppercase;
+            }}
+            
+            .tax-breakdown table {{
+                width: 100%;
+                font-size: 10px;
+            }}
+            
+            .tax-breakdown td {{
+                padding: 5px 0;
+                color: #17144B;
+            }}
+            
+            .tax-breakdown td:last-child {{
+                text-align: right;
+                font-weight: bold;
+            }}
+            
+            .invoice-footer {{
+                text-align: center;
+                margin-top: 25px;
+                padding-top: 15px;
+                border-top: 2px solid #e5e7eb;
+                font-size: 9px;
+                color: #6b7280;
+            }}
+            
+            .invoice-footer p {{
+                margin: 3px 0;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="invoice-container">
+            <!-- Header -->
+            <div class="invoice-header">
+                <div class="company-logo">
+                    <!-- Logo will be embedded or referenced -->
+                </div>
+                <div class="company-info">
+                    <h1>{company_name}</h1>
+                    <p class="address">P-5284, ST#09 REHMATABAD, SHEIKUPURA ROAD FAISALABAD.</p>
+                </div>
+            </div>
+            
+            <!-- Invoice Title -->
+            <div class="invoice-title">Sales Tax Invoice</div>
+            
+            <!-- Details Grid -->
+            <div class="details-grid">
+                <div class="details-section">
+                    <h3>Bill To:</h3>
+                    <p><strong>{buyer.company_name}</strong></p>
+                    <p><span class="label">City:</span> {buyer.city or 'N/A'}</p>
+                    <p><span class="label">NTN:</span> {buyer.ntn_number or 'N/A'}</p>
+                    <p><span class="label">GST #:</span> {buyer.gst_number or 'N/A'}</p>
+                    <p><span class="label">Phone:</span> {buyer.phone or 'N/A'}</p>
+                </div>
+                <div class="details-section">
+                    <h3>Invoice Details:</h3>
+                    <p><span class="label">ID#:</span> {order.id}</p>
+                    <p><span class="label">Date:</span> {order_date_str}</p>
+                    <p><span class="label">Due Date:</span> {due_date}</p>
+                </div>
+            </div>
+            
+            <!-- Items Table -->
+            <table class="invoice-table">
+                <thead>
+                    <tr>
+                        <th style="width: 4%;">#</th>
+                        <th style="width: 30%;">Description</th>
+                        <th class="center" style="width: 8%;">Qty</th>
+                        <th class="right" style="width: 12%;">Rate</th>
+                        <th class="center" style="width: 8%;">Tax %</th>
+                        <th class="right" style="width: 15%;">Amount Before Tax</th>
+                        <th class="right" style="width: 15%;">Amount After Tax</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {items_rows}
+                </tbody>
+            </table>
+            
+            <!-- Summary -->
+            <div class="summary-section">
+                <div class="summary-row subtotal">
+                    <span>Subtotal (Before Tax):</span>
+                    <span>₨ {subtotal:,.2f}</span>
+                </div>
+                <div class="summary-row tax">
+                    <span>Sales Tax ({order.tax_rate}%):</span>
+                    <span>₨ {total_tax:,.2f}</span>
+                </div>
+                <div class="summary-row">
+                    <span>Additional Charges:</span>
+                    <span>₨ {0:,.2f}</span>
+                </div>
+                <div class="summary-row total">
+                    <span>TOTAL AMOUNT:</span>
+                    <span>₨ {total_amount:,.2f}</span>
+                </div>
+            </div>
+            
+            <!-- Amount in Words -->
+            <div class="amount-in-words">
+                <strong>Amount in Words:</strong> [Amount in words will be added]
+            </div>
+            
+            <!-- Tax Breakdown -->
+            <div class="tax-breakdown">
+                <h4>Sales Tax Breakdown</h4>
+                <table>
+                    <tr>
+                        <td>Base Amount (Before Tax):</td>
+                        <td>₨ {subtotal:,.2f}</td>
+                    </tr>
+                    <tr>
+                        <td>GST @ {order.tax_rate}%:</td>
+                        <td>₨ {total_tax:,.2f}</td>
+                    </tr>
+                    <tr>
+                        <td style="border-top: 1px solid #17144B; padding-top: 8px;">Total Tax Amount:</td>
+                        <td style="border-top: 1px solid #17144B; padding-top: 8px;">₨ {total_tax:,.2f}</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <!-- Footer -->
+            <div class="invoice-footer">
+                <p><strong>Thank you for your business!</strong></p>
+                <p><strong>Payment Terms:</strong> Net 30 Days</p>
+                <p>For queries: umarsons08@gmail.com | Cell: 0301-7194270 | WhatsApp: 0313-7050844</p>
+                <p>This is a computer-generated invoice and does not require a signature.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    # Generate filename
+    filename = f"{buyer.company_name}_{order.order_date.strftime('%Y-%m-%d')}_ID{order.id}.pdf"
+    
+    try:
+        # Import WeasyPrint only when needed
+        from weasyprint import HTML
+        
+        # Convert HTML to PDF using WeasyPrint
+        pdf_bytes = HTML(string=html_content).write_pdf()
+        
+        # Return PDF file
+        return send_file(
+            io.BytesIO(pdf_bytes),
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=filename
+        )
+    except Exception as e:
+        import traceback
+        print(f"PDF Generation Error: {str(e)}")
+        print(traceback.format_exc())
+        return jsonify({'error': f'PDF generation failed: {str(e)}'}), 500
+

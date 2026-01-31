@@ -14,5 +14,19 @@
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
+    <script>
+      // Clear session if 'clear' parameter is present (when starting fresh)
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('clear') === 'true') {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('selectedCompanyId');
+        localStorage.removeItem('selectedCompanyCode');
+        localStorage.removeItem('selectedCompanyName');
+        localStorage.removeItem('lastActivity');
+        // Remove the parameter from URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    </script>
   </body>
 </html>

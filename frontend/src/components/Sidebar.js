@@ -10,6 +10,16 @@ const Sidebar = ({ companyName }) => {
   const { showToast } = useContext(ToastContext);
   const [isOpen, setIsOpen] = useState(true);
 
+  // Map company names to logo paths
+  const getCompanyLogo = (companyName) => {
+    if (companyName?.toLowerCase().includes('umarsons')) {
+      return '/umarsons-logo.png';
+    } else if (companyName?.toLowerCase().includes('makkah')) {
+      return '/makkahpackages-logo.png';
+    }
+    return null;
+  };
+
   // Map database company names to display names
   const getDisplayCompanyName = (companyName) => {
     if (!companyName) return 'Business';
@@ -52,11 +62,23 @@ const Sidebar = ({ companyName }) => {
         </div>
       </div>
 
-      <div className="p-4 border-b border-white border-opacity-15 bg-[#3A3F8C] bg-opacity-20 backdrop-blur-sm">
+      <div className="p-4 border-b border-white border-opacity-15 bg-[#3A3F8C] bg-opacity-20 backdrop-blur-sm flex items-center justify-center min-h-24">
         {isOpen && (
-          <div>
-            <p className="text-white text-sm font-semibold opacity-90">{companyName}</p>
-            <p className="text-white text-xs opacity-70 mt-1">{user?.full_name}</p>
+          <div className="text-center">
+            {getCompanyLogo(companyName) ? (
+              <div className="backdrop-blur-xl bg-white bg-opacity-90 rounded-xl p-3 border border-white border-opacity-30">
+                <img 
+                  src={getCompanyLogo(companyName)} 
+                  alt={companyName} 
+                  className="h-16 object-contain mx-auto"
+                />
+              </div>
+            ) : (
+              <div>
+                <p className="text-white text-sm font-semibold opacity-90">{companyName}</p>
+                <p className="text-white text-xs opacity-70 mt-1">{user?.full_name}</p>
+              </div>
+            )}
           </div>
         )}
       </div>

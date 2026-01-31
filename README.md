@@ -340,8 +340,8 @@ Company 1: UmarSons
 
 Company 2: Makkah Packages
 - Location: Textile City, Faisalabad, Pakistan
-- GST: GST-QP-2024-002
-- Mock Token: Bearer mock-token-QP
+- GST: GST-MP-2024-002
+- Mock Token: Bearer mock-token-MP
 - Access: Click "Makkah Packages" button on login page
 
 No password required - instant dashboard access!
@@ -350,7 +350,7 @@ No password required - instant dashboard access!
 ## API Endpoints
 
 All endpoints accept optional JWT tokens (`@jwt_required(optional=True)`).
-Mock tokens: `Bearer mock-token-PC` or `Bearer mock-token-QP`
+Mock tokens: `Bearer mock-token-PC` or `Bearer mock-token-MP`
 
 ### Authentication
 - `POST /api/auth/login` - Login user (optional - direct access available)

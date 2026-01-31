@@ -219,6 +219,17 @@
             border-bottom: none;
         }
 
+        .amount-in-words {
+            margin-top: 15px;
+            padding: 10px 12px;
+            background: #e8e7f5;
+            border-left: 4px solid #17144B;
+            border-radius: 4px;
+            font-size: 11px;
+            color: #17144B;
+            font-weight: 600;
+        }
+
         /* Footer */
         .invoice-footer {
             text-align: center;
@@ -253,14 +264,14 @@
 <body>
     <!-- Background Watermark -->
     <div class="watermark">
-        <img src="umarsons/watermark.png" alt="Watermark">
+        <img src="watermark.png" alt="Watermark">
     </div>
 
     <div class="invoice-container">
         <!-- Header -->
         <div class="invoice-header">
             <div class="company-logo">
-                <img src="umarsons/logo.png" alt="Company Logo">
+                <img src="logo.png" alt="Company Logo">
             </div>
             <div class="company-info">
                 <h1>UMARSONS</h1>
@@ -307,36 +318,36 @@
                     <td>1</td>
                     <td>Product Item A - High Quality Material</td>
                     <td class="center">5</td>
-                    <td class="right">$200.00</td>
-                    <td class="right">$1,000.00</td>
+                    <td class="right">PKR 5,000</td>
+                    <td class="right">PKR 25,000</td>
                 </tr>
                 <tr>
                     <td>2</td>
                     <td>Service Package B - Installation & Setup</td>
                     <td class="center">1</td>
-                    <td class="right">$500.00</td>
-                    <td class="right">$500.00</td>
+                    <td class="right">PKR 12,500</td>
+                    <td class="right">PKR 12,500</td>
                 </tr>
                 <tr>
                     <td>3</td>
                     <td>Product Item C - Premium Edition</td>
                     <td class="center">3</td>
-                    <td class="right">$150.00</td>
-                    <td class="right">$450.00</td>
+                    <td class="right">PKR 3,750</td>
+                    <td class="right">PKR 11,250</td>
                 </tr>
                 <tr>
                     <td>4</td>
                     <td>Maintenance Service - Annual Contract</td>
                     <td class="center">1</td>
-                    <td class="right">$800.00</td>
-                    <td class="right">$800.00</td>
+                    <td class="right">PKR 20,000</td>
+                    <td class="right">PKR 20,000</td>
                 </tr>
                 <tr>
                     <td>5</td>
                     <td>Spare Parts Kit - Complete Set</td>
                     <td class="center">2</td>
-                    <td class="right">$75.00</td>
-                    <td class="right">$150.00</td>
+                    <td class="right">PKR 1,875</td>
+                    <td class="right">PKR 3,750</td>
                 </tr>
             </tbody>
         </table>
@@ -345,28 +356,29 @@
         <div class="summary-section">
             <div class="summary-row subtotal">
                 <span>Subtotal:</span>
-                <span>$2,900.00</span>
-            </div>
-            <div class="summary-row">
-                <span>Discount (5%):</span>
-                <span>-$145.00</span>
+                <span>PKR 72,500</span>
             </div>
             <div class="summary-row">
                 <span>Additional Charges:</span>
-                <span>$50.00</span>
+                <span>PKR 1,250</span>
             </div>
             <div class="summary-row total">
                 <span>TOTAL AMOUNT:</span>
-                <span>$2,805.00</span>
+                <span>PKR 70,125</span>
             </div>
+        </div>
+
+        <!-- Amount in Words -->
+        <div class="amount-in-words">
+            <strong>Amount in Words:</strong> Seventy Thousand One Hundred Twenty-Five Pakistani Rupees Only
         </div>
 
         <!-- Footer -->
         <div class="invoice-footer">
             <p><strong>Thank you for your business!</strong></p>
-            <p>Bank: ABC Bank | Account: 1234-5678-9012 | Branch: Main Branch</p>
-            <p>For questions, contact: info@umarsons.com | www.umarsons.com</p>
-            <p>© 2026 Umar & Sons. All rights reserved.</p>
+            <p><strong>Payment Terms:</strong> Net 30 Days</p>
+            <p>For queries: umarsons08@gmail.com | Cell: 0301-7194270 | WhatsApp: 0313-7050844</p>
+            <p>This is a computer-generated invoice and does not require a signature.</p>
         </div>
     </div>
 </body>

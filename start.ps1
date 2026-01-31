@@ -74,20 +74,32 @@ Write-Host "[OK] Python cache cleared" -ForegroundColor Green
 
 # Start backend
 Write-Host "`n=== Starting Backend (Flask @5000) ===" -ForegroundColor Cyan
-Start-Process -WindowStyle Hidden -WorkingDirectory $Backend -FilePath cmd.exe -ArgumentList "/c", "$py app.py"
+Start-Process -NoNewWindow -WorkingDirectory $Backend -FilePath cmd.exe -ArgumentList "/c", "$py app.py"
 Write-Host "[OK] Backend server starting..." -ForegroundColor Green
-Start-Sleep -Seconds 3
+Start-Sleep -Seconds 4
 
 # Start frontend
 Write-Host "`n=== Starting Frontend (React @3000) ===" -ForegroundColor Cyan
 if (-not (Test-Path (Join-Path $Frontend 'node_modules'))) {
     Write-Host "Installing frontend dependencies (first time)..." -ForegroundColor Yellow
-    Start-Process -WindowStyle Hidden -WorkingDirectory $Frontend -FilePath cmd.exe -ArgumentList "/c", "npm install && npm start"
+    $env:BROWSER='none'
+    Start-Process -NoNewWindow -WorkingDirectory $Frontend -FilePath cmd.exe -ArgumentList "/c", "npm install && npm start"
 } else {
-    Start-Process -WindowStyle Hidden -WorkingDirectory $Frontend -FilePath cmd.exe -ArgumentList "/c", "npm start"
+    $env:BROWSER='none'
+    Start-Process -NoNewWindow -WorkingDirectory $Frontend -FilePath cmd.exe -ArgumentList "/c", "npm start"
 }
 Write-Host "[OK] Frontend server starting..." -ForegroundColor Green
-Start-Sleep -Seconds 5
+Write-Host "Waiting for React server to initialize..." -ForegroundColor Yellow
+Start-Sleep -Seconds 8
+
+# Open browser with clear parameter to reset session
+Write-Host "Opening browser with fresh session..." -ForegroundColor Yellow
+Start-Sleep -Seconds 2
+try {
+    Start-Process "http://localhost:3000/?clear=true"
+} catch {
+    Write-Host "Could not auto-open browser. Please navigate to http://localhost:3000/?clear=true manually" -ForegroundColor Yellow
+}
 
 # Summary
 Write-Host ""
@@ -97,7 +109,7 @@ Write-Host "=============================================" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "Companies Configured:" -ForegroundColor White
 Write-Host "  • UmarSons (PC)       -> $umarDb" -ForegroundColor Green
-Write-Host "  • Makkah Packages (QP) -> $makkahDb" -ForegroundColor Green
+Write-Host "  • Makkah Packages (MP) -> $makkahDb" -ForegroundColor Green
 Write-Host ""
 Write-Host "Active Services:" -ForegroundColor White
 Write-Host "  • Backend API  -> http://localhost:5000" -ForegroundColor Green

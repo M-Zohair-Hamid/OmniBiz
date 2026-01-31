@@ -105,7 +105,7 @@ const ItemsPage = () => {
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-[#17144B] via-[#3A3F8C] to-[#17144B] relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-[#17144B] via-[#3A3F8C] to-[#17144B] opacity-80"></div>
-      <Sidebar companyName={user?.full_name || 'User'} />
+      <Sidebar companyName={user?.company_name || 'Business'} />
       
       <div className="flex-1 ml-64 relative z-10">
         <div className="p-8">
@@ -265,15 +265,15 @@ const ItemsPage = () => {
                 <form onSubmit={handleSubmit}>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
-                      <label className="block text-white font-bold mb-2">Code *</label>
+                      <label className="block text-[#17144B] font-bold mb-2">Code *</label>
                       <input type="text" value={formData.code} onChange={(e) => setFormData({...formData, code: e.target.value})} placeholder="Enter item code" className="w-full px-3 py-2 backdrop-blur-sm bg-white bg-opacity-40 border border-[#3A3F8C] rounded-lg focus:border-[#00D4FF]" required />
                     </div>
                     <div>
-                      <label className="block text-white font-bold mb-2">Name *</label>
+                      <label className="block text-[#17144B] font-bold mb-2">Name *</label>
                       <input type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full px-3 py-2 backdrop-blur-sm bg-white bg-opacity-40 border border-[#3A3F8C] rounded-lg focus:border-[#00D4FF]" />
                     </div>
                     <div>
-                      <label className="block text-white font-bold mb-2">Unit</label>
+                      <label className="block text-[#17144B] font-bold mb-2">Unit</label>
                       <select value={formData.unit} onChange={(e) => setFormData({...formData, unit: e.target.value})} className="w-full px-3 py-2 backdrop-blur-sm bg-white bg-opacity-40 border border-[#3A3F8C] rounded-lg focus:border-[#00D4FF]">
                         <option>PCS</option>
                         <option>KG</option>

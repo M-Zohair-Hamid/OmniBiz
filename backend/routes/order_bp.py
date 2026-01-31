@@ -83,7 +83,16 @@ def get_order(order_id):
         'order_number': order.order_number,
         'buyer_id': order.buyer_id,
         'buyer_name': order.buyer.company_name,
-        'order_date': format_date_display(order.order_date),
+        'company_name': order.company.name,
+        'buyer': {
+            'id': order.buyer.id,
+            'company_name': order.buyer.company_name,
+            'city': order.buyer.city,
+            'ntn_number': order.buyer.ntn_number,
+            'gst_number': order.buyer.gst_number,
+            'phone': order.buyer.phone
+        },
+        'order_date': order.order_date.isoformat(),
         'subtotal': order.subtotal,
         'tax_rate': order.tax_rate,
         'tax_amount': order.tax_amount,
@@ -93,7 +102,11 @@ def get_order(order_id):
         'items': [{
             'id': oi.id,
             'item_id': oi.item_id,
-            'item_name': oi.item.name,
+            'name': oi.item.name,
+            'item': {
+                'name': oi.item.name,
+                'unit_price': oi.item.unit_price
+            },
             'quantity': oi.quantity,
             'unit_price': oi.unit_price,
             'line_total': oi.line_total

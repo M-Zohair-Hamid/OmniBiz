@@ -66,6 +66,16 @@ const DashboardPage = () => {
     );
   }
 
+  // Map company names to logo paths
+  const getCompanyLogo = (companyName) => {
+    if (companyName?.toLowerCase().includes('umarsons')) {
+      return '/umarsons-logo.png';
+    } else if (companyName?.toLowerCase().includes('makkah')) {
+      return '/makkahpackages-logo.png';
+    }
+    return null;
+  };
+
   const chartColors = {
     primary: '#0066ff',
     success: '#22c55e',
@@ -166,7 +176,7 @@ const DashboardPage = () => {
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-[#17144B] via-[#3A3F8C] to-[#17144B] relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-[#17144B] via-[#3A3F8C] to-[#17144B] opacity-80"></div>
-      <Sidebar companyName={user?.full_name || 'User'} />
+      <Sidebar companyName={user?.company_name || 'Business'} />
       
       <div className="flex-1 ml-64 relative z-10">
         <div className="p-8">
@@ -187,8 +197,8 @@ const DashboardPage = () => {
               <p className="text-5xl font-bold text-emerald-700">{dashboardData.summary.recent_orders_count}</p>
             </div>
             <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-2xl shadow-glass-lg p-6 border border-white border-opacity-30 hover:bg-opacity-60 transition-all duration-300 hover:shadow-xl hover:scale-105 hover:-translate-y-1 cursor-pointer transform">
-              <h3 className="text-[#00D4FF] text-base font-bold mb-3 uppercase tracking-wide">Payment Status</h3>
-              <div className="flex gap-2 text-base">
+              <h3 className="text-[#00D4FF] text-lg font-bold mb-3 uppercase tracking-wide">Payment Status</h3>
+              <div className="flex gap-4 text-2xl">
                 <span className="font-bold text-emerald-700">✓ {dashboardData.payment_status.paid}</span>
                 <span className="font-bold text-yellow-600">◐ {dashboardData.payment_status.partial}</span>
                 <span className="font-bold text-[#17144B]">✕ {dashboardData.payment_status.pending}</span>

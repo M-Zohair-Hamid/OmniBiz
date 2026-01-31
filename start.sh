@@ -9,12 +9,12 @@ mkdir -p "$DB_DIR"
 
 echo ""
 echo "╔════════════════════════════════════╗"
-echo "║      Multi-Company Application      ║"
+echo "║      Multi-Company Application     ║"
 echo "╚════════════════════════════════════╝"
 echo ""
 echo "Select a company to start:"
 echo "  1) UmarSons (PC)"
-echo "  2) Makkah Packages (QP)"
+echo "  2) Makkah Packages (MP)"
 read -p "Enter choice (1 or 2): " company_choice
 
 case $company_choice in
@@ -24,7 +24,7 @@ case $company_choice in
     ;;
   2)
     selected_company="Makkah Packages"
-    company_code="QP"
+    company_code="MP"
     ;;
   *)
     echo "Invalid choice. Exiting."

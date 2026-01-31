@@ -7,7 +7,7 @@ const LoginPage = () => {
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(false);
   const [companiesLoading, setCompaniesLoading] = useState(true);
-  const { login, user, setUserDirect } = useContext(AuthContext);
+  const { user, setUserDirect } = useContext(AuthContext);
   const { showToast } = useContext(ToastContext);
   const navigate = useNavigate();
 
@@ -21,7 +21,7 @@ const LoginPage = () => {
     // Hardcode companies - no API call needed
     setCompanies([
       { id: 1, name: 'UmarSons', code: 'PC' },
-      { id: 2, name: 'Makkah Packages', code: 'QP' }
+      { id: 2, name: 'Makkah Packages', code: 'MP' }
     ]);
     setCompaniesLoading(false);
   }, []);
@@ -98,7 +98,13 @@ const LoginPage = () => {
                     className="group backdrop-blur-xl bg-white bg-opacity-20 hover:bg-opacity-30 border-2 border-white border-opacity-30 hover:border-opacity-50 rounded-2xl p-8 transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-[#00D4FF]/50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <div className="text-center">
-                      <div className="mb-4 text-6xl">{company.code === 'PC' ? '🏢' : '📦'}</div>
+                      <div className="mb-4 flex justify-center">
+                        <img 
+                          src={company.code === 'PC' ? '/umarsons-logo.png' : '/makkahpackages-logo.png'} 
+                          alt={company.name}
+                          className="h-24 object-contain"
+                        />
+                      </div>
                       <h2 className="text-3xl font-bold text-white mb-2">{company.name}</h2>
                       <p className="text-[#EBEEF5] text-sm">Code: {company.code}</p>
                     </div>

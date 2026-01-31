@@ -116,7 +116,7 @@ const BuyersPage = () => {
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-[#17144B] via-[#3A3F8C] to-[#17144B] relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-[#17144B] via-[#3A3F8C] to-[#17144B] opacity-80"></div>
-      <Sidebar companyName={user?.full_name || 'User'} />
+      <Sidebar companyName={user?.company_name || 'Business'} />
       
       <div className="flex-1 ml-64 relative z-10">
         <div className="p-8">
