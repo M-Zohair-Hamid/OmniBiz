@@ -240,6 +240,15 @@ def generate_sti_pdf(order_id):
                 padding: 0;
                 box-sizing: border-box;
             }}
+
+            @page {{
+                size: A4;
+                margin: 12mm;
+            }}
+
+            html, body {{
+                height: 100%;
+            }}
             
             body {{
                 font-family: Arial, Helvetica, sans-serif;
@@ -252,18 +261,35 @@ def generate_sti_pdf(order_id):
                 max-width: 800px;
                 margin: 0 auto;
                 background: white;
-                padding: 30px;
+                padding: 10px;
                 position: relative;
                 z-index: 1;
                 box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                min-height: 100%;
+                display: flex;
+                flex-direction: column;
+            }}
+
+            .invoice-content {{
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+            }}
+
+            .invoice-bottom {{
+                margin-top: auto;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                page-break-inside: avoid;
             }}
             
             .invoice-header {{
                 position: relative;
                 text-align: center;
-                margin-bottom: 20px;
-                padding-bottom: 15px;
-                border-bottom: 3px solid #17144B;
+                margin-bottom: 5px;
+                padding-bottom: 5px;
+                border-bottom: 2px solid #17144B;
             }}
             
             .company-logo {{
@@ -287,17 +313,17 @@ def generate_sti_pdf(order_id):
             
             .company-info h1 {{
                 font-family: 'Montserrat', Arial, sans-serif;
-                font-size: 28px;
+                font-size: 20px;
                 font-weight: 800;
-                margin-bottom: 8px;
+                margin-bottom: 3px;
                 color: #17144B;
                 letter-spacing: 2px;
             }}
             
             .company-info p {{
-                margin: 2px 0;
+                margin: 1px 0;
                 color: #333;
-                font-size: 10px;
+                font-size: 9px;
             }}
             
             .company-info p.address {{
@@ -308,10 +334,10 @@ def generate_sti_pdf(order_id):
             .invoice-title {{
                 font-family: 'Montserrat', Arial, sans-serif;
                 text-align: center;
-                font-size: 26px;
+                font-size: 18px;
                 font-weight: 800;
                 color: #17144B;
-                margin: 15px 0;
+                margin: 5px 0;
                 text-transform: uppercase;
             }}
             
@@ -319,7 +345,7 @@ def generate_sti_pdf(order_id):
                 display: grid;
                 grid-template-columns: 1fr 1fr;
                 gap: 20px;
-                margin-bottom: 20px;
+                margin-bottom: 10px;
             }}
             
             .details-section {{
@@ -353,7 +379,8 @@ def generate_sti_pdf(order_id):
             .invoice-table {{
                 width: 100%;
                 border-collapse: collapse;
-                margin: 20px 0;
+                margin: 0;
+                padding: 0;
                 font-size: 10px;
             }}
             
@@ -363,11 +390,11 @@ def generate_sti_pdf(order_id):
             }}
             
             .invoice-table th {{
-                padding: 10px 8px;
+                padding: 6px 6px;
                 text-align: left;
                 font-weight: bold;
                 text-transform: uppercase;
-                font-size: 10px;
+                font-size: 9px;
             }}
             
             .invoice-table th.center {{
@@ -379,7 +406,7 @@ def generate_sti_pdf(order_id):
             }}
             
             .invoice-table td {{
-                padding: 8px;
+                padding: 4px;
                 border-bottom: 1px solid #e5e7eb;
                 color: #374151;
             }}
@@ -394,8 +421,9 @@ def generate_sti_pdf(order_id):
             
             .summary-section {{
                 width: 100%;
-                margin-top: 10px;
-                border: 2px solid #17144B;
+                margin: 0;
+                padding: 0;
+                border: 1px solid #17144B;
                 border-radius: 4px;
                 overflow: hidden;
             }}
@@ -403,7 +431,7 @@ def generate_sti_pdf(order_id):
             .summary-row {{
                 display: flex;
                 justify-content: space-between;
-                padding: 8px 12px;
+                padding: 5px 10px;
                 font-size: 11px;
                 border-bottom: 1px solid #e5e7eb;
             }}
@@ -421,34 +449,34 @@ def generate_sti_pdf(order_id):
                 background: linear-gradient(135deg, #17144B, #0d0a2e);
                 color: white;
                 font-weight: bold;
-                font-size: 14px;
+                font-size: 12px;
                 border-bottom: none;
             }}
             
             .amount-in-words {{
-                margin-top: 15px;
-                padding: 10px 12px;
+                margin-top: 8px;
+                padding: 8px 10px;
                 background: #e8e7f5;
                 border-left: 4px solid #17144B;
                 border-radius: 4px;
-                font-size: 11px;
+                font-size: 10px;
                 color: #17144B;
                 font-weight: 600;
             }}
             
             .tax-breakdown {{
-                margin-top: 20px;
-                padding: 15px;
+                margin-top: 8px;
+                padding: 10px;
                 background: #e8e7f5;
                 border-left: 4px solid #17144B;
                 border-radius: 4px;
             }}
             
             .tax-breakdown h4 {{
-                font-size: 12px;
+                font-size: 10px;
                 font-weight: bold;
                 color: #17144B;
-                margin-bottom: 10px;
+                margin-bottom: 5px;
                 text-transform: uppercase;
             }}
             
@@ -470,8 +498,8 @@ def generate_sti_pdf(order_id):
             .invoice-footer {{
                 text-align: center;
                 margin-top: 25px;
-                padding-top: 15px;
-                border-top: 2px solid #e5e7eb;
+                padding-top: 8px;
+                border-top: 1px solid #e5e7eb;
                 font-size: 9px;
                 color: #6b7280;
             }}
@@ -483,98 +511,102 @@ def generate_sti_pdf(order_id):
     </head>
     <body>
         <div class="invoice-container">
-            <!-- Header -->
-            <div class="invoice-header">
-                <div class="company-logo">
-                    <!-- Logo will be embedded or referenced -->
+            <div class="invoice-content">
+                <!-- Header -->
+                <div class="invoice-header">
+                    <div class="company-logo">
+                        <!-- Logo will be embedded or referenced -->
+                    </div>
+                    <div class="company-info">
+                        <h1>{company_name}</h1>
+                        <p class="address">P-5284, ST#09 REHMATABAD, SHEIKUPURA ROAD FAISALABAD.</p>
+                    </div>
                 </div>
-                <div class="company-info">
-                    <h1>{company_name}</h1>
-                    <p class="address">P-5284, ST#09 REHMATABAD, SHEIKUPURA ROAD FAISALABAD.</p>
+                
+                <!-- Invoice Title -->
+                <div class="invoice-title">Sales Tax Invoice</div>
+                
+                <!-- Details Grid -->
+                <div class="details-grid">
+                    <div class="details-section">
+                        <h3>Bill To:</h3>
+                        <p><strong>{buyer.company_name}</strong></p>
+                        <p><span class="label">City:</span> {buyer.city or 'N/A'}</p>
+                        <p><span class="label">NTN:</span> {buyer.ntn_number or 'N/A'}</p>
+                        <p><span class="label">GST #:</span> {buyer.gst_number or 'N/A'}</p>
+                        <p><span class="label">Phone:</span> {buyer.phone or 'N/A'}</p>
+                    </div>
+                    <div class="details-section">
+                        <h3>Invoice Details:</h3>
+                        <p><span class="label">ID#:</span> {order.id}</p>
+                        <p><span class="label">Date:</span> {order_date_str}</p>
+                        <p><span class="label">Due Date:</span> {due_date}</p>
+                    </div>
                 </div>
-            </div>
-            
-            <!-- Invoice Title -->
-            <div class="invoice-title">Sales Tax Invoice</div>
-            
-            <!-- Details Grid -->
-            <div class="details-grid">
-                <div class="details-section">
-                    <h3>Bill To:</h3>
-                    <p><strong>{buyer.company_name}</strong></p>
-                    <p><span class="label">City:</span> {buyer.city or 'N/A'}</p>
-                    <p><span class="label">NTN:</span> {buyer.ntn_number or 'N/A'}</p>
-                    <p><span class="label">GST #:</span> {buyer.gst_number or 'N/A'}</p>
-                    <p><span class="label">Phone:</span> {buyer.phone or 'N/A'}</p>
-                </div>
-                <div class="details-section">
-                    <h3>Invoice Details:</h3>
-                    <p><span class="label">ID#:</span> {order.id}</p>
-                    <p><span class="label">Date:</span> {order_date_str}</p>
-                    <p><span class="label">Due Date:</span> {due_date}</p>
-                </div>
-            </div>
-            
-            <!-- Items Table -->
-            <table class="invoice-table">
-                <thead>
-                    <tr>
-                        <th style="width: 4%;">#</th>
-                        <th style="width: 30%;">Description</th>
-                        <th class="center" style="width: 8%;">Qty</th>
-                        <th class="right" style="width: 12%;">Rate</th>
-                        <th class="center" style="width: 8%;">Tax %</th>
-                        <th class="right" style="width: 15%;">Amount Before Tax</th>
-                        <th class="right" style="width: 15%;">Amount After Tax</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {items_rows}
-                </tbody>
-            </table>
-            
-            <!-- Summary -->
-            <div class="summary-section">
-                <div class="summary-row subtotal">
-                    <span>Subtotal (Before Tax):</span>
-                    <span>₨ {subtotal:,.2f}</span>
-                </div>
-                <div class="summary-row tax">
-                    <span>Sales Tax ({order.tax_rate}%):</span>
-                    <span>₨ {total_tax:,.2f}</span>
-                </div>
-                <div class="summary-row">
-                    <span>Additional Charges:</span>
-                    <span>₨ {0:,.2f}</span>
-                </div>
-                <div class="summary-row total">
-                    <span>TOTAL AMOUNT:</span>
-                    <span>₨ {total_amount:,.2f}</span>
-                </div>
-            </div>
-            
-            <!-- Amount in Words -->
-            <div class="amount-in-words">
-                <strong>Amount in Words:</strong> [Amount in words will be added]
-            </div>
-            
-            <!-- Tax Breakdown -->
-            <div class="tax-breakdown">
-                <h4>Sales Tax Breakdown</h4>
-                <table>
-                    <tr>
-                        <td>Base Amount (Before Tax):</td>
-                        <td>₨ {subtotal:,.2f}</td>
-                    </tr>
-                    <tr>
-                        <td>GST @ {order.tax_rate}%:</td>
-                        <td>₨ {total_tax:,.2f}</td>
-                    </tr>
-                    <tr>
-                        <td style="border-top: 1px solid #17144B; padding-top: 8px;">Total Tax Amount:</td>
-                        <td style="border-top: 1px solid #17144B; padding-top: 8px;">₨ {total_tax:,.2f}</td>
-                    </tr>
+                
+                <!-- Items Table -->
+                <table class="invoice-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 4%;">#</th>
+                            <th style="width: 30%;">Description</th>
+                            <th class="center" style="width: 8%;">Qty</th>
+                            <th class="right" style="width: 12%;">Rate</th>
+                            <th class="center" style="width: 8%;">Tax %</th>
+                            <th class="right" style="width: 15%;">Amount Before Tax</th>
+                            <th class="right" style="width: 15%;">Amount After Tax</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {items_rows}
+                    </tbody>
                 </table>
+                
+                <div class="invoice-bottom">
+                    <!-- Summary -->
+                    <div class="summary-section">
+                        <div class="summary-row subtotal">
+                            <span>Subtotal (Before Tax):</span>
+                            <span>₨ {subtotal:,.2f}</span>
+                        </div>
+                        <div class="summary-row tax">
+                            <span>Sales Tax ({order.tax_rate}%):</span>
+                            <span>₨ {total_tax:,.2f}</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Additional Charges:</span>
+                            <span>₨ {0:,.2f}</span>
+                        </div>
+                        <div class="summary-row total">
+                            <span>TOTAL AMOUNT:</span>
+                            <span>₨ {total_amount:,.2f}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Amount in Words -->
+                    <div class="amount-in-words">
+                        <strong>Amount in Words:</strong> [Amount in words will be added]
+                    </div>
+                    
+                    <!-- Tax Breakdown -->
+                    <div class="tax-breakdown">
+                        <h4>Sales Tax Breakdown</h4>
+                        <table>
+                            <tr>
+                                <td>Base Amount (Before Tax):</td>
+                                <td>₨ {subtotal:,.2f}</td>
+                            </tr>
+                            <tr>
+                                <td>GST @ {order.tax_rate}%:</td>
+                                <td>₨ {total_tax:,.2f}</td>
+                            </tr>
+                            <tr>
+                                <td style="border-top: 1px solid #17144B; padding-top: 8px;">Total Tax Amount:</td>
+                                <td style="border-top: 1px solid #17144B; padding-top: 8px;">₨ {total_tax:,.2f}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
             </div>
             
             <!-- Footer -->

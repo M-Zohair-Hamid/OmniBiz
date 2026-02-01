@@ -4,6 +4,7 @@
   width: 100%;
   min-height: 100vh;
   background: #f8f8f8;
+  font-family: 'Montserrat', Arial, sans-serif;
 }
 
 .invoice-controls {
@@ -72,33 +73,56 @@
 }
 
 .invoice-container {
-  max-width: 210mm;
+  width: 210mm;
+  height: 297mm;
   margin: 30px auto;
   background: white;
-  padding: 15px;
+  padding: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   position: relative;
   z-index: 10;
-  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  page-break-after: always;
+  box-sizing: border-box;
 }
 
 /* Content wrapper to push footer to bottom */
 .invoice-content {
   padding: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.invoice-bottom {
+  margin-top: auto;
+  padding-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  page-break-inside: avoid;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Watermark */
 .watermark {
-  position: fixed;
+  position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 400px;
-  height: 400px;
+  width: 600px;
+  height: 600px;
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-  z-index: -1000;
+  z-index: 0;
   pointer-events: none;
 }
 
@@ -106,19 +130,20 @@
 .invoice-header {
   position: relative;
   text-align: center;
-  margin-bottom: 6px;
-  padding-bottom: 6px;
+  margin-bottom: 8px;
+  padding: 8px 0 6px 0;
   border-bottom: 3px solid #17144B;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .logo-container {
   position: absolute;
-  left: 0;
-  width: 80px;
-  height: 60px;
+  left: 8px;
+  width: 75px;
+  height: 75px;
 }
 
 .company-logo {
@@ -134,15 +159,15 @@
 
 .company-name {
   font-family: 'Montserrat', Arial, sans-serif;
-  font-size: 20px;
+  font-size: 32px;
   font-weight: 800;
-  margin-bottom: 2px;
+  margin-bottom: 6px;
   color: #17144B;
-  letter-spacing: 2px;
+  letter-spacing: 3px;
 }
 
 .company-address {
-  font-size: 8px;
+  font-size: 10px;
   color: #333;
   margin: 0;
   line-height: 1.2;
@@ -155,8 +180,11 @@
   font-size: 16px;
   font-weight: 800;
   color: #17144B;
-  margin: 4px 0;
+  margin: 6px 0;
+  padding: 5px 0;
   text-transform: uppercase;
+  border-bottom: 2px solid #ddd;
+  flex-shrink: 0;
 }
 
 /* Details Grid */
@@ -164,8 +192,12 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
-  margin-bottom: 8px;
+  margin: 6px 0;
+  padding: 0;
   page-break-inside: avoid;
+  flex-shrink: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .details-section {
@@ -173,44 +205,52 @@
   padding: 6px;
   border-radius: 4px;
   page-break-inside: avoid;
+  background: #fafafa;
 }
 
 .details-section h3 {
-  font-size: 8px;
+  font-size: 12px;
   font-weight: bold;
   color: #17144B;
-  margin-bottom: 3px;
+  margin-bottom: 4px;
   text-transform: uppercase;
   border-bottom: 1px solid #e5e7eb;
-  padding-bottom: 2px;
+  padding-bottom: 3px;
+  font-family: 'Montserrat', Arial, sans-serif;
+  text-align: center;
 }
 
 .buyer-name {
-  font-size: 9px !important;
+  font-size: 14px !important;
   font-weight: bold !important;
   color: #17144B !important;
-  margin-bottom: 3px !important;
+  margin-bottom: 4px !important;
 }
 
 .details-section p {
-  font-size: 8px;
+  font-size: 13px;
   color: #374151;
-  margin: 1px 0;
+  margin: 2px 0;
+  font-family: Arial, sans-serif;
+  line-height: 1.4;
 }
 
 .details-section .label {
   font-weight: bold;
   display: inline-block;
-  width: 80px;
+  width: 70px;
 }
 
 /* Invoice Table - CRITICAL FIX FOR HEADERS */
 .invoice-table {
   width: 100%;
   border-collapse: collapse;
-  margin: 20px 0;
-  font-size: 10px;
+  margin: 6px 0;
+  padding: 0;
+  font-size: 11px;
   border: 1px solid #333;
+  flex-shrink: 0;
+  box-sizing: border-box;
 }
 
 .invoice-table thead {
@@ -219,26 +259,34 @@
 }
 
 .invoice-table th {
-  padding: 12px 8px;
+  padding: 6px 4px;
   text-align: center;
   font-weight: bold;
   text-transform: uppercase;
-  font-size: 10px;
+  font-size: 9px;
   border: 1px solid #0d0a2e;
   color: white;
   background: linear-gradient(135deg, #17144B, #0d0a2e) !important;
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
+  font-family: 'Montserrat', Arial, sans-serif;
+}
+
+.invoice-table tbody {
+  text-align: center;
 }
 
 .invoice-table tbody tr {
   border-bottom: 1px solid #e5e7eb;
+  text-align: center;
 }
 
 .invoice-table td {
-  padding: 3px 2px;
+  padding: 6px 4px;
   border: 1px solid #e5e7eb;
   color: #374151;
+  text-align: center;
+  font-size: 11px;
 }
 
 .invoice-table td.center {
@@ -252,19 +300,23 @@
 /* Summary Section */
 .summary-section {
   width: 100%;
-  margin-top: 10px;
+  margin: 4px 0;
+  padding: 0;
   border: 2px solid #17144B;
   border-radius: 4px;
   overflow: hidden;
   page-break-inside: avoid;
+  flex-shrink: 0;
+  box-sizing: border-box;
 }
 
 .summary-row {
   display: flex;
   justify-content: space-between;
-  padding: 4px 8px;
-  font-size: 9px;
+  padding: 8px 12px;
+  font-size: 13px;
   border-bottom: 1px solid #e5e7eb;
+  font-family: Arial, sans-serif;
 }
 
 .summary-row.subtotal {
@@ -280,54 +332,63 @@
   background: linear-gradient(135deg, #17144B, #0d0a2e);
   color: white;
   font-weight: bold;
-  font-size: 10px;
+  font-size: 14px;
   border-bottom: none;
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
+  font-family: 'Montserrat', Arial, sans-serif;
 }
 
 /* Amount in Words */
 .amount-in-words {
-  margin-top: 6px;
-  padding: 6px 8px;
+  margin: 4px 0;
+  padding: 10px 12px;
   background: #e8e7f5;
   border-left: 4px solid #17144B;
   border-radius: 4px;
-  font-size: 9px;
+  font-size: 13px;
   color: #17144B;
   font-weight: 600;
   page-break-inside: avoid;
+  flex-shrink: 0;
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
 }
 
 /* Tax Breakdown */
 .tax-breakdown {
-  margin-top: 6px;
-  padding: 8px;
+  margin: 4px 0;
+  padding: 10px 12px;
   background: #e8e7f5;
   border-left: 4px solid #17144B;
   border-radius: 4px;
   page-break-inside: avoid;
+  flex-shrink: 0;
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .tax-breakdown h4 {
-  font-size: 9px;
+  font-size: 10px;
   font-weight: bold;
   color: #17144B;
   margin-bottom: 4px;
   text-transform: uppercase;
+  font-family: 'Montserrat', Arial, sans-serif;
 }
 
 .tax-breakdown table {
   width: 100%;
-  font-size: 8px;
+  font-size: 11px;
 }
 
 .tax-breakdown td {
-  padding: 2px 0;
+  padding: 4px 0;
   color: #17144B;
 }
 
@@ -340,17 +401,19 @@
 .invoice-footer {
   text-align: center;
   margin-top: 6px;
-  padding-top: 6px;
+  padding: 8px 0;
   border-top: 2px solid #e5e7eb;
-  font-size: 7px;
+  font-size: 10px;
   color: #6b7280;
   page-break-inside: avoid;
-  line-height: 1.2;
+  line-height: 1.4;
+  flex-shrink: 0;
+  font-family: Arial, sans-serif;
 }
 
 .invoice-footer p {
-  margin: 1px 0;
-  line-height: 1.2;
+  margin: 2px 0;
+  line-height: 1.4;
 }
 
 /* 
@@ -388,77 +451,144 @@ PRINT LAYOUT RULES (DO NOT BREAK):
   }
 
   .invoice-container {
-    width: 100%;
+    width: 210mm;
+    height: 297mm;
     margin: 0;
-    padding: 0;
+    background: white;
+    padding: 12px;
     box-shadow: none;
+    position: relative;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    page-break-after: avoid;
+    box-sizing: border-box;
   }
 
-  /* Fixed Header on every page */
-  .invoice-header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 50mm;
-    padding: 5mm 10mm;
-    background: white;
-    z-index: 999;
+  .invoice-content {
+    padding: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    width: 100%;
+    box-sizing: border-box;
   }
 
-  /* Fixed Title below header */
-  .invoice-title {
-    position: fixed;
-    top: 50mm;
-    left: 0;
-    right: 0;
-    height: 15mm;
-    padding: 3mm 10mm;
-    background: white;
-    z-index: 999;
-  }
-
-  /* Content starts below title */
-  .details-grid {
-    margin-top: 70mm !important;
-  }
-
-  /* Fixed Footer on every page */
-  .invoice-footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 30mm;
-    padding: 3mm 10mm;
-    background: white;
-    z-index: 999;
-    margin-bottom: 0 !important;
-  }
-
-  .details-grid,
-  .invoice-table,
-  .summary-section,
-  .amount-in-words,
-  .tax-breakdown {
+  .invoice-bottom {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
     page-break-inside: avoid;
+    width: 100%;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    overflow: hidden;
   }
 
-  /* Keep watermark visible in print */
+  /* Header - top */
+  .invoice-header {
+    flex-shrink: 0;
+    padding: 8px;
+    background: white;
+    z-index: 1;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Title - after header */
+  .invoice-title {
+    flex-shrink: 0;
+    padding: 6px 8px;
+    background: white;
+    z-index: 1;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Details grid - after title */
+  .details-grid {
+    flex-shrink: 0;
+    padding: 0 8px;
+    margin-bottom: 6px;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  /* Table - after details */
+  .invoice-table {
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0 8px;
+    width: 100%;
+    box-sizing: border-box;
+    max-height: 40%;
+    overflow: hidden;
+  }
+
+  /* Amount in words - after table */
+  .amount-in-words {
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0 8px;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  /* Tax breakdown - after amount in words */
+  .tax-breakdown {
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0 8px;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  /* Summary - before footer */
+  .summary-section {
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0 8px;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  /* Footer - stays at bottom */
+  .invoice-footer {
+    flex-shrink: 0;
+    padding: 8px;
+    background: #f8f8f8;
+    z-index: 1;
+    border-top: 2px solid #e5e7eb;
+    margin-top: 0;
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 9px;
+  }
+
+  /* Watermark visible but behind content */
   .watermark {
     position: fixed;
     top: 50%;
     left: 50%;
-    z-index: -1000;
+    z-index: -1;
     display: block !important;
+    opacity: 1;
+    width: 600px;
+    height: 600px;
   }
 
   /* KEEP DETAILS GRID SIDE BY SIDE */
   .details-grid {
     display: grid !important;
     grid-template-columns: 1fr 1fr !important;
-    gap: 20px !important;
-    page-break-inside: avoid !important;
+    gap: 15px !important;
   }
 
   .details-section {
@@ -468,7 +598,6 @@ PRINT LAYOUT RULES (DO NOT BREAK):
   /* TABLE HEADERS MUST SHOW IN PRINT */
   .invoice-table {
     width: 100%;
-    page-break-inside: avoid;
     border-collapse: collapse;
   }
 
@@ -479,39 +608,28 @@ PRINT LAYOUT RULES (DO NOT BREAK):
   .invoice-table th {
     background: #17144B !important;
     color: white !important;
-    padding: 12px 8px !important;
+    padding: 6px 4px !important;
     border: 1px solid #0d0a2e !important;
+    font-size: 9px !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
   .invoice-table td {
-    border: 1px solid #ccc;
-    padding: 8px;
+    border: 1px solid #ddd;
+    padding: 6px;
+    font-size: 11px;
+    text-align: center;
   }
 
   .invoice-table tbody tr {
     page-break-inside: avoid;
   }
 
-  /* All sections stay together */
-  .invoice-header,
-  .invoice-title,
-  .invoice-table,
-  .summary-section,
-  .amount-in-words,
-  .tax-breakdown,
-  .invoice-footer {
-    page-break-inside: avoid !important;
-  }
-
   /* Adjust sizing for print */
-  .invoice-table {
-    font-size: 9px;
-  }
-
   .details-section p {
-    font-size: 9px;
+    font-size: 13px;
+    margin: 3px 0;
   }
 
   /* Maintain colors in print */
@@ -542,6 +660,18 @@ PRINT LAYOUT RULES (DO NOT BREAK):
     color: #17144B !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+    padding: 8px;
+    margin: 0 0 4px 0;
+    font-size: 13px;
+  }
+
+  .logo-container img {
+    max-width: 85px;
+    height: auto;
+  }
+
+  .company-info {
+    font-size: 9px;
   }
 }
 

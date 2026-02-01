@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, g
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from models import db, Buyer, User
 from utils import get_company_id_from_token, format_date_display
@@ -6,19 +6,28 @@ from datetime import datetime
 
 bp = Blueprint('buyers', __name__, url_prefix='/api/buyers')
 
+def get_session():
+    """Get the session bound to current company's database"""
+    company_code = getattr(g, 'company_code', 'umarsons')
+    engine = db.get_engine(bind=company_code)
+    from sqlalchemy.orm import sessionmaker
+    Session = sessionmaker(bind=engine)
+    return Session()
+
 def verify_company_access():
     """Verify user has access to the company"""
     return get_company_id_from_token()
 
 @bp.route('', methods=['GET'])
 def get_buyers():
+    session = get_session()
     company_id = verify_company_access()
     
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
     search = request.args.get('search', '', type=str)
     
-    query = Buyer.query.filter_by(company_id=company_id)
+    query = session.query(Buyer).filter_by(company_id=company_id)
     
     if search:
         query = query.filter(
@@ -27,7 +36,15 @@ def get_buyers():
             (Buyer.gst_number.ilike(f'%{search}%'))
         )
     
-    pagination = query.paginate(page=page, per_page=per_page)
+    # Get total count before pagination
+    total = query.count()
+    
+    # Apply ordering and pagination using offset/limit
+    offset = (page - 1) * per_page
+    items = query.order_by(Buyer.created_at.desc()).offset(offset).limit(per_page).all()
+    
+    # Calculate total pages
+    pages = (total + per_page - 1) // per_page
     
     return jsonify({
         'data': [{
@@ -42,16 +59,17 @@ def get_buyers():
             'city': b.city,
             'is_active': b.is_active,
             'created_at': format_date_display(b.created_at)
-        } for b in pagination.items],
-        'total': pagination.total,
-        'pages': pagination.pages,
+        } for b in items],
+        'total': total,
+        'pages': pages,
         'current_page': page
     }), 200
 
 @bp.route('/<int:buyer_id>', methods=['GET'])
 def get_buyer(buyer_id):
+    session = get_session()
     company_id = verify_company_access()
-    buyer = Buyer.query.filter_by(id=buyer_id, company_id=company_id).first()
+    buyer = session.query(Buyer).filter_by(id=buyer_id, company_id=company_id).first()
     
     if not buyer:
         return jsonify({'error': 'Buyer not found'}), 404
@@ -73,6 +91,7 @@ def get_buyer(buyer_id):
 
 @bp.route('', methods=['POST'])
 def create_buyer():
+    session = get_session()
     company_id = verify_company_access()
     data = request.get_json()
     
@@ -92,12 +111,12 @@ def create_buyer():
             company_id=company_id
         )
         
-        db.session.add(buyer)
-        db.session.commit()
+        session.add(buyer)
+        session.commit()
         
         return jsonify({'id': buyer.id, 'message': 'Buyer created successfully'}), 201
     except Exception as e:
-        db.session.rollback()
+        session.rollback()
         error_str = str(e)
         if 'company_name' in error_str or 'UNIQUE constraint failed' in error_str:
             if 'company_name' in error_str:
@@ -111,8 +130,9 @@ def create_buyer():
 
 @bp.route('/<int:buyer_id>', methods=['PUT'])
 def update_buyer(buyer_id):
+    session = get_session()
     company_id = verify_company_access()
-    buyer = Buyer.query.filter_by(id=buyer_id, company_id=company_id).first()
+    buyer = session.query(Buyer).filter_by(id=buyer_id, company_id=company_id).first()
     
     if not buyer:
         return jsonify({'error': 'Buyer not found'}), 404
@@ -131,10 +151,10 @@ def update_buyer(buyer_id):
         buyer.is_active = data.get('is_active', buyer.is_active)
         buyer.updated_at = datetime.utcnow()
         
-        db.session.commit()
+        session.commit()
         return jsonify({'message': 'Buyer updated successfully'}), 200
     except Exception as e:
-        db.session.rollback()
+        session.rollback()
         error_str = str(e)
         if 'company_name' in error_str:
             return jsonify({'error': 'Company name already exists in database'}), 409
@@ -147,13 +167,14 @@ def update_buyer(buyer_id):
 
 @bp.route('/<int:buyer_id>', methods=['DELETE'])
 def delete_buyer(buyer_id):
+    session = get_session()
     company_id = verify_company_access()
-    buyer = Buyer.query.filter_by(id=buyer_id, company_id=company_id).first()
+    buyer = session.query(Buyer).filter_by(id=buyer_id, company_id=company_id).first()
     
     if not buyer:
         return jsonify({'error': 'Buyer not found'}), 404
     
-    db.session.delete(buyer)
-    db.session.commit()
+    session.delete(buyer)
+    session.commit()
     
     return jsonify({'message': 'Buyer deleted successfully'}), 200

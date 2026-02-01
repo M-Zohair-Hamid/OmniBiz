@@ -55,29 +55,25 @@ def setup_makkah_packages():
         # Create buyers
         buyers = [
             Buyer(
-                name='Royal Textiles',
                 company_name='Royal Textile Industries',
                 contact_person='Zain Malik',
                 email='zain@royal.com',
                 phone='042-9876543',
                 address='789 Industrial Area, Karachi',
                 city='Karachi',
-                gst_number='GST-BUYER-003',
-                ntn_number='NTN-BUYER-003',
-                credit_limit=450000,
+                gst_number='GST-MP-BUYER-001',
+                ntn_number='NTN-MP-BUYER-001',
                 company_id=2
             ),
             Buyer(
-                name='Elite Fabrics',
                 company_name='Elite Fabric Solutions',
                 contact_person='Sara Ahmed',
                 email='sara@elite.com',
                 phone='042-1112223',
                 address='321 Export Zone, Karachi',
                 city='Karachi',
-                gst_number='GST-BUYER-004',
-                ntn_number='NTN-BUYER-004',
-                credit_limit=350000,
+                gst_number='GST-MP-BUYER-002',
+                ntn_number='NTN-MP-BUYER-002',
                 company_id=2
             )
         ]

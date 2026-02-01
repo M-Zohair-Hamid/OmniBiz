@@ -26,15 +26,16 @@ app.config['SQLALCHEMY_BINDS'] = {
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///umarsons.db'  # Default database
 
 # Initialize extensions
-CORS(app, resources={
-    r"/api/*": {
+CORS(app, 
+     resources={r"/api/*": {
         "origins": ["http://localhost:3000", "http://127.0.0.1:3000"],
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization", "X-Company-Code", "X-Company-Id"],
         "expose_headers": ["Content-Type", "X-Company-Code", "X-Company-Id"],
-        "supports_credentials": True
-    }
-})
+        "supports_credentials": True,
+        "max_age": 3600
+     }},
+     intercept_exceptions=True)
 jwt = JWTManager(app)
 
 # Import database and models
@@ -107,7 +108,7 @@ def before_request():
         auth_header = request.headers.get('Authorization', '')
         if 'mock-token-PC' in auth_header:
             company_code = 'umarsons'
-        elif 'mock-token-QP' in auth_header:
+        elif 'mock-token-MP' in auth_header or 'mock-token-QP' in auth_header:
             company_code = 'makkah_packages'
 
     # Allow explicit company override header from frontend
@@ -115,7 +116,7 @@ def before_request():
         header_code = request.headers.get('X-Company-Code', '').upper()
         if header_code in ['PC', 'UMARSONS']:
             company_code = 'umarsons'
-        elif header_code in ['QP', 'MAKKAH_PACKAGES']:
+        elif header_code in ['QP', 'MP', 'MAKKAH_PACKAGES', 'MAKKAH']:
             company_code = 'makkah_packages'
     
     # Default to umarsons if no company specified
@@ -123,9 +124,21 @@ def before_request():
         company_code = 'umarsons'
     
     # Switch database
-    print(f"[BEFORE_REQUEST] Path: {request.path}, Switching to database: {company_code}")
+    print(f"[BEFORE_REQUEST] Path: {request.path}, Company: {company_code}")
     switch_database(app, company_code)
     g.company_code = company_code
+
+@app.after_request
+def after_request(response):
+    """Ensure CORS headers are present on all responses"""
+    origin = request.headers.get('Origin')
+    if origin in ["http://localhost:3000", "http://127.0.0.1:3000"]:
+        response.headers['Access-Control-Allow-Origin'] = origin
+        response.headers['Access-Control-Allow-Credentials'] = 'true'
+        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Company-Code, X-Company-Id'
+        response.headers['Access-Control-Expose-Headers'] = 'Content-Type, X-Company-Code, X-Company-Id'
+    return response
 
 # Register blueprints
 from routes import auth_bp, buyer_bp, item_bp, order_bp, report_bp, dashboard_bp, ledger_bp

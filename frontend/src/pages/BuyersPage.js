@@ -15,7 +15,15 @@ const BuyersPage = () => {
   const [totalPages, setTotalPages] = useState(1);
   
   const [formData, setFormData] = useState({
-    company_name: '', gst_number: 'GST-', ntn_number: 'NTN-', address: '', contact_person: '', email: '', phone: '', city: ''
+    company_name: '',
+    gst_number: 'GST-',
+    ntn_number: 'NTN-',
+    address: '',
+    contact_person: '',
+    email: '',
+    phone: '',
+    city: '',
+    is_filer: true
   });
 
   const { showToast } = useContext(ToastContext);
@@ -52,16 +60,19 @@ const BuyersPage = () => {
   };
 
   const handleAddBuyer = () => {
-    setFormData({ company_name: '', gst_number: 'GST-', ntn_number: 'NTN-', address: '', contact_person: '', email: '', phone: '', city: '' });
+    setFormData({ company_name: '', gst_number: 'GST-', ntn_number: 'NTN-', address: '', contact_person: '', email: '', phone: '', city: '', is_filer: true });
     setEditingId(null);
     setShowForm(true);
   };
 
   const handleEditBuyer = (buyer) => {
+    const isNonFiler = (buyer.gst_number || '').trim().toUpperCase() === 'N/A'
+      && (buyer.ntn_number || '').trim().toUpperCase() === 'N/A';
     setFormData({
       ...buyer,
-      gst_number: ensurePrefix(buyer.gst_number || 'GST-', 'GST-'),
-      ntn_number: ensurePrefix(buyer.ntn_number || 'NTN-', 'NTN-')
+      gst_number: isNonFiler ? 'N/A' : ensurePrefix(buyer.gst_number || 'GST-', 'GST-'),
+      ntn_number: isNonFiler ? 'N/A' : ensurePrefix(buyer.ntn_number || 'NTN-', 'NTN-'),
+      is_filer: !isNonFiler
     });
     setEditingId(buyer.id);
     setShowForm(true);
@@ -70,14 +81,15 @@ const BuyersPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const gst = ensurePrefix(formData.gst_number, 'GST-');
-    const ntn = ensurePrefix(formData.ntn_number, 'NTN-');
+    const isFiler = formData.is_filer;
+    const gst = isFiler ? ensurePrefix(formData.gst_number, 'GST-') : 'N/A';
+    const ntn = isFiler ? ensurePrefix(formData.ntn_number, 'NTN-') : 'N/A';
 
-    const hasGstDigits = (gst.replace(/^GST-/, '').trim().length > 0);
-    const hasNtnDigits = (ntn.replace(/^NTN-/, '').trim().length > 0);
+    const hasGstDigits = isFiler ? (gst.replace(/^GST-/, '').trim().length > 0) : true;
+    const hasNtnDigits = isFiler ? (ntn.replace(/^NTN-/, '').trim().length > 0) : true;
 
-    if (!formData.company_name || !hasGstDigits || !hasNtnDigits || !formData.address) {
-      showToast('Please fill required fields: Company Name, GST, NTN, Address', 'warning');
+    if (!formData.company_name || !formData.address || !hasGstDigits || !hasNtnDigits) {
+      showToast(isFiler ? 'Please fill required fields: Company Name, GST, NTN, Address' : 'Please fill required fields: Company Name, Address', 'warning');
       return;
     }
 
@@ -132,7 +144,10 @@ const BuyersPage = () => {
 
           {/* Search */}
           <div className="mb-6">
+            <label htmlFor="searchBuyers" className="block text-white font-semibold mb-2">Search</label>
             <input
+              id="searchBuyers"
+              name="searchBuyers"
               type="text"
               placeholder="Search buyers..."
               value={searchTerm}
@@ -220,37 +235,75 @@ const BuyersPage = () => {
                 <h2 className="text-2xl font-bold mb-6">{editingId ? 'Edit Buyer' : 'Add Buyer'}</h2>
                 <form onSubmit={handleSubmit}>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div>
-                      <label className="block font-bold text-[#17144B] mb-2">Company Name *</label>
-                      <input type="text" value={formData.company_name} onChange={(e) => setFormData({...formData, company_name: e.target.value})} className="w-full px-4 py-3 border border-[#3A3F8C] rounded-lg text-base" />
+                    <div className="md:col-span-3">
+                      <label htmlFor="filerStatus" className="block font-bold text-[#17144B] mb-2">Filer Status *</label>
+                      <div className="flex gap-3">
+                        <button
+                          type="button"
+                          id="filerStatus"
+                          onClick={() => setFormData({ ...formData, is_filer: true, gst_number: ensurePrefix(formData.gst_number || 'GST-', 'GST-'), ntn_number: ensurePrefix(formData.ntn_number || 'NTN-', 'NTN-') })}
+                          className={`px-4 py-2 rounded-lg font-semibold border ${formData.is_filer ? 'bg-[#00D4FF] text-[#17144B] border-[#00D4FF]' : 'bg-white text-[#17144B] border-[#3A3F8C]'}`}
+                        >
+                          Filer
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFormData({ ...formData, is_filer: false, gst_number: 'N/A', ntn_number: 'N/A' })}
+                          className={`px-4 py-2 rounded-lg font-semibold border ${!formData.is_filer ? 'bg-[#00D4FF] text-[#17144B] border-[#00D4FF]' : 'bg-white text-[#17144B] border-[#3A3F8C]'}`}
+                        >
+                          Non-Filer
+                        </button>
+                      </div>
                     </div>
                     <div>
-                      <label className="block font-bold text-[#17144B] mb-2">GST Number *</label>
-                      <input type="text" value={formData.gst_number} onChange={(e) => setFormData({...formData, gst_number: ensurePrefix(e.target.value, 'GST-')})} className="w-full px-4 py-3 border border-[#3A3F8C] rounded-lg text-base" placeholder="GST-XXXX-XXXX" />
+                      <label htmlFor="companyName" className="block font-bold text-[#17144B] mb-2">Company Name *</label>
+                      <input id="companyName" name="company_name" type="text" value={formData.company_name} onChange={(e) => setFormData({...formData, company_name: e.target.value})} className="w-full px-4 py-3 border border-[#3A3F8C] rounded-lg text-base" />
                     </div>
                     <div>
-                      <label className="block font-bold text-[#17144B] mb-2">NTN Number *</label>
-                      <input type="text" value={formData.ntn_number} onChange={(e) => setFormData({...formData, ntn_number: ensurePrefix(e.target.value, 'NTN-')})} className="w-full px-4 py-3 border border-[#3A3F8C] rounded-lg text-base" placeholder="NTN-XXXXXXX" />
+                      <label htmlFor="gstNumber" className="block font-bold text-[#17144B] mb-2">GST Number *</label>
+                      <input
+                        id="gstNumber"
+                        name="gst_number"
+                        type="text"
+                        value={formData.gst_number}
+                        onChange={(e) => formData.is_filer && setFormData({ ...formData, gst_number: ensurePrefix(e.target.value, 'GST-') })}
+                        className="w-full px-4 py-3 border border-[#3A3F8C] rounded-lg text-base"
+                        placeholder="GST-XXXX-XXXX"
+                        disabled={!formData.is_filer}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="ntnNumber" className="block font-bold text-[#17144B] mb-2">NTN Number *</label>
+                      <input
+                        id="ntnNumber"
+                        name="ntn_number"
+                        type="text"
+                        value={formData.ntn_number}
+                        onChange={(e) => formData.is_filer && setFormData({ ...formData, ntn_number: ensurePrefix(e.target.value, 'NTN-') })}
+                        className="w-full px-4 py-3 border border-[#3A3F8C] rounded-lg text-base"
+                        placeholder="NTN-XXXXXXX"
+                        disabled={!formData.is_filer}
+                      />
                     </div>
                     <div className="md:col-span-3">
-                      <label className="block font-bold text-[#17144B] mb-2">Address *</label>
-                      <textarea value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} className="w-full px-4 py-3 border border-[#3A3F8C] rounded-lg text-base" rows="2" />
+                      <label htmlFor="address" className="block font-bold text-[#17144B] mb-2">Address *</label>
+                      <textarea id="address" name="address" value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} className="w-full px-4 py-3 border border-[#3A3F8C] rounded-lg text-base" rows="2" />
                     </div>
                     <div>
-                      <label className="block text-gray-700 font-semibold mb-2">Contact Person</label>
-                      <input type="text" value={formData.contact_person} onChange={(e) => setFormData({...formData, contact_person: e.target.value})} className="w-full px-4 py-3 border rounded-lg text-base" />
+                      <label htmlFor="contactPerson" className="block text-gray-700 font-semibold mb-2">Contact Person</label>
+                      <input id="contactPerson" name="contact_person" type="text" value={formData.contact_person} onChange={(e) => setFormData({...formData, contact_person: e.target.value})} className="w-full px-4 py-3 border rounded-lg text-base" />
                     </div>
                     <div>
-                      <label className="block text-gray-700 font-semibold mb-2">Email</label>
-                      <input type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full px-4 py-3 border rounded-lg text-base" />
+                      <label htmlFor="email" className="block text-gray-700 font-semibold mb-2">Email</label>
+                      <input id="email" name="email" type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full px-4 py-3 border rounded-lg text-base" />
                     </div>
                     <div>
-                      <label className="block text-gray-700 font-semibold mb-2">Phone</label>
-                      <input type="tel" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full px-4 py-3 border rounded-lg text-base" />
+                      <label htmlFor="phone" className="block text-gray-700 font-semibold mb-2">Phone</label>
+                      <input id="phone" name="phone" type="tel" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full px-4 py-3 border rounded-lg text-base" />
                     </div>
                     <div>
-                      <label className="block text-gray-700 font-semibold mb-2">City</label>
-                      <input type="text" value={formData.city} onChange={(e) => setFormData({...formData, city: e.target.value})} className="w-full px-4 py-3 border rounded-lg text-base" />
+                      <label htmlFor="city" className="block text-gray-700 font-semibold mb-2">City</label>
+                      <input id="city" name="city" type="text" value={formData.city} onChange={(e) => setFormData({...formData, city: e.target.value})} className="w-full px-4 py-3 border rounded-lg text-base" />
                     </div>
                   </div>
                   <div className="flex gap-4 mt-8">

@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, g
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from models import db, Item
 from utils import get_company_id_from_token, format_date_display
@@ -6,19 +6,28 @@ from datetime import datetime
 
 bp = Blueprint('items', __name__, url_prefix='/api/items')
 
+def get_session():
+    """Get the session bound to current company's database"""
+    company_code = getattr(g, 'company_code', 'umarsons')
+    engine = db.get_engine(bind=company_code)
+    from sqlalchemy.orm import sessionmaker
+    Session = sessionmaker(bind=engine)
+    return Session()
+
 def verify_company_access():
     """Verify user has access to the company"""
     return get_company_id_from_token()
 
 @bp.route('', methods=['GET'])
 def get_items():
+    session = get_session()
     company_id = verify_company_access()
     
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
     search = request.args.get('search', '', type=str)
     
-    query = Item.query.filter_by(company_id=company_id)
+    query = session.query(Item).filter_by(company_id=company_id)
     
     if search:
         query = query.filter(
@@ -26,7 +35,15 @@ def get_items():
             (Item.code.ilike(f'%{search}%'))
         )
     
-    pagination = query.paginate(page=page, per_page=per_page)
+    # Get total count before pagination
+    total = query.count()
+    
+    # Apply ordering and pagination using offset/limit
+    offset = (page - 1) * per_page
+    items = query.order_by(Item.created_at.desc()).offset(offset).limit(per_page).all()
+    
+    # Calculate total pages
+    pages = (total + per_page - 1) // per_page
     
     return jsonify({
         'data': [{
@@ -39,16 +56,17 @@ def get_items():
             'quantity_in_stock': i.quantity_in_stock,
             'is_active': i.is_active,
             'created_at': format_date_display(i.created_at)
-        } for i in pagination.items],
-        'total': pagination.total,
-        'pages': pagination.pages,
+        } for i in items],
+        'total': total,
+        'pages': pages,
         'current_page': page
     }), 200
 
 @bp.route('/<int:item_id>', methods=['GET'])
 def get_item(item_id):
+    session = get_session()
     company_id = verify_company_access()
-    item = Item.query.filter_by(id=item_id, company_id=company_id).first()
+    item = session.query(Item).filter_by(id=item_id, company_id=company_id).first()
     
     if not item:
         return jsonify({'error': 'Item not found'}), 404
@@ -68,6 +86,7 @@ def get_item(item_id):
 
 @bp.route('', methods=['POST'])
 def create_item():
+    session = get_session()
     company_id = verify_company_access()
     data = request.get_json()
     
@@ -89,12 +108,12 @@ def create_item():
             company_id=company_id
         )
         
-        db.session.add(item)
-        db.session.commit()
+        session.add(item)
+        session.commit()
         
         return jsonify({'id': item.id, 'code': item.code, 'message': 'Item created successfully'}), 201
     except Exception as e:
-        db.session.rollback()
+        session.rollback()
         error_str = str(e)
         if 'code' in error_str:
             return jsonify({'error': f'Item code "{code}" already exists in database'}), 409
@@ -105,8 +124,9 @@ def create_item():
 
 @bp.route('/<int:item_id>', methods=['PUT'])
 def update_item(item_id):
+    session = get_session()
     company_id = verify_company_access()
-    item = Item.query.filter_by(id=item_id, company_id=company_id).first()
+    item = session.query(Item).filter_by(id=item_id, company_id=company_id).first()
     
     if not item:
         return jsonify({'error': 'Item not found'}), 404
@@ -123,11 +143,11 @@ def update_item(item_id):
         item.is_active = data.get('is_active', item.is_active)
         item.updated_at = datetime.utcnow()
         
-        db.session.commit()
+        session.commit()
         
         return jsonify({'message': 'Item updated successfully'}), 200
     except Exception as e:
-        db.session.rollback()
+        session.rollback()
         error_str = str(e)
         if 'code' in error_str:
             return jsonify({'error': f'Item code "{data.get("code", item.code)}" already exists in database'}), 409
@@ -138,13 +158,14 @@ def update_item(item_id):
 
 @bp.route('/<int:item_id>', methods=['DELETE'])
 def delete_item(item_id):
+    session = get_session()
     company_id = verify_company_access()
-    item = Item.query.filter_by(id=item_id, company_id=company_id).first()
+    item = session.query(Item).filter_by(id=item_id, company_id=company_id).first()
     
     if not item:
         return jsonify({'error': 'Item not found'}), 404
     
-    db.session.delete(item)
-    db.session.commit()
+    session.delete(item)
+    session.commit()
     
     return jsonify({'message': 'Item deleted successfully'}), 200

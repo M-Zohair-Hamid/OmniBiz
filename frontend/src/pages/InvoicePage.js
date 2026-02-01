@@ -12,6 +12,30 @@ const InvoicePage = () => {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Company configuration
+  const companyConfig = {
+    umarsons: {
+      name: 'UMARSONS',
+      address: 'P-5284, ST#09 REHMATABAD, SHEIKUPURA ROAD FAISALABAD.',
+      logo: '/logo.png',
+      watermark: '/watermark.png',
+      email: 'umarsons08@gmail.com',
+      phone: '0301-7194270',
+      whatsapp: '0313-7050844'
+    },
+    makkah_packages: {
+      name: 'MAKKAH PACKAGES',
+      address: 'P-5284, ST#09 REHMATABAD, SHEIKUPURA ROAD FAISALABAD.',
+      logo: '/assets/templates/makkahpackages/logo.png',
+      watermark: '/assets/templates/makkahpackages/watermark.png',
+      email: 'makkahpackages08@gmail.com',
+      phone: '0301-7194270',
+      whatsapp: '0313-7050844'
+    }
+  };
+
+  const [companyData, setCompanyData] = useState(companyConfig.umarsons);
+
   useEffect(() => {
     fetchOrder();
   }, [orderId]);
@@ -21,9 +45,14 @@ const InvoicePage = () => {
       const response = await getOrder(orderId);
       setOrder(response.data);
       
-      // Set document title to order number format
-      const orderTitle = `${response.data.buyer_name}_${new Date(response.data.order_date).toISOString().split('T')[0]}_ID${response.data.id}`;
-      document.title = orderTitle;
+      // Set company configuration based on order's company
+      const companyCode = response.data.company_name?.toLowerCase().replace(/\s+/g, '_') || 'umarsons';
+      if (companyConfig[companyCode]) {
+        setCompanyData(companyConfig[companyCode]);
+      }
+      
+      // Set document title to order number (ID)
+      document.title = response.data.order_number;
       
       setLoading(false);
     } catch (error) {
@@ -75,125 +104,129 @@ const InvoicePage = () => {
       {/* Invoice Container */}
       <div className="invoice-container">
         {/* Watermark */}
-        <div className="watermark" style={{backgroundImage: "url('/watermark.png')"}}></div>
+        <div className="watermark" style={{backgroundImage: `url('${companyData.watermark}')`}}></div>
 
-        {/* Header */}
-        <div className="invoice-header">
-          <div className="logo-container">
-            <img src="/logo.png" alt="Company Logo" className="company-logo" />
+        <div className="invoice-content">
+          {/* Header */}
+          <div className="invoice-header">
+            <div className="logo-container">
+              <img src={companyData.logo} alt="Company Logo" className="company-logo" />
+            </div>
+            <div className="company-info">
+              <h1 className="company-name">{companyData.name}</h1>
+              <p className="company-address"><strong>{companyData.address}</strong></p>
+            </div>
           </div>
-          <div className="company-info">
-            <h1 className="company-name">UMARSONS</h1>
-            <p className="company-address">P-5284, ST#09 REHMATABAD, SHEIKUPURA ROAD FAISALABAD.</p>
-          </div>
-        </div>
 
-        {/* Invoice Title */}
-        <div className="invoice-title">Sales Tax Invoice</div>
+          {/* Invoice Title */}
+          <div className="invoice-title">Sales Tax Invoice</div>
 
-        {/* Details Grid */}
-        <div className="details-grid">
-          <div className="details-section">
-            <h3>Bill To:</h3>
-            <p className="buyer-name"><strong>{order.buyer_name}</strong></p>
-            <p><span className="label">City:</span> {order.buyer?.city || 'N/A'}</p>
-            <p><span className="label">NTN:</span> {order.buyer?.ntn_number || 'N/A'}</p>
-            <p><span className="label">GST #:</span> {order.buyer?.gst_number || 'N/A'}</p>
-            <p><span className="label">Phone:</span> {order.buyer?.phone || 'N/A'}</p>
+          {/* Details Grid */}
+          <div className="details-grid">
+            <div className="details-section">
+              <h3>Bill To:</h3>
+              <p className="buyer-name"><strong>{order.buyer_name}</strong></p>
+              <p><span className="label">City:</span> {order.buyer?.city || 'N/A'}</p>
+              <p><span className="label">NTN:</span> {order.buyer?.ntn_number || 'N/A'}</p>
+              <p><span className="label">GST #:</span> {order.buyer?.gst_number || 'N/A'}</p>
+              <p><span className="label">Phone:</span> {order.buyer?.phone || 'N/A'}</p>
+            </div>
+            <div className="details-section">
+              <h3>Invoice Details:</h3>
+              <p><span className="label">ID#:</span> {order.order_number}</p>
+              <p><span className="label">Date:</span> {orderDateStr}</p>
+              <p><span className="label">Due Date:</span> {dueDateStr}</p>
+            </div>
           </div>
-          <div className="details-section">
-            <h3>Invoice Details:</h3>
-            <p><span className="label">ID#:</span> {order.order_number}</p>
-            <p><span className="label">Date:</span> {orderDateStr}</p>
-            <p><span className="label">Due Date:</span> {dueDateStr}</p>
-          </div>
-        </div>
 
-        {/* Items Table */}
-        <table className="invoice-table">
-          <thead>
-            <tr>
-              <th style={{ width: '4%', textAlign: 'center' }}>#</th>
-              <th style={{ width: '30%', textAlign: 'center' }}>Description</th>
-              <th style={{ width: '8%', textAlign: 'center' }}>Qty</th>
-              <th style={{ width: '12%', textAlign: 'center' }}>Rate</th>
-              <th style={{ width: '8%', textAlign: 'center' }}>Tax %</th>
-              <th style={{ width: '15%', textAlign: 'center' }}>Amount Before Tax</th>
-              <th style={{ width: '15%', textAlign: 'center' }}>Amount After Tax</th>
-            </tr>
-          </thead>
-          <tbody>
-            {order.items && order.items.map((item, idx) => {
-              const amountBeforeTax = item.line_total;
-              const taxAmount = amountBeforeTax * (order.tax_rate / 100);
-              const amountAfterTax = amountBeforeTax + taxAmount;
-              return (
-                <tr key={idx}>
-                  <td>{idx + 1}</td>
-                  <td>{item.item?.name || item.name || 'Item'}</td>
-                  <td style={{ textAlign: 'center' }}>{item.quantity}</td>
-                  <td style={{ textAlign: 'right' }}>₨ {(item.item?.unit_price || item.unit_price || 0).toFixed(2)}</td>
-                  <td style={{ textAlign: 'center' }}>{order.tax_rate}%</td>
-                  <td style={{ textAlign: 'right' }}>₨ {amountBeforeTax.toFixed(2)}</td>
-                  <td style={{ textAlign: 'right' }}>₨ {amountAfterTax.toFixed(2)}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-
-        {/* Summary Section */}
-        <div className="summary-section">
-          <div className="summary-row subtotal">
-            <span>Subtotal (Before Tax):</span>
-            <span>₨ {subtotal.toFixed(2)}</span>
-          </div>
-          <div className="summary-row tax">
-            <span>Sales Tax ({order.tax_rate}%):</span>
-            <span>₨ {totalTax.toFixed(2)}</span>
-          </div>
-          <div className="summary-row">
-            <span>Additional Charges:</span>
-            <span>₨ 0.00</span>
-          </div>
-          <div className="summary-row total">
-            <span>TOTAL AMOUNT:</span>
-            <span>₨ {totalAmount.toFixed(2)}</span>
-          </div>
-        </div>
-
-        {/* Amount in Words */}
-        <div className="amount-in-words">
-          <strong>Amount in Words:</strong> {amountToWords(totalAmount)}
-        </div>
-
-        {/* Tax Breakdown */}
-        <div className="tax-breakdown">
-          <h4>Sales Tax Breakdown</h4>
-          <table>
+          {/* Items Table */}
+          <table className="invoice-table">
+            <thead>
+              <tr>
+                <th style={{ width: '4%', textAlign: 'center' }}>#</th>
+                <th style={{ width: '30%', textAlign: 'center' }}>Description</th>
+                <th style={{ width: '8%', textAlign: 'center' }}>Qty</th>
+                <th style={{ width: '12%', textAlign: 'center' }}>Rate</th>
+                <th style={{ width: '8%', textAlign: 'center' }}>Tax %</th>
+                <th style={{ width: '15%', textAlign: 'center' }}>Amount Before Tax</th>
+                <th style={{ width: '15%', textAlign: 'center' }}>Amount After Tax</th>
+              </tr>
+            </thead>
             <tbody>
-              <tr>
-                <td>Base Amount (Before Tax):</td>
-                <td style={{ textAlign: 'right' }}>₨ {subtotal.toFixed(2)}</td>
-              </tr>
-              <tr>
-                <td>GST @ {order.tax_rate}%:</td>
-                <td style={{ textAlign: 'right' }}>₨ {totalTax.toFixed(2)}</td>
-              </tr>
-              <tr>
-                <td style={{ borderTop: '1px solid #17144B', paddingTop: '8px' }}>Total Tax Amount:</td>
-                <td style={{ borderTop: '1px solid #17144B', paddingTop: '8px', textAlign: 'right' }}>₨ {totalTax.toFixed(2)}</td>
-              </tr>
+              {order.items && order.items.map((item, idx) => {
+                const amountBeforeTax = item.line_total;
+                const taxAmount = amountBeforeTax * (order.tax_rate / 100);
+                const amountAfterTax = amountBeforeTax + taxAmount;
+                return (
+                  <tr key={idx}>
+                    <td>{idx + 1}</td>
+                    <td>{item.item?.name || item.name || 'Item'}</td>
+                    <td style={{ textAlign: 'center' }}>{item.quantity}</td>
+                    <td style={{ textAlign: 'right' }}>₨ {(item.item?.unit_price || item.unit_price || 0).toFixed(2)}</td>
+                    <td style={{ textAlign: 'center' }}>{order.tax_rate}%</td>
+                    <td style={{ textAlign: 'right' }}>₨ {amountBeforeTax.toFixed(2)}</td>
+                    <td style={{ textAlign: 'right' }}>₨ {amountAfterTax.toFixed(2)}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
-        </div>
 
-        {/* Footer */}
-        <div className="invoice-footer">
-          <p><strong>Thank you for your business!</strong></p>
-          <p><strong>Payment Terms:</strong> Net 30 Days</p>
-          <p>For queries: umarsons08@gmail.com | Cell: 0301-7194270 | WhatsApp: 0313-7050844</p>
-          <p>This is a computer-generated invoice and does not require a signature.</p>
+          <div className="invoice-bottom">
+            {/* Summary Section */}
+            <div className="summary-section">
+              <div className="summary-row subtotal">
+                <span>Subtotal (Before Tax):</span>
+                <span>₨ {subtotal.toFixed(2)}</span>
+              </div>
+              <div className="summary-row tax">
+                <span>Sales Tax ({order.tax_rate}%):</span>
+                <span>₨ {totalTax.toFixed(2)}</span>
+              </div>
+              <div className="summary-row">
+                <span>Additional Charges:</span>
+                <span>₨ 0.00</span>
+              </div>
+              <div className="summary-row total">
+                <span>TOTAL AMOUNT:</span>
+                <span>₨ {totalAmount.toFixed(2)}</span>
+              </div>
+            </div>
+
+            {/* Amount in Words */}
+            <div className="amount-in-words">
+              <strong>Amount in Words:</strong> {amountToWords(totalAmount)}
+            </div>
+
+            {/* Tax Breakdown */}
+            <div className="tax-breakdown">
+              <h4>Sales Tax Breakdown</h4>
+              <table>
+                <tbody>
+                  <tr>
+                    <td>Base Amount (Before Tax):</td>
+                    <td style={{ textAlign: 'right' }}>₨ {subtotal.toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td>GST @ {order.tax_rate}%:</td>
+                    <td style={{ textAlign: 'right' }}>₨ {totalTax.toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td style={{ borderTop: '1px solid #17144B', paddingTop: '8px' }}>Total Tax Amount:</td>
+                    <td style={{ borderTop: '1px solid #17144B', paddingTop: '8px', textAlign: 'right' }}>₨ {totalTax.toFixed(2)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="invoice-footer">
+            <p><strong>Thank you for your business!</strong></p>
+            <p><strong>Payment Terms:</strong> Net 30 Days</p>
+            <p>For queries: {companyData.email} | Cell: {companyData.phone} | WhatsApp: {companyData.whatsapp}</p>
+            <p>This is a computer-generated invoice and does not require a signature.</p>
+          </div>
         </div>
       </div>
     </div>

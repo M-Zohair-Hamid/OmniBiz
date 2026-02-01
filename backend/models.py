@@ -8,7 +8,7 @@ db = SQLAlchemy()
 _current_db = 'umarsons'
 
 def switch_database(app, company_code):
-    """Switch the active database based on company code"""
+    """Switch to use specific company database via SQLAlchemy binds"""
     global _current_db
     
     if company_code == 'umarsons':
@@ -20,22 +20,41 @@ def switch_database(app, company_code):
     
     _current_db = bind_key
     
-    # Set the default database URI to the selected bind
-    app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_BINDS'][bind_key]
-    
-    # Force new connection
+    # Remove current session and connections
     try:
         db.session.remove()
         db.session.close()
-        db.engine.dispose()
     except:
         pass
+    
+    # Dispose of all connections to force reconnect to the right database
+    try:
+        if hasattr(db, 'engines') and bind_key in db.engines:
+            db.engines[bind_key].dispose()
+        elif hasattr(db, 'engine'):
+            db.engine.dispose()
+    except:
+        pass
+    
+    # Store the current bind in app context
+    app.config['SQLALCHEMY_CURRENT_BIND'] = bind_key
     
     return company_code
 
 def get_current_bind():
     """Get the current database bind key"""
     return _current_db
+
+def get_db_for_company(company_code):
+    """Get database engine for a specific company"""
+    if company_code == 'makkah_packages':
+        return db.get_engine(bind='makkah_packages')
+    else:
+        return db.get_engine(bind='umarsons')
+
+def get_current_db():
+    """Get current database engine based on _current_db"""
+    return db.get_engine(bind=_current_db)
 
 # ========== COMPANY MODEL ==========
 class Company(db.Model):

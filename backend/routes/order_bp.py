@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, g
 from flask_jwt_extended import jwt_required, get_jwt
 from models import db, Order, OrderItem, Item, Buyer
 from utils import get_company_id_from_token, format_date_display
@@ -8,49 +8,71 @@ import string
 
 bp = Blueprint('orders', __name__, url_prefix='/api/orders')
 
-def verify_company_access():
-    return get_company_id_from_token()
+def get_session():
+    """Get the session bound to current company's database"""
+    company_code = getattr(g, 'company_code', 'umarsons')
+    # Use db.get_engine with the correct bind
+    engine = db.get_engine(bind=company_code)
+    # Create a new session with this engine
+    from sqlalchemy.orm import sessionmaker
+    Session = sessionmaker(bind=engine)
+    return Session()
 
-def generate_order_number(buyer_name, order_date):
+def generate_order_number(buyer_id, buyer_name, order_date):
     """Generate unique order number: BuyerName_YYYY-MM-DD_ID1000
-    Auto ID starts from 1000 and increments per day per buyer"""
+    Auto ID starts from 1000 and increments globally per buyer across all dates"""
     date_str = order_date.strftime('%Y-%m-%d')
     
-    # Query all orders for this buyer on this date
-    from models import Company
-    existing_orders = Order.query.filter(
-        Order.order_number.like(f'{buyer_name}_{date_str}_ID%')
+    # Query ALL orders for this buyer (regardless of date)
+    session = get_session()
+    existing_orders = session.query(Order).filter(
+        Order.buyer_id == buyer_id
     ).all()
     
-    # Extract max number
+    print(f"\n[DEBUG] Generating order for buyer_id={buyer_id}, buyer_name={buyer_name}")
+    print(f"[DEBUG] Found {len(existing_orders)} existing orders for this buyer")
+    
+    # Extract max number from all orders for this buyer
     max_num = 999
     for order in existing_orders:
         try:
             # Format: BuyerName_YYYY-MM-DD_ID1000, BuyerName_YYYY-MM-DD_ID1001, etc
-            parts = order.order_number.split('_ID')
-            num = int(parts[-1])
+            id_part = order.order_number.split('_ID')[-1]
+            num = int(id_part)
+            print(f"[DEBUG] Found order number: {order.order_number}, ID part: {id_part}, num: {num}")
             if num > max_num:
                 max_num = num
-        except (ValueError, IndexError):
+        except (ValueError, IndexError) as e:
+            print(f"[DEBUG] Error parsing {order.order_number}: {e}")
             continue
     
     next_num = max_num + 1
-    return f"{buyer_name}_{date_str}_ID{next_num}"
+    order_number = f"{buyer_name}_{date_str}_ID{next_num}"
+    print(f"[DEBUG] Generated order number: {order_number}")
+    return order_number
 
 @bp.route('', methods=['GET'])
 def get_orders():
-    company_id = verify_company_access()
+    session = get_session()
     
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
     status = request.args.get('status', '', type=str)
     
-    query = Order.query.filter_by(company_id=company_id)
+    query = session.query(Order)
     
     if status:
         query = query.filter_by(status=status)
     
-    pagination = query.order_by(Order.created_at.desc()).paginate(page=page, per_page=per_page)
+    # Get total count before pagination
+    total = query.count()
+    
+    # Apply ordering and pagination using offset/limit
+    offset = (page - 1) * per_page
+    items = query.order_by(Order.created_at.desc()).offset(offset).limit(per_page).all()
+    
+    # Calculate total pages
+    pages = (total + per_page - 1) // per_page
     
     return jsonify({
         'data': [{
@@ -64,16 +86,16 @@ def get_orders():
             'total_amount': o.total_amount,
             'status': o.status,
             'created_at': format_date_display(o.created_at)
-        } for o in pagination.items],
-        'total': pagination.total,
-        'pages': pagination.pages,
+        } for o in items],
+        'total': total,
+        'pages': pages,
         'current_page': page
     }), 200
 
 @bp.route('/<int:order_id>', methods=['GET'])
 def get_order(order_id):
-    company_id = verify_company_access()
-    order = Order.query.filter_by(id=order_id, company_id=company_id).first()
+    session = get_session()
+    order = session.query(Order).filter_by(id=order_id).first()
     
     if not order:
         return jsonify({'error': 'Order not found'}), 404
@@ -83,7 +105,7 @@ def get_order(order_id):
         'order_number': order.order_number,
         'buyer_id': order.buyer_id,
         'buyer_name': order.buyer.company_name,
-        'company_name': order.company.name,
+        'company_name': order.company.name if order.company else 'Unknown',
         'buyer': {
             'id': order.buyer.id,
             'company_name': order.buyer.company_name,
@@ -117,28 +139,26 @@ def get_order(order_id):
 
 @bp.route('', methods=['POST'])
 def create_order():
-    company_id = verify_company_access()
+    session = get_session()
     data = request.get_json()
     
     if not data.get('buyer_id') or not data.get('items'):
         return jsonify({'error': 'Missing required fields'}), 400
     
-    buyer = Buyer.query.filter_by(id=data['buyer_id'], company_id=company_id).first()
+    buyer = session.query(Buyer).filter_by(id=data['buyer_id']).first()
     if not buyer:
         return jsonify({'error': 'Buyer not found'}), 404
     
     # Get buyer name and generate order number
-    from models import Company
-    company = Company.query.get(company_id)
     order_date = datetime.fromisoformat(data.get('order_date')) if data.get('order_date') else datetime.utcnow()
-    order_number = generate_order_number(buyer.company_name, order_date)
+    order_number = generate_order_number(buyer.id, buyer.company_name, order_date)
     
     # Calculate totals
     subtotal = 0
     items_list = []
     
     for item_data in data['items']:
-        item = Item.query.filter_by(id=item_data['item_id'], company_id=company_id).first()
+        item = session.query(Item).filter_by(id=item_data['item_id']).first()
         if not item:
             return jsonify({'error': f'Item {item_data["item_id"]} not found'}), 404
         
@@ -169,7 +189,7 @@ def create_order():
     order = Order(
         order_number=order_number,
         buyer_id=data['buyer_id'],
-        company_id=company_id,
+        company_id=buyer.company_id,
         order_date=datetime.fromisoformat(data['order_date']) if data.get('order_date') else datetime.utcnow(),
         subtotal=subtotal,
         tax_rate=tax_rate,
@@ -179,8 +199,8 @@ def create_order():
         notes=data.get('notes', '')
     )
     
-    db.session.add(order)
-    db.session.flush()
+    session.add(order)
+    session.flush()
     
     for item_data in items_list:
         order_item = OrderItem(
@@ -190,16 +210,16 @@ def create_order():
             unit_price=item_data['unit_price'],
             line_total=item_data['line_total']
         )
-        db.session.add(order_item)
+        session.add(order_item)
     
-    db.session.commit()
+    session.commit()
     
     return jsonify({'id': order.id, 'order_number': order_number, 'message': 'Order created successfully'}), 201
 
 @bp.route('/<int:order_id>', methods=['PUT'])
 def update_order(order_id):
-    company_id = verify_company_access()
-    order = Order.query.filter_by(id=order_id, company_id=company_id).first()
+    session = get_session()
+    order = session.query(Order).filter_by(id=order_id).first()
     
     if not order:
         return jsonify({'error': 'Order not found'}), 404
@@ -207,7 +227,7 @@ def update_order(order_id):
     data = request.get_json()
     # Validate buyer if being updated
     if 'buyer_id' in data:
-        buyer = Buyer.query.filter_by(id=int(data['buyer_id']), company_id=company_id).first()
+        buyer = session.query(Buyer).filter_by(id=int(data['buyer_id'])).first()
         if not buyer:
             return jsonify({'error': 'Buyer not found'}), 404
     
@@ -219,17 +239,17 @@ def update_order(order_id):
         print(f"DEBUG: Old items dict: {old_items}")  # Debug
         
         # Delete old order items
-        OrderItem.query.filter_by(order_id=order_id).delete()
-        db.session.flush()  # Ensure deletion is processed
+        session.query(OrderItem).filter_by(order_id=order_id).delete()
+        session.flush()  # Ensure deletion is processed
         
         # Calculate new totals and create new items
         subtotal = 0
         items_list = []
         
         for item_data in data['items']:
-            item = Item.query.filter_by(id=int(item_data['item_id']), company_id=company_id).first()
+            item = session.query(Item).filter_by(id=int(item_data['item_id'])).first()
             if not item:
-                db.session.rollback()
+                session.rollback()
                 return jsonify({'error': f'Item {item_data["item_id"]} not found'}), 404
             
             quantity = float(item_data['quantity'])
@@ -241,7 +261,7 @@ def update_order(order_id):
             # Check if we have enough stock for the additional quantity
             if qty_difference > 0:  # Increasing quantity
                 if qty_difference > item.quantity_in_stock:
-                    db.session.rollback()
+                    session.rollback()
                     return jsonify({'error': f'Insufficient stock for {item.name}. Need additional: {qty_difference}, Available: {item.quantity_in_stock}'}), 400
                 item.quantity_in_stock -= qty_difference
                 print(f"DEBUG: Deducted {qty_difference}, new stock: {item.quantity_in_stock}")  # Debug
@@ -263,14 +283,14 @@ def update_order(order_id):
         # Handle items that were removed from order (restore their stock)
         for old_item_id, old_qty in old_items.items():
             if not any(int(item_data['item_id']) == old_item_id for item_data in data['items']):
-                item = Item.query.filter_by(id=old_item_id, company_id=company_id).first()
+                item = session.query(Item).filter_by(id=old_item_id).first()
                 if item:
                     item.quantity_in_stock += old_qty
         
         # Restore inventory for items that were removed from order
         for old_item_id, old_qty in old_items.items():
             if not any(int(item_data['item_id']) == old_item_id for item_data in data['items']):
-                item = Item.query.filter_by(id=old_item_id, company_id=company_id).first()
+                item = session.query(Item).filter_by(id=old_item_id).first()
                 if item:
                     item.quantity_in_stock += old_qty
         
@@ -293,7 +313,7 @@ def update_order(order_id):
                 unit_price=item_data['unit_price'],
                 line_total=item_data['line_total']
             )
-            db.session.add(order_item)
+            session.add(order_item)
     
     # Update other fields
     if 'buyer_id' in data:
@@ -308,29 +328,27 @@ def update_order(order_id):
     order.updated_at = datetime.utcnow()
     
     try:
-        db.session.commit()
+        session.commit()
         return jsonify({'message': 'Order updated successfully'}), 200
     except Exception as e:
-        db.session.rollback()
+        session.rollback()
         return jsonify({'error': str(e)}), 500
 
 @bp.route('/<int:order_id>', methods=['DELETE'])
 def delete_order(order_id):
-    company_id = verify_company_access()
-    order = Order.query.filter_by(id=order_id, company_id=company_id).first()
+    session = get_session()
+    order = session.query(Order).filter_by(id=order_id).first()
     
     if not order:
         return jsonify({'error': 'Order not found'}), 404
     
     # Restore stock for all items in the order
     for order_item in order.items:
-        item = Item.query.filter_by(id=order_item.item_id, company_id=company_id).first()
+        item = session.query(Item).filter_by(id=order_item.item_id).first()
         if item:
             item.quantity_in_stock += order_item.quantity
     
-    db.session.delete(order)
-    db.session.commit()
+    session.delete(order)
+    session.commit()
     
     return jsonify({'message': 'Order deleted successfully and stock restored'}), 200
-    
-    return jsonify({'message': 'Order deleted successfully'}), 200
