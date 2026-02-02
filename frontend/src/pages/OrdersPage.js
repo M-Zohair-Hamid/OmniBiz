@@ -528,7 +528,7 @@ const OrdersPage = () => {
                                   }
                                 }}
                                 onFocus={() => setOpenDropdownIdx(idx)}
-                                onBlur={() => setTimeout(() => setOpenDropdownIdx(null), 200)}
+                                onBlur={() => setTimeout(() => setOpenDropdownIdx(null), 300)}
                                 onKeyDown={(e) => handleItemRowKeyDown(idx, e)}
                                 placeholder="Search and select item"
                                 className="w-full px-2 py-1 border rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
@@ -538,7 +538,8 @@ const OrdersPage = () => {
                                   {suggestedItems.slice(0, 10).map((suggestion) => (
                                     <div
                                       key={suggestion.id}
-                                      onClick={() => {
+                                      onMouseDown={(e) => {
+                                        e.preventDefault();
                                         updateItemRow(idx, 'item_query', getItemLabel(suggestion));
                                         updateItemRow(idx, 'item_id', String(suggestion.id));
                                         setOpenDropdownIdx(null);
