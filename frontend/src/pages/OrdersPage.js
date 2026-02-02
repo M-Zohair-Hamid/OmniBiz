@@ -173,11 +173,23 @@ const OrdersPage = () => {
         status: fullOrder.status,
         tax_rate: fullOrder.tax_rate || 0,
         notes: fullOrder.notes || '',
-        items: fullOrder.items.map(item => ({
-          item_id: String(item.item_id),
-          quantity: parseFloat(item.quantity),
-          item_query: item.item ? getItemLabel(item.item) : ''
-        }))
+        items: fullOrder.items.map(item => {
+          let itemQuery = '';
+          if (item.item) {
+            itemQuery = getItemLabel(item.item);
+          } else {
+            // If item data not in response, look it up from items array
+            const foundItem = items.find(i => i.id === item.item_id);
+            if (foundItem) {
+              itemQuery = getItemLabel(foundItem);
+            }
+          }
+          return {
+            item_id: String(item.item_id),
+            quantity: parseFloat(item.quantity),
+            item_query: itemQuery
+          };
+        })
       });
       setItemSearchTerm('');
       setShowForm(true);
