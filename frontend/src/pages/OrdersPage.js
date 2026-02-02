@@ -22,13 +22,33 @@ const OrdersPage = () => {
   const [items, setItems] = useState([]);
   const [showOptionsModal, setShowOptionsModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [itemSearchTerm, setItemSearchTerm] = useState('');
+  const [openDropdownIdx, setOpenDropdownIdx] = useState(null);
   
   const [formData, setFormData] = useState({
-    buyer_id: '', order_date: getCurrentDateForInput(), status: 'pending', tax_rate: 0, notes: '', items: [{ item_id: '', quantity: 1 }]
+    buyer_id: '', order_date: getCurrentDateForInput(), status: 'pending', tax_rate: 0, notes: '', items: [{ item_id: '', quantity: 1, item_query: '' }]
   });
 
   const { showToast } = useContext(ToastContext);
   const { user } = useContext(AuthContext);
+
+  const filteredItems = items.filter(i => {
+    const term = itemSearchTerm.trim().toLowerCase();
+    if (!term) return true;
+    return (
+      String(i.name || '').toLowerCase().includes(term) ||
+      String(i.code || '').toLowerCase().includes(term)
+    );
+  });
+
+  const getFilteredItemsForRow = (query) => {
+    if (!query.trim()) return items;
+    const term = query.trim().toLowerCase();
+    return items.filter(i =>
+      String(i.code || '').toLowerCase().includes(term) ||
+      String(i.name || '').toLowerCase().includes(term)
+    );
+  };
 
   const fetchOrders = async (page = 1) => {
     setLoading(true);
@@ -61,8 +81,8 @@ const OrdersPage = () => {
 
   const fetchBuyersAndItems = async () => {
     try {
-      const buyersRes = await getBuyers(1, 100);
-      const itemsRes = await getItems(1, 100);
+      const buyersRes = await getBuyers(1, 500);
+      const itemsRes = await getItems(1, 500);
       setBuyers(buyersRes.data.data);
       setItems(itemsRes.data.data);
     } catch (error) {
@@ -115,7 +135,9 @@ const OrdersPage = () => {
 
   const handleAddOrder = () => {
     setEditingId(null);
-    setFormData({ buyer_id: '', order_date: getCurrentDateForInput(), status: 'pending', tax_rate: 0, notes: '', items: [{ item_id: '', quantity: 1 }] });
+    setFormData({ buyer_id: '', order_date: getCurrentDateForInput(), status: 'pending', tax_rate: 0, notes: '', items: [{ item_id: '', quantity: 1, item_query: '' }] });
+    setItemSearchTerm('');
+    fetchBuyersAndItems();
     setShowForm(true);
   };
 
@@ -153,9 +175,11 @@ const OrdersPage = () => {
         notes: fullOrder.notes || '',
         items: fullOrder.items.map(item => ({
           item_id: String(item.item_id),
-          quantity: parseFloat(item.quantity)
+          quantity: parseFloat(item.quantity),
+          item_query: item.item ? getItemLabel(item.item) : ''
         }))
       });
+      setItemSearchTerm('');
       setShowForm(true);
     } catch (error) {
       showToast('Failed to load order details', 'error');
@@ -272,7 +296,7 @@ const OrdersPage = () => {
   };
 
   const addItemRow = () => {
-    setFormData({...formData, items: [...formData.items, { item_id: '', quantity: 1 }]});
+    setFormData({...formData, items: [...formData.items, { item_id: '', quantity: 1, item_query: '' }]});
   };
 
   const confirmAddItem = (index) => {
@@ -345,10 +369,18 @@ const OrdersPage = () => {
       newItems[index][field] = value === '' ? '' : parseFloat(value) || 0;
     } else if (field === 'item_id') {
       newItems[index][field] = String(value); // Keep as string for select
+    } else if (field === 'item_query') {
+      newItems[index][field] = value;
     } else {
       newItems[index][field] = value;
     }
     setFormData({...formData, items: newItems});
+  };
+
+  const getItemLabel = (item) => {
+    if (!item) return '';
+    const labelCode = item.code || '';
+    return `${labelCode} | ${item.name} (₨${item.unit_price})`;
   };
 
   return (
@@ -465,18 +497,69 @@ const OrdersPage = () => {
                   </div>
 
                   <h3 className="font-semibold mb-2">Items</h3>
-                  <div className="border rounded p-3 mb-4">
-                    {formData.items.map((item, idx) => (
-                      <div key={idx} className="flex gap-2 mb-2">
-                        <select value={String(item.item_id)} onChange={(e) => updateItemRow(idx, 'item_id', e.target.value)} onKeyDown={(e) => handleItemRowKeyDown(idx, e)} className="flex-1 px-2 py-1 border rounded text-sm">
-                          <option value="">Select item</option>
-                          {items.map(i => <option key={i.id} value={String(i.id)}>{i.name} (₨{i.unit_price})</option>)}
-                        </select>
-                        <input type="number" step="0.01" value={item.quantity} onChange={(e) => updateItemRow(idx, 'quantity', e.target.value)} onKeyDown={(e) => handleItemRowKeyDown(idx, e)} placeholder="Qty" className="w-24 px-2 py-1 border rounded text-sm" />
-                        <button type="button" onClick={() => confirmAddItem(idx)} className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-sm font-bold">+</button>
-                        <button type="button" onClick={() => removeItemRow(idx)} className="bg-red-500 text-white px-2 py-1 rounded text-sm">×</button>
-                      </div>
-                    ))}
+                  <div className="border rounded p-3 mb-4 space-y-3">
+                    {formData.items.map((item, idx) => {
+                      const selectedItem = items.find(i => String(i.id) === String(item.item_id));
+                      const displayValue = item.item_query || (selectedItem ? getItemLabel(selectedItem) : '');
+                      const suggestedItems = getFilteredItemsForRow(displayValue);
+                      const showDropdown = openDropdownIdx === idx && displayValue.trim();
+
+                      return (
+                        <div key={idx} className="relative">
+                          <div className="flex gap-2">
+                            <div className="flex-1 relative">
+                              <input
+                                type="text"
+                                value={displayValue}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  updateItemRow(idx, 'item_query', value);
+                                  setOpenDropdownIdx(idx);
+                                  if (!value.trim()) {
+                                    updateItemRow(idx, 'item_id', '');
+                                    return;
+                                  }
+                                  const parsedCode = value.split('|')[0].trim();
+                                  const match = items.find(i =>
+                                    String(i.code || '').toLowerCase() === parsedCode.toLowerCase()
+                                  );
+                                  if (match) {
+                                    updateItemRow(idx, 'item_id', String(match.id));
+                                  }
+                                }}
+                                onFocus={() => setOpenDropdownIdx(idx)}
+                                onBlur={() => setTimeout(() => setOpenDropdownIdx(null), 200)}
+                                onKeyDown={(e) => handleItemRowKeyDown(idx, e)}
+                                placeholder="Search and select item"
+                                className="w-full px-2 py-1 border rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
+                              />
+                              {showDropdown && suggestedItems.length > 0 && (
+                                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded shadow-lg z-50 max-h-48 overflow-y-auto">
+                                  {suggestedItems.slice(0, 10).map((suggestion) => (
+                                    <div
+                                      key={suggestion.id}
+                                      onClick={() => {
+                                        updateItemRow(idx, 'item_query', getItemLabel(suggestion));
+                                        updateItemRow(idx, 'item_id', String(suggestion.id));
+                                        setOpenDropdownIdx(null);
+                                      }}
+                                      className="px-3 py-2 hover:bg-blue-100 cursor-pointer text-sm text-gray-800 border-b last:border-b-0"
+                                    >
+                                      <div className="font-semibold">{suggestion.code}</div>
+                                      <div className="text-xs text-gray-600">{suggestion.name}</div>
+                                      <div className="text-xs text-gray-500">₨{suggestion.unit_price}</div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                            <input type="number" step="0.01" value={item.quantity} onChange={(e) => updateItemRow(idx, 'quantity', e.target.value)} onKeyDown={(e) => handleItemRowKeyDown(idx, e)} placeholder="Qty" className="w-24 px-2 py-1 border rounded text-sm" />
+                            <button type="button" onClick={() => confirmAddItem(idx)} className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-sm font-bold">+</button>
+                            <button type="button" onClick={() => removeItemRow(idx)} className="bg-red-500 text-white px-2 py-1 rounded text-sm">×</button>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                   <button type="button" onClick={addItemRow} className="mb-4 text-white hover:text-gray-200 font-semibold text-sm">+ Add Item</button>
 

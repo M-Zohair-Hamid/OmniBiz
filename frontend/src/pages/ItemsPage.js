@@ -11,8 +11,6 @@ const ItemsPage = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   
   const [formData, setFormData] = useState({
     code: '', name: '', description: '', unit: 'PCS', unit_price: 0, quantity_in_stock: 0, add_stock: 0
@@ -21,13 +19,11 @@ const ItemsPage = () => {
   const { showToast } = useContext(ToastContext);
   const { user } = useContext(AuthContext);
 
-  const fetchItems = async (page = 1, search = '') => {
+  const fetchItems = async (search = '') => {
     setLoading(true);
     try {
-      const response = await getItems(page, 10, search);
+      const response = await getItems(1, 1000, search);
       setItems(response.data.data);
-      setTotalPages(response.data.pages);
-      setCurrentPage(page);
     } catch (error) {
       showToast('Failed to load items', 'error');
     } finally {
@@ -41,8 +37,7 @@ const ItemsPage = () => {
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
-    setCurrentPage(1);
-    fetchItems(1, e.target.value);
+    fetchItems(e.target.value);
   };
 
   const handleAddItem = () => {
@@ -84,7 +79,7 @@ const ItemsPage = () => {
         showToast('Item created successfully', 'success');
       }
       setShowForm(false);
-      fetchItems(currentPage);
+      fetchItems(searchTerm);
     } catch (error) {
       showToast('Failed to save item', 'error');
     }
@@ -95,7 +90,7 @@ const ItemsPage = () => {
       try {
         await deleteItem(id);
         showToast('Item deleted successfully', 'success');
-        fetchItems(currentPage);
+        fetchItems(searchTerm);
       } catch (error) {
         showToast('Failed to delete item', 'error');
       }
@@ -193,7 +188,7 @@ const ItemsPage = () => {
                   <button onClick={() => exportTableToPDF('itemsTable', 'items.pdf')} className="px-3 py-2 bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] text-[#17144B] rounded-lg text-xs font-bold transition-all duration-200 hover:shadow-lg transform hover:scale-105 active:scale-95">📄 PDF</button>
                   <button onClick={() => exportChartToImage('itemsTable', 'items.png')} className="px-3 py-2 bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] text-[#17144B] rounded-lg text-xs font-bold transition-all duration-200 hover:shadow-lg transform hover:scale-105 active:scale-95">🖼️ PNG</button>
                 </div>
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto max-h-[60vh] overflow-y-auto">
                   <table id="itemsTable" className="w-full">
                     <thead className="border-b border-[#17144B]">
                       <tr>
@@ -233,26 +228,6 @@ const ItemsPage = () => {
                   </table>
                 </div>
 
-                {/* Pagination */}
-                <div className="flex justify-between items-center p-6">
-                  <span className="text-black">Page {currentPage} of {totalPages}</span>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => fetchItems(currentPage - 1, searchTerm)}
-                      disabled={currentPage === 1}
-                      className="px-4 py-2 bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] disabled:opacity-50 disabled:from-gray-600 disabled:to-gray-600 text-[#17144B] rounded-lg font-semibold transition-all duration-200"
-                    >
-                      Previous
-                    </button>
-                    <button
-                      onClick={() => fetchItems(currentPage + 1, searchTerm)}
-                      disabled={currentPage === totalPages}
-                      className="px-4 py-2 bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] disabled:opacity-50 disabled:from-gray-600 disabled:to-gray-600 text-[#17144B] rounded-lg font-semibold transition-all duration-200"
-                    >
-                      Next
-                    </button>
-                  </div>
-                </div>
               </>
             )}
           </div>
