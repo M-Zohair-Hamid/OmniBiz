@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getOrder } from '../services/api';
 import { ToastContext } from '../context/ToastContext';
 import { amountToWords } from '../utils/numberToWords';
+import html2pdf from 'html2pdf.js';
 import './InvoicePage.css';
 
 const InvoicePage = () => {
@@ -63,6 +64,22 @@ const InvoicePage = () => {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleSavePDF = () => {
+    const element = document.querySelector('.invoice-page');
+    const opt = {
+      margin: [0.5, 0.5, 0.5, 0.5],
+      filename: `${order.order_number}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+    };
+
+    // Generate PDF and open in new tab
+    html2pdf().set(opt).from(element).toPdf().get('pdf').then((pdf) => {
+      window.open(pdf.output('bloburl'), '_blank');
+    });
   };
 
   if (loading) {
@@ -127,8 +144,11 @@ const InvoicePage = () => {
     <div className="invoice-page">
       {/* Print/Save Controls */}
       <div className="invoice-controls print-hidden">
+        <button onClick={handleSavePDF} className="btn-print">
+          💾 Save & Open PDF
+        </button>
         <button onClick={handlePrint} className="btn-print">
-          🖨️ Print / Save as PDF
+          🖨️ Print
         </button>
         <button onClick={() => navigate(-1)} className="btn-back">
           ← Back
