@@ -16,7 +16,7 @@ Write-Host ""
 if (-not (Test-Path $DbDir)) { 
     Write-Host "Creating instance directory..." -ForegroundColor Yellow
     
-    New-Item -ItemType Directory -Path $DbDir | Out-Null 
+    New-Item -ItemType Directory -Path $DbDir | Out-Null
 }
 
 # Python check

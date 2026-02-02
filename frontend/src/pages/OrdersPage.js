@@ -465,7 +465,7 @@ const OrdersPage = () => {
                   </div>
 
                   <h3 className="font-semibold mb-2">Items</h3>
-                  <div className="border rounded p-3 mb-4 max-h-32 overflow-y-auto">
+                  <div className="border rounded p-3 mb-4">
                     {formData.items.map((item, idx) => (
                       <div key={idx} className="flex gap-2 mb-2">
                         <select value={String(item.item_id)} onChange={(e) => updateItemRow(idx, 'item_id', e.target.value)} onKeyDown={(e) => handleItemRowKeyDown(idx, e)} className="flex-1 px-2 py-1 border rounded text-sm">

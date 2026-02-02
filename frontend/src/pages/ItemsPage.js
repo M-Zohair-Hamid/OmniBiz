@@ -266,7 +266,21 @@ const ItemsPage = () => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
                       <label className="block text-[#17144B] font-bold mb-2">Code *</label>
-                      <input type="text" value={formData.code} onChange={(e) => setFormData({...formData, code: e.target.value})} placeholder="Enter item code" className="w-full px-3 py-2 backdrop-blur-sm bg-white bg-opacity-40 border border-[#3A3F8C] rounded-lg focus:border-[#00D4FF]" required />
+                      <input 
+                        type="text" 
+                        value={formData.code} 
+                        onChange={(e) => {
+                          let value = e.target.value.trim();
+                          // If user entered something and it doesn't start with HS-, add it
+                          if (value && !value.startsWith('HS-')) {
+                            value = 'HS-' + value.replace(/^HS-/, '');
+                          }
+                          setFormData({...formData, code: value});
+                        }} 
+                        placeholder="Enter item code" 
+                        className="w-full px-3 py-2 backdrop-blur-sm bg-white bg-opacity-40 border border-[#3A3F8C] rounded-lg focus:border-[#00D4FF]" 
+                        required 
+                      />
                     </div>
                     <div>
                       <label className="block text-[#17144B] font-bold mb-2">Name *</label>
