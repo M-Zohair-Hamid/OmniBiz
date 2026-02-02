@@ -184,15 +184,26 @@ const OrdersPage = () => {
         notes: fullOrder.notes || '',
         items: fullOrder.items.map(item => {
           let itemQuery = '';
-          if (item.item) {
+          let foundItemData = null;
+          
+          // Try to get item data from the response first
+          if (item.item && item.item.code) {
             itemQuery = getItemLabel(item.item);
+            foundItemData = item.item;
           } else {
-            // If item data not in response, look it up from freshly fetched items array
+            // Otherwise look it up from freshly fetched items array
             const foundItem = itemsList.find(i => i.id === item.item_id);
             if (foundItem) {
               itemQuery = getItemLabel(foundItem);
+              foundItemData = foundItem;
             }
           }
+          
+          // If still no code, construct it manually
+          if (!itemQuery && item.item_id) {
+            itemQuery = `${foundItemData?.code || 'N/A'} | ${foundItemData?.name || 'Item'} (₨${foundItemData?.unit_price || 0})`;
+          }
+          
           return {
             item_id: String(item.item_id),
             quantity: parseFloat(item.quantity),
