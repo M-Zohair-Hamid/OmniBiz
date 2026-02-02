@@ -566,8 +566,8 @@ const OrdersPage = () => {
                                 className="w-full px-2 py-1 border rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
                               />
                               {showDropdown && suggestedItems.length > 0 && (
-                                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded shadow-lg z-50 max-h-48 overflow-y-auto">
-                                  {suggestedItems.slice(0, 10).map((suggestion) => (
+                                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded shadow-lg z-50 max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
+                                  {suggestedItems.slice(0, 20).map((suggestion) => (
                                     <div
                                       key={suggestion.id}
                                       onMouseDown={(e) => {
