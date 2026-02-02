@@ -172,11 +172,12 @@ const InvoicePage = () => {
             <table className="invoice-table">
               <thead>
                 <tr>
-                  <th style={{ width: '4%', textAlign: 'center' }}>#</th>
-                  <th style={{ width: '30%', textAlign: 'center' }}>Description</th>
-                  <th style={{ width: '8%', textAlign: 'center' }}>Qty</th>
-                  <th style={{ width: '12%', textAlign: 'center' }}>Rate</th>
-                  <th style={{ width: '8%', textAlign: 'center' }}>Tax %</th>
+                  <th style={{ width: '3%', textAlign: 'center' }}>#</th>
+                  <th style={{ width: '8%', textAlign: 'center' }}>Code</th>
+                  <th style={{ width: '28%', textAlign: 'center' }}>Description</th>
+                  <th style={{ width: '7%', textAlign: 'center' }}>Qty</th>
+                  <th style={{ width: '10%', textAlign: 'center' }}>Rate</th>
+                  <th style={{ width: '7%', textAlign: 'center' }}>Tax %</th>
                   <th style={{ width: '15%', textAlign: 'center' }}>Amount Before Tax</th>
                   <th style={{ width: '15%', textAlign: 'center' }}>Amount After Tax</th>
                 </tr>
@@ -190,6 +191,7 @@ const InvoicePage = () => {
                   return (
                     <tr key={idx}>
                       <td>{globalIndex + 1}</td>
+                      <td style={{ textAlign: 'center' }}>{item.item?.code || item.code || 'N/A'}</td>
                       <td>{item.item?.name || item.name || 'Item'}</td>
                       <td style={{ textAlign: 'center' }}>{item.quantity}</td>
                       <td style={{ textAlign: 'right' }}>₨ {(item.item?.unit_price || item.unit_price || 0).toFixed(2)}</td>
