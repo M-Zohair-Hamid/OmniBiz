@@ -143,6 +143,15 @@ const OrdersPage = () => {
 
   const handleEditOrder = async (order) => {
     try {
+      // First fetch buyers and items to ensure we have fresh data
+      const buyersRes = await getBuyers(1, 500);
+      const itemsRes = await getItems(1, 500);
+      const buyersList = buyersRes.data.data;
+      const itemsList = itemsRes.data.data;
+      
+      setBuyers(buyersList);
+      setItems(itemsList);
+
       // Fetch full order details including items
       const response = await getOrder(order.id);
       const fullOrder = response.data;
@@ -178,8 +187,8 @@ const OrdersPage = () => {
           if (item.item) {
             itemQuery = getItemLabel(item.item);
           } else {
-            // If item data not in response, look it up from items array
-            const foundItem = items.find(i => i.id === item.item_id);
+            // If item data not in response, look it up from freshly fetched items array
+            const foundItem = itemsList.find(i => i.id === item.item_id);
             if (foundItem) {
               itemQuery = getItemLabel(foundItem);
             }
