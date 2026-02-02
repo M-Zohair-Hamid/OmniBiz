@@ -126,6 +126,7 @@ def get_order(order_id):
             'item_id': oi.item_id,
             'name': oi.item.name,
             'item': {
+                'code': oi.item.code,
                 'name': oi.item.name,
                 'unit_price': oi.item.unit_price
             },

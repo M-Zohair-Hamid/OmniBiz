@@ -534,7 +534,7 @@ const OrdersPage = () => {
                       const selectedItem = items.find(i => String(i.id) === String(item.item_id));
                       const displayValue = item.item_query || (selectedItem ? getItemLabel(selectedItem) : '');
                       const suggestedItems = getFilteredItemsForRow(displayValue);
-                      const showDropdown = openDropdownIdx === idx && displayValue.trim();
+                      const showDropdown = openDropdownIdx === idx;
 
                       return (
                         <div key={idx} className="relative">
