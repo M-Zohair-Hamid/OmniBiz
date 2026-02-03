@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getOrder } from '../services/api';
 import { ToastContext } from '../context/ToastContext';
 import { amountToWords } from '../utils/numberToWords';
-import html2pdf from 'html2pdf.js';
 import './InvoicePage.css';
 
 const InvoicePage = () => {
@@ -66,21 +65,6 @@ const InvoicePage = () => {
     window.print();
   };
 
-  const handleSavePDF = () => {
-    const element = document.querySelector('.invoice-page');
-    const opt = {
-      margin: [0.5, 0.5, 0.5, 0.5],
-      filename: `${order.order_number}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-    };
-
-    // Generate PDF and open in new tab
-    html2pdf().set(opt).from(element).toPdf().get('pdf').then((pdf) => {
-      window.open(pdf.output('bloburl'), '_blank');
-    });
-  };
 
   if (loading) {
     return <div className="invoice-loading">Loading invoice...</div>;
@@ -108,6 +92,7 @@ const InvoicePage = () => {
 
   // Pagination: Split items into pages (approximately 15 items per page for A4)
   const ITEMS_PER_PAGE = 15;
+  const MAX_ITEMS_WITH_SUMMARY = 10;
   const itemPages = [];
   if (order.items && order.items.length > 0) {
     for (let i = 0; i < order.items.length; i += ITEMS_PER_PAGE) {
@@ -115,6 +100,13 @@ const InvoicePage = () => {
     }
   } else {
     itemPages.push([]);
+  }
+
+  // If the last page is too full, move summary to a new page
+  let summaryPageIndex = itemPages.length - 1;
+  if (itemPages.length > 1 && itemPages[summaryPageIndex].length > MAX_ITEMS_WITH_SUMMARY) {
+    itemPages.push([]);
+    summaryPageIndex = itemPages.length - 1;
   }
 
   // Render header component
@@ -144,9 +136,6 @@ const InvoicePage = () => {
     <div className="invoice-page">
       {/* Print/Save Controls */}
       <div className="invoice-controls print-hidden">
-        <button onClick={handleSavePDF} className="btn-print">
-          💾 Save & Open PDF
-        </button>
         <button onClick={handlePrint} className="btn-print">
           🖨️ Print
         </button>
@@ -156,8 +145,9 @@ const InvoicePage = () => {
       </div>
 
       {/* Render each page */}
-      {itemPages.map((pageItems, pageIndex) => (
-        <div key={pageIndex} className="invoice-container">
+      <div className="invoice-document">
+        {itemPages.map((pageItems, pageIndex) => (
+          <div key={pageIndex} className="invoice-container">
           {/* Watermark */}
           <div className="watermark" style={{backgroundImage: `url('${companyData.watermark}')`}}></div>
 
@@ -225,7 +215,7 @@ const InvoicePage = () => {
             </table>
 
             {/* Summary, Amount in Words, Tax Breakdown - Only on last page */}
-            {pageIndex === itemPages.length - 1 && (
+            {pageIndex === summaryPageIndex && (
               <div className="invoice-bottom">
                 {/* Summary Section */}
                 <div className="summary-section">
@@ -278,8 +268,9 @@ const InvoicePage = () => {
             {/* Footer on every page */}
             {renderFooter()}
           </div>
-        </div>
-      ))}
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

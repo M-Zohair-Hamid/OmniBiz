@@ -74,15 +74,11 @@ const convertIntegerToWords = (num) => {
 /**
  * Convert decimal part (paise/cents) to words
  */
-const convertDecimalToWords = (decimal) => {
-  if (!decimal || decimal === 0) return '';
-  
-  // Get exactly 2 decimal places
-  const paise = Math.round(decimal * 100);
-  
-  if (paise === 0) return '';
+const convertPaiseToWords = (paise) => {
+  if (!paise || paise === 0) return '';
+
   if (paise === 1) return 'One Paisa';
-  
+
   return convertIntegerToWords(paise) + ' Paise';
 };
 
@@ -97,19 +93,19 @@ export const amountToWords = (amount) => {
     return 'Zero Rupees';
   }
 
-  // Split into integer and decimal parts
-  const parts = String(amount).split('.');
-  const integerPart = parseInt(parts[0], 10);
-  const decimalPart = parts[1] ? parseInt(parts[1], 10) / 100 : 0;
+  // Round to 2 decimal places and split using integer paise to avoid float issues
+  const totalPaise = Math.round(Number(amount) * 100);
+  const rupees = Math.floor(totalPaise / 100);
+  const paise = totalPaise % 100;
 
   // Convert integer part
-  let result = convertIntegerToWords(integerPart) + ' Rupees';
+  let result = convertIntegerToWords(rupees) + ' Rupees';
 
-  // Add decimal part if exists
-  if (decimalPart > 0) {
-    const decimalWords = convertDecimalToWords(decimalPart);
-    if (decimalWords) {
-      result += ' and ' + decimalWords;
+  // Add paise part if exists
+  if (paise > 0) {
+    const paiseWords = convertPaiseToWords(paise);
+    if (paiseWords) {
+      result += ' and ' + paiseWords;
     }
   }
 
