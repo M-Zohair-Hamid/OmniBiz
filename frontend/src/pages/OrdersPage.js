@@ -21,6 +21,7 @@ const OrdersPage = () => {
   const [buyers, setBuyers] = useState([]);
   const [items, setItems] = useState([]);
   const [showOptionsModal, setShowOptionsModal] = useState(false);
+  const [showBillTaxModal, setShowBillTaxModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [itemSearchTerm, setItemSearchTerm] = useState('');
   const [openDropdownIdx, setOpenDropdownIdx] = useState(null);
@@ -317,8 +318,21 @@ const OrdersPage = () => {
 
   const handleGenerateBill = () => {
     setShowOptionsModal(false);
-    showToast('Generate Bill - Coming soon', 'info');
-    // TODO: Implement bill generation
+    setShowBillTaxModal(true);
+  };
+
+  const handleBillWithTax = () => {
+    if (!selectedOrder) return;
+    setShowBillTaxModal(false);
+    showToast('Opening Bill (Including Tax)...', 'info');
+    navigate(`/bill/${selectedOrder.id}?tax=include`);
+  };
+
+  const handleBillWithoutTax = () => {
+    if (!selectedOrder) return;
+    setShowBillTaxModal(false);
+    showToast('Opening Bill (Excluding Tax)...', 'info');
+    navigate(`/bill/${selectedOrder.id}?tax=exclude`);
   };
 
   const handleRecordPayment = () => {
@@ -637,6 +651,35 @@ const OrdersPage = () => {
                   </button>
                   <button 
                     onClick={() => setShowOptionsModal(false)}
+                    className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-red-500/50 transform hover:scale-105 active:scale-95 mt-2"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Bill Tax Options Modal */}
+          {showBillTaxModal && selectedOrder && (
+            <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+              <div className="backdrop-blur-xl bg-white bg-opacity-40 border border-white border-opacity-30 rounded-2xl shadow-glass-lg p-8 max-w-md w-full">
+                <h2 className="text-2xl font-bold mb-6 text-[#17144B] text-center">Select Bill Type</h2>
+                <div className="flex flex-col gap-3">
+                  <button 
+                    onClick={handleBillWithTax}
+                    className="w-full bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] text-[#17144B] px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-[#00D4FF]/50 transform hover:scale-105 active:scale-95"
+                  >
+                    📊 Bill (Including Tax)
+                  </button>
+                  <button 
+                    onClick={handleBillWithoutTax}
+                    className="w-full bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] text-[#17144B] px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-[#00D4FF]/50 transform hover:scale-105 active:scale-95"
+                  >
+                    📋 Bill (Excluding Tax)
+                  </button>
+                  <button 
+                    onClick={() => setShowBillTaxModal(false)}
                     className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-red-500/50 transform hover:scale-105 active:scale-95 mt-2"
                   >
                     Cancel

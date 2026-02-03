@@ -9,6 +9,7 @@ import OrdersPage from './pages/OrdersPage';
 import LedgerPage from './pages/LedgerPage';
 import ReportsPage from './pages/ReportsPage';
 import InvoicePage from './pages/InvoicePage';
+import BillPage from './pages/BillPage';
 import { ToastProvider } from './context/ToastContext';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -25,6 +26,7 @@ function App() {
             <Route path="/items" element={<ProtectedRoute><ItemsPage /></ProtectedRoute>} />
             <Route path="/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
             <Route path="/invoice/:orderId" element={<ProtectedRoute><InvoicePage /></ProtectedRoute>} />
+            <Route path="/bill/:orderId" element={<ProtectedRoute><BillPage /></ProtectedRoute>} />
             <Route path="/ledger" element={<ProtectedRoute><LedgerPage /></ProtectedRoute>} />
             <Route path="/reports" element={<ProtectedRoute><ReportsPage /></ProtectedRoute>} />
             <Route path="*" element={<Navigate to="/" replace />} />
