@@ -19,6 +19,20 @@ const ItemsPage = () => {
   const { showToast } = useContext(ToastContext);
   const { user } = useContext(AuthContext);
 
+  const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  const highlightText = (text) => {
+    const value = String(text ?? '');
+    const term = searchTerm.trim();
+    if (!term) return value;
+
+    const pattern = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+    return value.split(pattern).map((part, idx) => {
+      const match = part.toLowerCase() === term.toLowerCase();
+      return match ? <mark key={idx} className="bg-yellow-300 text-gray-900 px-0.5 rounded">{part}</mark> : part;
+    });
+  };
+
   const fetchItems = async (search = '') => {
     setLoading(true);
     try {
@@ -203,11 +217,11 @@ const ItemsPage = () => {
                     <tbody>
                       {items.map(item => (
                         <tr key={item.id} className="border-b border-[#3A3F8C] hover:bg-[#3A3F8C] hover:bg-opacity-50 transition-all duration-200 hover:scale-100 hover:shadow-md cursor-pointer">
-                          <td className="px-6 py-3 font-semibold text-black">{item.code}</td>
-                          <td className="px-6 py-3 text-black">{item.name}</td>
-                          <td className="px-6 py-3 text-black">{item.unit}</td>
-                          <td className="px-6 py-3 font-semibold text-black">₨{item.unit_price.toLocaleString('en-PK', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                          <td className="px-6 py-3 font-semibold text-black">{item.quantity_in_stock}</td>
+                          <td className="px-6 py-3 font-semibold text-black">{highlightText(item.code)}</td>
+                          <td className="px-6 py-3 text-black">{highlightText(item.name)}</td>
+                          <td className="px-6 py-3 text-black">{highlightText(item.unit)}</td>
+                          <td className="px-6 py-3 font-semibold text-black">{highlightText(`₨${item.unit_price.toLocaleString('en-PK', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`)}</td>
+                          <td className="px-6 py-3 font-semibold text-black">{highlightText(item.quantity_in_stock)}</td>
                           <td className="px-6 py-3">
                             <button
                               onClick={() => handleEditItem(item)}

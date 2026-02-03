@@ -230,7 +230,7 @@ def generate_sti_pdf(order_id):
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>{buyer.company_name}_{order.order_date.strftime('%Y-%m-%d')}_ID{order.id}.pdf</title>
+        <title>{order.order_number}.pdf</title>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
@@ -538,7 +538,7 @@ def generate_sti_pdf(order_id):
                     </div>
                     <div class="details-section">
                         <h3>Invoice Details:</h3>
-                        <p><span class="label">ID#:</span> {order.id}</p>
+                        <p><span class="label">ID#:</span> {order.order_number}</p>
                         <p><span class="label">Date:</span> {order_date_str}</p>
                         <p><span class="label">Due Date:</span> {due_date}</p>
                     </div>
@@ -622,7 +622,7 @@ def generate_sti_pdf(order_id):
     """
     
     # Generate filename
-    filename = f"{buyer.company_name}_{order.order_date.strftime('%Y-%m-%d')}_ID{order.id}.pdf"
+    filename = f"{order.order_number}.pdf"
     
     try:
         # Import WeasyPrint only when needed

@@ -29,6 +29,20 @@ const BuyersPage = () => {
   const { showToast } = useContext(ToastContext);
   const { user } = useContext(AuthContext);
 
+  const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  const highlightText = (text) => {
+    const value = String(text ?? '');
+    const term = searchTerm.trim();
+    if (!term) return value;
+
+    const pattern = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+    return value.split(pattern).map((part, idx) => {
+      const match = part.toLowerCase() === term.toLowerCase();
+      return match ? <mark key={idx} className="bg-yellow-300 text-gray-900 px-0.5 rounded">{part}</mark> : part;
+    });
+  };
+
   const fetchBuyers = async (page = 1, search = '') => {
     setLoading(true);
     try {
@@ -181,9 +195,9 @@ const BuyersPage = () => {
                     <tbody>
                       {buyers.map(buyer => (
                         <tr key={buyer.id} className="border-b border-[#3A3F8C] hover:bg-[#3A3F8C] hover:bg-opacity-50 transition-all duration-200 hover:scale-100 hover:shadow-md cursor-pointer">
-                          <td className="px-6 py-3 font-semibold text-black">{buyer.company_name}</td>
-                          <td className="px-6 py-3 text-black">{buyer.email}</td>
-                          <td className="px-6 py-3 text-black">{buyer.phone}</td>
+                          <td className="px-6 py-3 font-semibold text-black">{highlightText(buyer.company_name)}</td>
+                          <td className="px-6 py-3 text-black">{highlightText(buyer.email)}</td>
+                          <td className="px-6 py-3 text-black">{highlightText(buyer.phone)}</td>
                           <td className="px-6 py-3">
                             <button
                               onClick={() => handleEditBuyer(buyer)}
