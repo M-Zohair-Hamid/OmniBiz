@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
-import { getOrders, getOrder, createOrder, updateOrder, deleteOrder, getBuyers, getItems } from '../services/api';
+import { getOrders, getOrder, createOrder, updateOrder, deleteOrder, getBuyers, getItems, createPayment, getOrderPayments } from '../services/api';
 import { ToastContext } from '../context/ToastContext';
 import { AuthContext } from '../context/AuthContext';
 import { exportTableToPDF, exportChartToImage } from '../utils/exportUtils';
@@ -22,9 +22,19 @@ const OrdersPage = () => {
   const [items, setItems] = useState([]);
   const [showOptionsModal, setShowOptionsModal] = useState(false);
   const [showBillTaxModal, setShowBillTaxModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [itemSearchTerm, setItemSearchTerm] = useState('');
   const [openDropdownIdx, setOpenDropdownIdx] = useState(null);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [viewingOrder, setViewingOrder] = useState(null);
+  const [paymentForm, setPaymentForm] = useState({
+    amount: '',
+    payment_method: 'cash',
+    payment_type: 'full',
+    payment_date: getCurrentDateForInput(),
+    notes: ''
+  });
   
   const [formData, setFormData] = useState({
     buyer_id: '', order_date: getCurrentDateForInput(), status: 'pending', tax_rate: 0, notes: '', items: [{ item_id: '', quantity: 1, item_query: '' }]
@@ -67,6 +77,14 @@ const OrdersPage = () => {
   };
 
   const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  const roundToNearestTen = (value) => {
+    const number = Math.round(Number(value) || 0);
+    const lastDigit = number % 10;
+    return lastDigit <= 5 ? number - lastDigit : number + (10 - lastDigit);
+  };
+
+  const formatRoundedAmount = (value) => roundToNearestTen(value).toLocaleString('en-PK');
 
   const highlightText = (text) => {
     const value = String(text ?? '');
@@ -301,10 +319,23 @@ const OrdersPage = () => {
     }
   };
 
+  const handleViewOrder = async (order) => {
+    try {
+      const response = await getOrder(order.id);
+      setViewingOrder(response.data);
+      setShowViewModal(true);
+    } catch (error) {
+      showToast('Failed to load order details', 'error');
+    }
+  };
+
   const handleOpenOptions = (order) => {
     setSelectedOrder(order);
     setShowOptionsModal(true);
   };
+
+  const isPaymentLocked = (order) =>
+    order && ['partial', 'paid'].includes(String(order.status).toLowerCase());
 
   const handleGenerateInvoice = async () => {
     if (!selectedOrder) return;
@@ -335,10 +366,76 @@ const OrdersPage = () => {
     navigate(`/bill/${selectedOrder.id}?tax=exclude`);
   };
 
-  const handleRecordPayment = () => {
+  const handleRecordPayment = async () => {
+    if (!selectedOrder) return;
+    if (isPaymentLocked(selectedOrder)) {
+      showToast('Payment already recorded for this order', 'info');
+      return;
+    }
     setShowOptionsModal(false);
-    showToast('Record Payment - Coming soon', 'info');
-    // TODO: Implement payment recording
+    
+    // Fetch existing payments to calculate remaining amount
+    try {
+      const response = await getOrderPayments(selectedOrder.id);
+      const remaining = response.data.remaining;
+      
+      setPaymentForm({
+        amount: remaining.toFixed(2),
+        payment_method: 'cash',
+        payment_type: remaining >= selectedOrder.total_amount ? 'full' : 'partial',
+        payment_date: getCurrentDateForInput(),
+        notes: ''
+      });
+      setShowPaymentModal(true);
+    } catch (error) {
+      // If no payments yet, use full amount
+      setPaymentForm({
+        amount: selectedOrder.total_amount.toFixed(2),
+        payment_method: 'cash',
+        payment_type: 'full',
+        payment_date: getCurrentDateForInput(),
+        notes: ''
+      });
+      setShowPaymentModal(true);
+    }
+  };
+
+  const handlePaymentSubmit = async () => {
+    if (!selectedOrder || !paymentForm.amount) {
+      showToast('Please enter payment amount', 'warning');
+      return;
+    }
+
+    if (isPaymentLocked(selectedOrder)) {
+      showToast('Payment already recorded for this order', 'info');
+      return;
+    }
+
+    let amount = parseFloat(paymentForm.amount);
+    // Round amount to 2 decimal places
+    amount = Math.round(amount * 100) / 100;
+    
+    if (amount <= 0) {
+      showToast('Payment amount must be greater than 0', 'error');
+      return;
+    }
+
+    try {
+      await createPayment({
+        order_id: selectedOrder.id,
+        amount: amount,
+        payment_method: paymentForm.payment_method,
+        payment_type: paymentForm.payment_type,
+        payment_date: paymentForm.payment_date,
+        notes: paymentForm.notes
+      });
+      
+      showToast('Payment recorded successfully', 'success');
+      setShowPaymentModal(false);
+      fetchOrders(); // Refresh orders list
+    } catch (error) {
+      showToast(error.response?.data?.error || 'Failed to record payment', 'error');
+    }
   };
 
   const addItemRow = () => {
@@ -465,20 +562,16 @@ const OrdersPage = () => {
           <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-2xl shadow-glass-lg border border-white border-opacity-30">
             {loading ? <div className="p-8 text-center text-white">Loading...</div> : filteredOrders.length === 0 ? <div className="p-8 text-center text-gray-200">No orders found</div> : (
               <>
-                <div className="flex justify-end gap-2 p-4 border-b border-[#17144B]">
-                  <button onClick={() => exportTableToPDF('ordersTable', 'orders.pdf')} className="px-3 py-2 bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] text-[#17144B] rounded-lg text-xs font-bold transition-all duration-200 hover:shadow-lg transform hover:scale-105 active:scale-95">📄 PDF</button>
-                  <button onClick={() => exportChartToImage('ordersTable', 'orders.png')} className="px-3 py-2 bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] text-[#17144B] rounded-lg text-xs font-bold transition-all duration-200 hover:shadow-lg transform hover:scale-105 active:scale-95">🖼️ PNG</button>
-                </div>
                 <div className="overflow-x-auto">
                   <table id="ordersTable" className="w-full text-sm">
                     <thead className="border-b border-[#17144B]">
                       <tr>
-                        <th className="px-4 py-2 text-left font-bold text-[#17144B]">Order #</th>
-                        <th className="px-4 py-2 text-left font-bold text-[#17144B]">Buyer</th>
-                        <th className="px-4 py-2 text-left font-bold text-[#17144B]">Date</th>
-                        <th className="px-4 py-2 text-left font-bold text-[#17144B]">Total</th>
-                        <th className="px-4 py-2 text-left font-bold text-[#17144B]">Status</th>
-                        <th className="px-4 py-2 text-left font-bold text-[#17144B]">Actions</th>
+                        <th className="px-4 py-2 text-center font-bold text-[#17144B]">Order #</th>
+                        <th className="px-4 py-2 text-center font-bold text-[#17144B]">Buyer</th>
+                        <th className="px-4 py-2 text-center font-bold text-[#17144B]">Date</th>
+                        <th className="px-4 py-2 text-center font-bold text-[#17144B]">Total</th>
+                        <th className="px-4 py-2 text-center font-bold text-[#17144B]">Status</th>
+                        <th className="px-4 py-2 text-center font-bold text-[#17144B]">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -487,10 +580,11 @@ const OrdersPage = () => {
                           <td className="px-4 py-2 font-bold text-black">{highlightText(order.order_number)}</td>
                           <td className="px-4 py-2 text-black font-semibold">{highlightText(order.buyer_name)}</td>
                           <td className="px-4 py-2 text-black font-semibold">{highlightText(formatDate(order.order_date))}</td>
-                          <td className="px-4 py-2 font-semibold text-black">₨ {order.total_amount.toLocaleString('en-PK', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                          <td className="px-4 py-2 font-semibold text-black">₨ {formatRoundedAmount(order.total_amount)}</td>
                           <td className="px-4 py-2"><span className="bg-yellow-300 bg-opacity-30 text-yellow-800 border border-yellow-300 border-opacity-50 px-2 py-1 rounded text-xs font-bold">{highlightText(order.status)}</span></td>
                           <td className="px-4 py-2">
-                            <div className="flex gap-2 items-center">
+                            <div className="flex gap-2 items-center flex-wrap">
+                              <button onClick={() => handleViewOrder(order)} className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 transform hover:scale-105 active:scale-95">👁️ View</button>
                               <button onClick={() => handleEditOrder(order)} className="bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] text-[#17144B] px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 transform hover:scale-105 active:scale-95">Edit</button>
                               <button onClick={() => handleDeleteOrder(order.id)} className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 transform hover:scale-105 active:scale-95">Delete</button>
                               <button onClick={() => handleOpenOptions(order)} className="bg-gradient-to-r from-green-400 to-green-500 hover:from-green-500 hover:to-green-600 text-white px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 transform hover:scale-105 active:scale-95">Options</button>
@@ -645,9 +739,13 @@ const OrdersPage = () => {
                   </button>
                   <button 
                     onClick={handleRecordPayment}
-                    className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-green-500/50 transform hover:scale-105 active:scale-95"
+                    disabled={isPaymentLocked(selectedOrder)}
+                    className={`w-full px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-lg ${isPaymentLocked(selectedOrder)
+                      ? 'bg-gray-400 text-white cursor-not-allowed'
+                      : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white hover:shadow-green-500/50 transform hover:scale-105 active:scale-95'
+                    }`}
                   >
-                    💰 Record Payment
+                    {isPaymentLocked(selectedOrder) ? '🔒 Payment Recorded' : '💰 Record Payment'}
                   </button>
                   <button 
                     onClick={() => setShowOptionsModal(false)}
@@ -683,6 +781,202 @@ const OrdersPage = () => {
                     className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-red-500/50 transform hover:scale-105 active:scale-95 mt-2"
                   >
                     Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Record Payment Modal */}
+          {showPaymentModal && selectedOrder && (
+            <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+              <div className="backdrop-blur-xl bg-white bg-opacity-40 border border-white border-opacity-30 rounded-2xl shadow-glass-lg p-8 max-w-md w-full">
+                <h2 className="text-2xl font-bold mb-6 text-[#17144B] text-center">💳 Record Payment</h2>
+                <div className="mb-4 p-4 bg-white bg-opacity-50 rounded-lg">
+                  <p className="text-sm text-gray-700"><strong>Order:</strong> {selectedOrder.order_number}</p>
+                  <p className="text-sm text-gray-700"><strong>Buyer:</strong> {selectedOrder.buyer_name}</p>
+                  <p className="text-sm text-gray-700"><strong>Total:</strong> ₨ {formatRoundedAmount(selectedOrder.total_amount)}</p>
+                </div>
+                <div className="space-y-4">
+                  {/* Payment Amount */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Payment Amount</label>
+                    <input
+                      type="number"
+                      value={paymentForm.amount}
+                      onChange={(e) => setPaymentForm({...paymentForm, amount: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="0.00"
+                      step="0.01"
+                    />
+                  </div>
+
+                  {/* Payment Method */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
+                    <select
+                      value={paymentForm.payment_method}
+                      onChange={(e) => setPaymentForm({...paymentForm, payment_method: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="cash">💵 Cash</option>
+                      <option value="card">💳 Card</option>
+                      <option value="bank_transfer">🏦 Bank Transfer</option>
+                      <option value="cheque">📄 Cheque</option>
+                    </select>
+                  </div>
+
+                  {/* Payment Type */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Payment Type</label>
+                    <select
+                      value={paymentForm.payment_type}
+                      onChange={(e) => setPaymentForm({...paymentForm, payment_type: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="full">✅ Full Payment</option>
+                      <option value="partial">⚠️ Partial Payment</option>
+                    </select>
+                  </div>
+
+                  {/* Payment Date */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Payment Date</label>
+                    <input
+                      type="date"
+                      value={paymentForm.payment_date}
+                      onChange={(e) => setPaymentForm({...paymentForm, payment_date: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  {/* Notes */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Notes (Optional)</label>
+                    <textarea
+                      value={paymentForm.notes}
+                      onChange={(e) => setPaymentForm({...paymentForm, notes: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      rows="2"
+                      placeholder="Additional notes..."
+                    />
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-3 mt-6">
+                    <button 
+                      onClick={handlePaymentSubmit}
+                      disabled={isPaymentLocked(selectedOrder)}
+                      className={`flex-1 px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-lg ${isPaymentLocked(selectedOrder)
+                        ? 'bg-gray-400 text-white cursor-not-allowed'
+                        : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white hover:shadow-green-500/50 transform hover:scale-105 active:scale-95'
+                      }`}
+                    >
+                      {isPaymentLocked(selectedOrder) ? '🔒 Payment Recorded' : '💰 Record Payment'}
+                    </button>
+                    <button 
+                      onClick={() => setShowPaymentModal(false)}
+                      className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-red-500/50 transform hover:scale-105 active:scale-95"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* View Order Details Modal */}
+          {showViewModal && viewingOrder && (
+            <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+              <div className="backdrop-blur-xl bg-white bg-opacity-40 border border-white border-opacity-30 rounded-2xl shadow-glass-lg p-8 max-w-5xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+                <h2 className="text-2xl font-bold mb-6 text-[#17144B]">📋 Order Details</h2>
+                
+                <div className="flex gap-6 flex-1 min-h-0 overflow-hidden">
+                  {/* LEFT SIDE - Order Details (Scrollable) */}
+                  <div className="flex-1 flex flex-col overflow-y-auto" style={{scrollbarWidth: 'thin', scrollbarColor: '#00D4FF rgba(0,212,255,0.2)'}}>
+                    {/* Order Header Info */}
+                    <div className="grid grid-cols-2 gap-4 p-6 backdrop-blur-sm bg-white bg-opacity-50 rounded-lg border border-white border-opacity-30 flex-shrink-0">
+                      <div>
+                        <p className="text-sm text-gray-600 font-bold uppercase tracking-wide">Order ID</p>
+                        <p className="text-3xl font-bold text-[#17144B] mt-2">#{viewingOrder.id}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600 font-bold uppercase tracking-wide">Order Number</p>
+                        <p className="text-xl font-bold text-[#17144B] mt-2 break-words">{viewingOrder.order_number}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600 font-bold uppercase tracking-wide">Date</p>
+                        <p className="text-2xl font-bold text-[#17144B] mt-2">{formatDate(viewingOrder.order_date)}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600 font-bold uppercase tracking-wide">Status</p>
+                        <p className="text-2xl font-bold text-yellow-600 mt-2">{viewingOrder.status}</p>
+                      </div>
+                    </div>
+
+                    {/* Buyer Info */}
+                    <div className="p-6 backdrop-blur-sm bg-white bg-opacity-50 rounded-lg border border-white border-opacity-30 mt-4 flex-shrink-0">
+                      <h3 className="font-bold text-[#17144B] mb-4 text-lg">👤 Buyer Information</h3>
+                      <p className="text-base text-gray-800 mb-3"><span className="font-bold">Company:</span> {viewingOrder.buyer_name}</p>
+                      <p className="text-base text-gray-800"><span className="font-bold">ID:</span> {viewingOrder.buyer_id}</p>
+                    </div>
+
+                    {/* Totals Section */}
+                    <div className="p-6 backdrop-blur-sm bg-white bg-opacity-50 rounded-lg border border-white border-opacity-30 mt-4 flex-shrink-0">
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-base text-gray-700 font-semibold">Subtotal:</span>
+                          <span className="font-bold text-gray-800 text-lg">₨ {formatRoundedAmount((viewingOrder.total_amount / (1 + viewingOrder.tax_rate / 100)) || 0)}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-base text-gray-700 font-semibold">Tax ({viewingOrder.tax_rate}%):</span>
+                          <span className="font-bold text-gray-800 text-lg">₨ {formatRoundedAmount(viewingOrder.total_amount - (viewingOrder.total_amount / (1 + viewingOrder.tax_rate / 100)))}</span>
+                        </div>
+                        <div className="flex justify-between items-center border-t-2 border-gray-300 pt-3 mt-3">
+                          <span className="font-bold text-[#17144B] text-lg">Total:</span>
+                          <span className="font-bold text-emerald-600 text-2xl">₨ {formatRoundedAmount(viewingOrder.total_amount)}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Notes */}
+                    {viewingOrder.notes && (
+                      <div className="p-6 backdrop-blur-sm bg-white bg-opacity-50 rounded-lg border border-white border-opacity-30 mt-4 flex-shrink-0">
+                        <h3 className="font-bold text-[#17144B] mb-3 text-lg">📝 Notes</h3>
+                        <p className="text-base text-gray-800">{viewingOrder.notes}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* RIGHT SIDE - Items List (Scrollable) */}
+                  <div className="flex-1 flex flex-col overflow-hidden">
+                    <div className="p-4 backdrop-blur-sm bg-white bg-opacity-50 rounded-lg border border-white border-opacity-30 flex-1 flex flex-col overflow-hidden">
+                      <h3 className="font-bold text-[#17144B] mb-3 flex-shrink-0">📦 Items</h3>
+                      <div className="space-y-2 overflow-y-scroll flex-1" style={{scrollbarWidth: 'thin', scrollbarColor: '#00D4FF rgba(0,212,255,0.2)'}}>
+                        {viewingOrder.items && viewingOrder.items.map((item, idx) => (
+                          <div key={idx} className="flex flex-col p-3 bg-white bg-opacity-40 rounded border border-white border-opacity-20 hover:bg-opacity-60 transition-all flex-shrink-0">
+                            <p className="text-sm font-semibold text-gray-800">{item.item?.name || 'Item'}</p>
+                            <p className="text-xs text-gray-600 mb-2">Code: {item.item?.code || 'N/A'}</p>
+                            <div className="flex justify-between items-center">
+                              <span className="text-xs text-gray-700">Qty: <strong>{item.quantity}</strong></span>
+                              <span className="text-sm font-bold text-emerald-600">₨ {formatRoundedAmount(item.item?.unit_price * item.quantity)}</span>
+                            </div>
+                            <p className="text-xs text-gray-600 mt-1">Unit: ₨ {formatRoundedAmount(item.item?.unit_price)}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Close Button */}
+                <div className="mt-6 flex-shrink-0">
+                  <button 
+                    onClick={() => setShowViewModal(false)}
+                    className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-red-500/50 transform hover:scale-105 active:scale-95"
+                  >
+                    Close
                   </button>
                 </div>
               </div>
