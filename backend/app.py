@@ -5,6 +5,7 @@ from datetime import timedelta
 import os
 import sqlite3
 from dotenv import load_dotenv
+from sqlalchemy import text
 
 # Load environment variables
 load_dotenv()
@@ -79,9 +80,29 @@ def ensure_database(company_code: str):
             print(f"[DB] Failed to remove {db_path}: {exc}")
 
     switch_database(app, company_code)
-    db.create_all()
+    db.metadata.create_all(bind=db.get_engine(bind=company_code))
     init_db(company_code)
+    ensure_payment_balance_column(company_code)
     print(f"[DB] {company_code} ready at {db_path}")
+
+def ensure_payment_balance_column(company_code: str):
+    """Ensure payments.balance column exists for legacy databases."""
+    try:
+        engine = db.get_engine(bind=company_code)
+        with engine.connect() as connection:
+            table_exists = connection.execute(
+                text("SELECT name FROM sqlite_master WHERE type='table' AND name='payments'")
+            ).fetchone()
+            if not table_exists:
+                db.metadata.create_all(bind=db.get_engine(bind=company_code))
+
+            result = connection.execute(text("PRAGMA table_info(payments)"))
+            columns = [row[1] for row in result.fetchall()]
+            if 'balance' not in columns:
+                connection.execute(text("ALTER TABLE payments ADD COLUMN balance FLOAT NOT NULL DEFAULT 0"))
+                print(f"[DB] Added payments.balance column for {company_code}")
+    except Exception as exc:
+        print(f"[DB] Failed to ensure payments.balance column for {company_code}: {exc}")
 
 @app.before_request
 def before_request():
@@ -141,7 +162,7 @@ def after_request(response):
     return response
 
 # Register blueprints
-from routes import auth_bp, buyer_bp, item_bp, order_bp, report_bp, dashboard_bp, ledger_bp
+from routes import auth_bp, buyer_bp, item_bp, order_bp, report_bp, dashboard_bp, ledger_bp, payment_bp
 
 app.register_blueprint(auth_bp.bp)
 app.register_blueprint(buyer_bp.bp)
@@ -150,6 +171,7 @@ app.register_blueprint(order_bp.bp)
 app.register_blueprint(report_bp.bp)
 app.register_blueprint(dashboard_bp.bp)
 app.register_blueprint(ledger_bp.bp)
+app.register_blueprint(payment_bp.bp)
 
 # JWT error handlers
 @jwt.invalid_token_loader

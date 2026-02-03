@@ -178,39 +178,37 @@ const BuyersPage = () => {
               <div className="p-8 text-center text-gray-600">No buyers found</div>
             ) : (
               <>
-                <div className="flex justify-end gap-2 p-4 border-b border-[#17144B]">
-                  <button onClick={() => exportTableToPDF('buyersTable', 'buyers.pdf')} className="px-3 py-2 bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] text-[#17144B] rounded-lg text-xs font-bold transition-all duration-200 hover:shadow-lg transform hover:scale-105 active:scale-95">📄 PDF</button>
-                  <button onClick={() => exportChartToImage('buyersTable', 'buyers.png')} className="px-3 py-2 bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] text-[#17144B] rounded-lg text-xs font-bold transition-all duration-200 hover:shadow-lg transform hover:scale-105 active:scale-95">🖼️ PNG</button>
-                </div>
                 <div className="overflow-x-auto">
                   <table id="buyersTable" className="w-full">
                     <thead className="border-b border-[#17144B]">
                       <tr>
-                        <th className="px-6 py-3 text-left font-bold text-[#17144B]">Company Name</th>
-                        <th className="px-6 py-3 text-left font-bold text-[#17144B]">Email</th>
-                        <th className="px-6 py-3 text-left font-bold text-[#17144B]">Phone</th>
-                        <th className="px-6 py-3 text-left font-bold text-[#17144B]">Actions</th>
+                        <th className="px-6 py-3 text-center font-bold text-[#17144B]">Company Name</th>
+                        <th className="px-6 py-3 text-center font-bold text-[#17144B]">Email</th>
+                        <th className="px-6 py-3 text-center font-bold text-[#17144B]">Phone</th>
+                        <th className="px-6 py-3 text-center font-bold text-[#17144B]">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {buyers.map(buyer => (
                         <tr key={buyer.id} className="border-b border-[#3A3F8C] hover:bg-[#3A3F8C] hover:bg-opacity-50 transition-all duration-200 hover:scale-100 hover:shadow-md cursor-pointer">
-                          <td className="px-6 py-3 font-semibold text-black">{highlightText(buyer.company_name)}</td>
-                          <td className="px-6 py-3 text-black">{highlightText(buyer.email)}</td>
-                          <td className="px-6 py-3 text-black">{highlightText(buyer.phone)}</td>
-                          <td className="px-6 py-3">
-                            <button
-                              onClick={() => handleEditBuyer(buyer)}
-                              className="bg-[#00D4FF] hover:bg-[#00B8E0] text-[#17144B] px-3 py-1 rounded mr-2 text-sm transition-all duration-200 hover:scale-105 active:scale-95"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => handleDeleteBuyer(buyer.id)}
-                              className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-3 py-1 rounded text-sm transition-all duration-200 hover:scale-105 active:scale-95"
-                            >
-                              Delete
-                            </button>
+                          <td className="px-6 py-3 font-semibold text-black text-center">{highlightText(buyer.company_name)}</td>
+                          <td className="px-6 py-3 text-black text-center">{highlightText(buyer.email)}</td>
+                          <td className="px-6 py-3 text-black text-center">{highlightText(buyer.phone)}</td>
+                          <td className="px-6 py-3 text-center">
+                            <div className="flex gap-2 justify-center">
+                              <button
+                                onClick={() => handleEditBuyer(buyer)}
+                                className="bg-[#00D4FF] hover:bg-[#00B8E0] text-[#17144B] px-3 py-1 rounded text-sm transition-all duration-200 hover:scale-105 active:scale-95"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => handleDeleteBuyer(buyer.id)}
+                                className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-3 py-1 rounded text-sm transition-all duration-200 hover:scale-105 active:scale-95"
+                              >
+                                Delete
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}

@@ -1,8 +1,9 @@
 from flask import Blueprint, request, jsonify, g
 from flask_jwt_extended import jwt_required, get_jwt
-from models import db, Order, OrderItem, Item, Buyer
+from models import db, Order, OrderItem, Item, Buyer, Payment
 from utils import get_company_id_from_token, format_date_display
 from datetime import datetime
+from sqlalchemy import func
 import random
 import string
 
@@ -51,6 +52,15 @@ def generate_order_number(buyer_id, buyer_name, order_date):
     print(f"[DEBUG] Generated order number: {order_number}")
     return order_number
 
+def calculate_order_status(session, order):
+    total_paid = session.query(func.coalesce(func.sum(Payment.amount), 0)).filter_by(order_id=order.id).scalar() or 0
+    remaining = round(order.total_amount - total_paid, 2)
+    if total_paid <= 0:
+        return 'pending'
+    if remaining <= 0:
+        return 'paid'
+    return 'partial'
+
 @bp.route('', methods=['GET'])
 def get_orders():
     session = get_session()
@@ -74,8 +84,14 @@ def get_orders():
     # Calculate total pages
     pages = (total + per_page - 1) // per_page
     
-    return jsonify({
-        'data': [{
+    status_updated = False
+    data = []
+    for o in items:
+        computed_status = calculate_order_status(session, o)
+        if o.status != computed_status:
+            o.status = computed_status
+            status_updated = True
+        data.append({
             'id': o.id,
             'order_number': o.order_number,
             'buyer_id': o.buyer_id,
@@ -86,7 +102,13 @@ def get_orders():
             'total_amount': o.total_amount,
             'status': o.status,
             'created_at': format_date_display(o.created_at)
-        } for o in items],
+        })
+
+    if status_updated:
+        session.commit()
+
+    return jsonify({
+        'data': data,
         'total': total,
         'pages': pages,
         'current_page': page
@@ -99,6 +121,11 @@ def get_order(order_id):
     
     if not order:
         return jsonify({'error': 'Order not found'}), 404
+
+    computed_status = calculate_order_status(session, order)
+    if order.status != computed_status:
+        order.status = computed_status
+        session.commit()
     
     return jsonify({
         'id': order.id,

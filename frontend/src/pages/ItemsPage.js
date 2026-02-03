@@ -198,31 +198,27 @@ const ItemsPage = () => {
               <div className="p-8 text-center text-gray-600">No items found</div>
             ) : (
               <>
-                <div className="flex justify-end gap-2 p-4 border-b border-[#17144B]">
-                  <button onClick={() => exportTableToPDF('itemsTable', 'items.pdf')} className="px-3 py-2 bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] text-[#17144B] rounded-lg text-xs font-bold transition-all duration-200 hover:shadow-lg transform hover:scale-105 active:scale-95">📄 PDF</button>
-                  <button onClick={() => exportChartToImage('itemsTable', 'items.png')} className="px-3 py-2 bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] text-[#17144B] rounded-lg text-xs font-bold transition-all duration-200 hover:shadow-lg transform hover:scale-105 active:scale-95">🖼️ PNG</button>
-                </div>
                 <div className="overflow-x-auto max-h-[60vh] overflow-y-auto">
                   <table id="itemsTable" className="w-full">
                     <thead className="border-b border-[#17144B]">
                       <tr>
-                        <th className="px-6 py-3 text-left font-bold text-[#17144B]">Code</th>
-                        <th className="px-6 py-3 text-left font-bold text-[#17144B]">Name</th>
-                        <th className="px-6 py-3 text-left font-bold text-[#17144B]">Unit</th>
-                        <th className="px-6 py-3 text-left font-bold text-[#17144B]">Price (₨)</th>
-                        <th className="px-6 py-3 text-left font-bold text-[#17144B]">Stock</th>
-                        <th className="px-6 py-3 text-left font-bold text-[#17144B]">Actions</th>
+                        <th className="px-6 py-3 text-center font-bold text-[#17144B]">Code</th>
+                        <th className="px-6 py-3 text-center font-bold text-[#17144B]">Name</th>
+                        <th className="px-6 py-3 text-center font-bold text-[#17144B]">Unit</th>
+                        <th className="px-6 py-3 text-center font-bold text-[#17144B]">Price (₨)</th>
+                        <th className="px-6 py-3 text-center font-bold text-[#17144B]">Stock</th>
+                        <th className="px-6 py-3 text-center font-bold text-[#17144B]">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {items.map(item => (
                         <tr key={item.id} className="border-b border-[#3A3F8C] hover:bg-[#3A3F8C] hover:bg-opacity-50 transition-all duration-200 hover:scale-100 hover:shadow-md cursor-pointer">
-                          <td className="px-6 py-3 font-semibold text-black">{highlightText(item.code)}</td>
-                          <td className="px-6 py-3 text-black">{highlightText(item.name)}</td>
-                          <td className="px-6 py-3 text-black">{highlightText(item.unit)}</td>
-                          <td className="px-6 py-3 font-semibold text-black">{highlightText(`₨${item.unit_price.toLocaleString('en-PK', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`)}</td>
-                          <td className="px-6 py-3 font-semibold text-black">{highlightText(item.quantity_in_stock)}</td>
-                          <td className="px-6 py-3">
+                          <td className="px-6 py-3 font-semibold text-black text-center">{highlightText(item.code)}</td>
+                          <td className="px-6 py-3 text-black text-center">{highlightText(item.name)}</td>
+                          <td className="px-6 py-3 text-black text-center">{highlightText(item.unit)}</td>
+                          <td className="px-6 py-3 font-semibold text-black text-center">{highlightText(`₨${item.unit_price.toLocaleString('en-PK', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`)}</td>
+                          <td className="px-6 py-3 font-semibold text-black text-center">{highlightText(item.quantity_in_stock)}</td>
+                          <td className="px-6 py-3 text-center">
                             <button
                               onClick={() => handleEditItem(item)}
                               className="bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] text-[#17144B] px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-200 transform hover:scale-105 active:scale-95 mr-2"

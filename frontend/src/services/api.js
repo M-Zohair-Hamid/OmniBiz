@@ -93,6 +93,7 @@ export const getPayments = (page = 1, perPage = 10) =>
 export const getPayment = (id) => api.get(`/payments/${id}`);
 export const createPayment = (data) => api.post('/payments', data);
 export const deletePayment = (id) => api.delete(`/payments/${id}`);
+export const getOrderPayments = (orderId) => api.get(`/payments/order/${orderId}`);
 
 // Reports
 export const getReportSummary = () => api.get('/reports/summary');

@@ -160,6 +160,23 @@ class OrderItem(db.Model):
     unit_price = db.Column(db.Float, nullable=False)
     line_total = db.Column(db.Float, nullable=False)
 
+# ========== PAYMENT MODEL ==========
+class Payment(db.Model):
+    __tablename__ = 'payments'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=False)
+    company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False)
+    payment_date = db.Column(db.DateTime, default=datetime.utcnow)
+    amount = db.Column(db.Float, nullable=False)
+    balance = db.Column(db.Float, nullable=False, default=0)  # Remaining balance after this payment
+    payment_method = db.Column(db.String(50), nullable=False)  # cash, card, bank_transfer, cheque
+    payment_type = db.Column(db.String(20), nullable=False)  # partial, full
+    notes = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    order = db.relationship('Order', backref='payments', lazy=True)
+
 def init_db(company_code='umarsons'):
     """Initialize database with sample data for specific company"""
     # Check if data already exists

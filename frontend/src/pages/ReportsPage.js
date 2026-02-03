@@ -173,25 +173,24 @@ const ReportsPage = () => {
           {/* Detailed Tables */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-2xl shadow-glass-lg p-6 border border-white border-opacity-30">
-              <div className="flex justify-between items-center mb-4">
+              <div className="mb-4">
                 <h2 className="text-lg font-bold text-black">Buyer-Wise Summary</h2>
-                <button onClick={() => exportChartToImage('buyerSummaryTable', 'buyer-summary.png')} className="px-2 py-1 bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] text-black rounded-lg text-xs font-bold transition-all duration-200 hover:shadow-lg transform hover:scale-105 active:scale-95">🖼️ PNG</button>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-gradient-to-r from-[#17144B] to-[#3A3F8C] border-b border-[#17144B]">
                     <tr>
-                      <th className="px-3 py-2 text-left font-bold text-white">Buyer</th>
-                      <th className="px-3 py-2 text-left font-bold text-white">Orders</th>
-                      <th className="px-3 py-2 text-left font-bold text-white">Total</th>
+                      <th className="px-3 py-2 text-center font-bold text-white">Buyer</th>
+                      <th className="px-3 py-2 text-center font-bold text-white">Orders</th>
+                      <th className="px-3 py-2 text-center font-bold text-white">Total</th>
                     </tr>
                   </thead>
                   <tbody>
                     {buyerData.map((buyer, idx) => (
                       <tr key={idx} className="border-b border-[#3A3F8C] hover:bg-[#3A3F8C] hover:bg-opacity-50 transition-all duration-200 hover:scale-100 hover:shadow-md cursor-pointer">
-                        <td className="px-3 py-2 font-semibold text-black">{buyer.buyer_name}</td>
-                        <td className="px-3 py-2 text-black">{buyer.order_count}</td>
-                        <td className="px-3 py-2 font-bold text-black">₨ {buyer.total_orders.toLocaleString('en-PK', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td className="px-3 py-2 font-semibold text-black text-center">{buyer.buyer_name}</td>
+                        <td className="px-3 py-2 text-black text-center">{buyer.order_count}</td>
+                        <td className="px-3 py-2 font-bold text-black text-center">₨ {buyer.total_orders.toLocaleString('en-PK', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -200,25 +199,24 @@ const ReportsPage = () => {
             </div>
 
             <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-2xl shadow-glass-lg p-6 border border-white border-opacity-30">
-              <div className="flex justify-between items-center mb-4">
+              <div className="mb-4">
                 <h2 className="text-lg font-bold text-black">Item-Wise Summary</h2>
-                <button onClick={() => exportChartToImage('itemSummaryTable', 'item-summary.png')} className="px-2 py-1 bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] text-black rounded-lg text-xs font-bold transition-all duration-200 hover:shadow-lg transform hover:scale-105 active:scale-95">🖼️ PNG</button>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-gradient-to-r from-[#17144B] to-[#3A3F8C] border-b border-[#17144B]">
                     <tr>
-                      <th className="px-3 py-2 text-left font-bold text-white">Item</th>
-                      <th className="px-3 py-2 text-left font-bold text-white">Qty</th>
-                      <th className="px-3 py-2 text-left font-bold text-white">Value</th>
+                      <th className="px-3 py-2 text-center font-bold text-white">Item</th>
+                      <th className="px-3 py-2 text-center font-bold text-white">Qty</th>
+                      <th className="px-3 py-2 text-center font-bold text-white">Value</th>
                     </tr>
                   </thead>
                   <tbody>
                     {itemData.map((item, idx) => (
                       <tr key={idx} className="border-b border-[#3A3F8C] hover:bg-[#3A3F8C] hover:bg-opacity-50 transition-all duration-200 hover:scale-100 hover:shadow-md cursor-pointer">
-                        <td className="px-3 py-2 font-semibold text-black">{item.item_name}</td>
-                        <td className="px-3 py-2 text-black">{item.total_quantity}</td>
-                        <td className="px-3 py-2 font-bold text-black">₨ {item.total_value.toLocaleString('en-PK', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td className="px-3 py-2 font-semibold text-black text-center">{item.item_name}</td>
+                        <td className="px-3 py-2 text-black text-center">{item.total_quantity}</td>
+                        <td className="px-3 py-2 font-bold text-black text-center">₨ {item.total_value.toLocaleString('en-PK', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                       </tr>
                     ))}
                   </tbody>

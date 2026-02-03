@@ -32,6 +32,7 @@ const Sidebar = ({ companyName }) => {
     { label: 'Buyers', id: 'buyers', path: '/buyers' },
     { label: 'Items', id: 'items', path: '/items' },
     { label: 'Orders', id: 'orders', path: '/orders' },
+    { label: 'Payments', id: 'payments', path: '/payments' },
     { label: 'Ledger', id: 'ledger', path: '/ledger' },
     { label: 'Reports', id: 'reports', path: '/reports' }
   ];

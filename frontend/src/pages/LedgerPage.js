@@ -180,22 +180,6 @@ const LedgerPage = () => {
                 </div>
               </div>
 
-              {/* Export Buttons */}
-              <div className="flex justify-end gap-3 mb-4">
-                <button
-                  onClick={handleExportPDF}
-                  className="px-5 py-2 bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] text-[#17144B] rounded-lg text-sm font-bold transition-all duration-200 hover:shadow-lg transform hover:scale-105 active:scale-95"
-                >
-                  📄 Export PDF
-                </button>
-                <button
-                  onClick={handleExportPNG}
-                  className="px-5 py-2 bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] text-[#17144B] rounded-lg text-sm font-bold transition-all duration-200 hover:shadow-lg transform hover:scale-105 active:scale-95"
-                >
-                  🖼️ Export PNG
-                </button>
-              </div>
-
               {/* Ledger Table */}
               <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-2xl shadow-glass-lg border border-white border-opacity-30 overflow-hidden mb-6">
                 <div className="overflow-x-auto">

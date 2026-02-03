@@ -245,20 +245,20 @@ const DashboardPage = () => {
               <table className="w-full text-base">
                 <thead className="bg-gradient-to-r from-[#17144B] to-[#3A3F8C] border-b border-[#17144B]">
                   <tr>
-                    <th className="px-4 py-4 text-lg text-left font-bold text-[#EBEEF5]">Order #</th>
-                    <th className="px-4 py-4 text-lg text-left font-bold text-[#EBEEF5]">Buyer</th>
-                    <th className="px-4 py-4 text-lg text-left font-bold text-[#EBEEF5]">Amount</th>
-                    <th className="px-4 py-4 text-lg text-left font-bold text-[#EBEEF5]">Status</th>
-                    <th className="px-4 py-4 text-lg text-left font-bold text-[#EBEEF5]">Date</th>
+                    <th className="px-4 py-4 text-lg text-center font-bold text-[#EBEEF5]">Order #</th>
+                    <th className="px-4 py-4 text-lg text-center font-bold text-[#EBEEF5]">Buyer</th>
+                    <th className="px-4 py-4 text-lg text-center font-bold text-[#EBEEF5]">Amount</th>
+                    <th className="px-4 py-4 text-lg text-center font-bold text-[#EBEEF5]">Status</th>
+                    <th className="px-4 py-4 text-lg text-center font-bold text-[#EBEEF5]">Date</th>
                   </tr>
                 </thead>
                 <tbody>
                   {dashboardData.recent_orders.map(order => (
                     <tr key={order.id} className="border-b border-[#3A3F8C] hover:bg-[#3A3F8C] hover:bg-opacity-50 transition-colors">
-                      <td className="px-4 py-3 font-bold text-base text-[#00D4FF]">{order.order_number}</td>
-                      <td className="px-4 py-3 text-base text-gray-700">{order.buyer_name}</td>
-                      <td className="px-4 py-3 font-semibold text-base text-gray-700">₨ {order.total_amount.toLocaleString('en-PK', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 font-bold text-base text-[#00D4FF] text-center">{order.order_number}</td>
+                      <td className="px-4 py-3 text-base text-gray-700 text-center">{order.buyer_name}</td>
+                      <td className="px-4 py-3 font-semibold text-base text-gray-700 text-center">₨ {order.total_amount.toLocaleString('en-PK', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                      <td className="px-4 py-3 text-center">
                         <span className={`px-3 py-1 rounded-full text-sm font-bold backdrop-blur-sm ${
                           order.status === 'pending' ? 'bg-yellow-300 bg-opacity-30 text-yellow-800 border border-yellow-300 border-opacity-50' :
                           order.status === 'confirmed' ? 'bg-blue-300 bg-opacity-30 text-blue-800 border border-blue-300 border-opacity-50' :
@@ -268,7 +268,7 @@ const DashboardPage = () => {
                           {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-base text-black font-semibold">{formatDate(order.created_at)}</td>
+                      <td className="px-4 py-3 text-base text-black font-semibold text-center">{formatDate(order.created_at)}</td>
                     </tr>
                   ))}
                 </tbody>
