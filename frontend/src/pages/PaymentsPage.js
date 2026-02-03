@@ -21,6 +21,7 @@ const PaymentsPage = () => {
     payment_method: 'cash',
     payment_type: 'full',
     payment_date: getCurrentDateForInput(),
+    income_tax_rate: '',
     notes: ''
   });
   const roundToNearestTen = (value) => {
@@ -128,6 +129,7 @@ const PaymentsPage = () => {
       payment_method: 'cash',
       payment_type: 'full',
       payment_date: getCurrentDateForInput(),
+      income_tax_rate: '',
       notes: ''
     });
     setShowCompletePaymentModal(true);
@@ -147,6 +149,10 @@ const PaymentsPage = () => {
 
     // Round amount to 2 decimal places
     amount = Math.round(amount * 100) / 100;
+    
+    // Parse income tax rate (percentage)
+    let income_tax_rate = parseFloat(completePaymentForm.income_tax_rate || 0);
+    income_tax_rate = Math.round(income_tax_rate * 100) / 100;
 
     try {
       await createPayment({
@@ -155,6 +161,7 @@ const PaymentsPage = () => {
         payment_method: completePaymentForm.payment_method,
         payment_type: completePaymentForm.payment_type,
         payment_date: completePaymentForm.payment_date,
+        income_tax_rate: income_tax_rate,
         notes: completePaymentForm.notes
       });
       showToast('Payment recorded successfully!', 'success');
@@ -486,6 +493,20 @@ const PaymentsPage = () => {
                     onChange={(e) => setCompletePaymentForm({...completePaymentForm, payment_date: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
+                </div>
+
+                {/* Income Tax Rate */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Income Tax Rate (%) - Optional</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={completePaymentForm.income_tax_rate}
+                    onChange={(e) => setCompletePaymentForm({...completePaymentForm, income_tax_rate: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="e.g., 1.5 for 1.5%"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Income tax will be calculated as: Payment Amount × Rate / 100</p>
                 </div>
 
                 {/* Notes */}

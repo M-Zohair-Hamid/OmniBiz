@@ -141,6 +141,8 @@ class Order(db.Model):
     subtotal = db.Column(db.Float, default=0)
     tax_rate = db.Column(db.Float, default=0)
     tax_amount = db.Column(db.Float, default=0)
+    income_tax_rate = db.Column(db.Float, default=0)  # New: Income tax rate for the order
+    income_tax_amount = db.Column(db.Float, default=0)  # New: Income tax amount for the order
     total_amount = db.Column(db.Float, default=0)
     status = db.Column(db.String(20), default='pending')  # pending, confirmed, shipped, delivered
     notes = db.Column(db.Text)
@@ -173,6 +175,8 @@ class Payment(db.Model):
     payment_method = db.Column(db.String(50), nullable=False)  # cash, card, bank_transfer, cheque
     payment_type = db.Column(db.String(20), nullable=False)  # partial, full
     notes = db.Column(db.Text)
+    income_tax_rate = db.Column(db.Float, default=0)  # Income tax rate percentage (e.g., 1.5 for 1.5%)
+    income_tax_amount = db.Column(db.Float, default=0)  # New: Income tax for this payment (not added to payment amount)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     order = db.relationship('Order', backref='payments', lazy=True)

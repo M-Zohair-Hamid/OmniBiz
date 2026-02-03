@@ -187,13 +187,12 @@ const LedgerPage = () => {
                     <thead className="bg-gradient-to-r from-[#17144B] to-[#3A3F8C] text-white">
                       <tr>
                         <th className="px-4 py-3 text-left text-sm font-bold">Date</th>
-                        <th className="px-4 py-3 text-left text-sm font-bold">Bill No</th>
+                        <th className="px-4 py-3 text-left text-sm font-bold">Reference</th>
                         <th className="px-4 py-3 text-left text-sm font-bold">Description</th>
-                        <th className="px-4 py-3 text-center text-sm font-bold">Qty</th>
-                        <th className="px-4 py-3 text-right text-sm font-bold">Rate</th>
-                        <th className="px-4 py-3 text-right text-sm font-bold">Amount</th>
-                        <th className="px-4 py-3 text-right text-sm font-bold">Tax</th>
-                        <th className="px-4 py-3 text-right text-sm font-bold">Total</th>
+                        <th className="px-4 py-3 text-right text-sm font-bold">Debit</th>
+                        <th className="px-4 py-3 text-right text-sm font-bold">Credit</th>
+                        <th className="px-4 py-3 text-right text-sm font-bold">Sales Tax</th>
+                        <th className="px-4 py-3 text-right text-sm font-bold">Income Tax</th>
                         <th className="px-4 py-3 text-right text-sm font-bold">Balance</th>
                       </tr>
                     </thead>
@@ -207,25 +206,22 @@ const LedgerPage = () => {
                             {formatDate(entry.date)}
                           </td>
                           <td className="px-4 py-3 text-sm font-medium text-[#00D4FF]">
-                            {entry.invoice_number}
+                            {entry.reference}
                           </td>
                           <td className="px-4 py-3 text-sm text-black font-semibold">
-                            {entry.item_name}
-                          </td>
-                          <td className="px-4 py-3 text-sm text-center text-black font-semibold">
-                            {entry.quantity > 0 ? entry.quantity : '-'}
+                            {entry.description}
                           </td>
                           <td className="px-4 py-3 text-sm text-right text-black font-semibold">
-                            {entry.rate > 0 ? `₨ ${entry.rate.toLocaleString('en-PK', {minimumFractionDigits: 2})}` : '-'}
+                            {entry.debit > 0 ? `₨ ${entry.debit.toLocaleString('en-PK', {minimumFractionDigits: 2})}` : '-'}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-right text-green-600 font-semibold">
+                            {entry.credit > 0 ? `₨ ${entry.credit.toLocaleString('en-PK', {minimumFractionDigits: 2})}` : '-'}
                           </td>
                           <td className="px-4 py-3 text-sm text-right text-black font-semibold">
-                            ₨ {entry.amount.toLocaleString('en-PK', {minimumFractionDigits: 2})}
+                            {entry.sales_tax > 0 ? `₨ ${entry.sales_tax.toLocaleString('en-PK', {minimumFractionDigits: 2})}` : '-'}
                           </td>
-                          <td className="px-4 py-3 text-sm text-right text-black font-semibold">
-                            {entry.tax > 0 ? `₨ ${entry.tax.toLocaleString('en-PK', {minimumFractionDigits: 2})}` : '-'}
-                          </td>
-                          <td className={`px-4 py-3 text-sm text-right font-bold ${entry.type === 'credit' ? 'text-green-600' : 'text-orange-600'}`}>
-                            {entry.type === 'credit' ? '-' : ''}₨ {entry.total.toLocaleString('en-PK', {minimumFractionDigits: 2})}
+                          <td className="px-4 py-3 text-sm text-right text-purple-600 font-semibold">
+                            {entry.income_tax > 0 ? `₨ ${entry.income_tax.toLocaleString('en-PK', {minimumFractionDigits: 2})}` : '-'}
                           </td>
                           <td className={`px-4 py-3 text-sm text-right font-bold ${entry.balance > 0 ? 'text-red-600' : 'text-green-600'}`}>
                             ₨ {entry.balance.toLocaleString('en-PK', {minimumFractionDigits: 2})}
@@ -240,7 +236,7 @@ const LedgerPage = () => {
               {/* Summary Card */}
               <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-2xl shadow-glass-lg border border-white border-opacity-30 p-6">
                 <h3 className="text-xl font-bold text-[#00D4FF] mb-4">Summary</h3>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
                   <div className="bg-[#3A3F8C] bg-opacity-60 rounded-lg p-4">
                     <p className="text-sm text-gray-600 mb-1">Opening Balance</p>
                     <p className="text-2xl font-bold text-[#00D4FF]">
@@ -257,6 +253,18 @@ const LedgerPage = () => {
                     <p className="text-sm text-gray-600 mb-1">Total Payments (Credits)</p>
                     <p className="text-2xl font-bold text-green-600">
                       ₨ {ledgerData.summary.total_credits.toLocaleString('en-PK', {minimumFractionDigits: 2})}
+                    </p>
+                  </div>
+                  <div className="bg-blue-50 bg-opacity-60 rounded-lg p-4">
+                    <p className="text-sm text-gray-600 mb-1">Total Sales Tax</p>
+                    <p className="text-2xl font-bold text-blue-600">
+                      ₨ {(ledgerData.summary.total_sales_tax || 0).toLocaleString('en-PK', {minimumFractionDigits: 2})}
+                    </p>
+                  </div>
+                  <div className="bg-purple-50 bg-opacity-60 rounded-lg p-4">
+                    <p className="text-sm text-gray-600 mb-1">Total Income Tax</p>
+                    <p className="text-2xl font-bold text-purple-600">
+                      ₨ {(ledgerData.summary.total_income_tax || 0).toLocaleString('en-PK', {minimumFractionDigits: 2})}
                     </p>
                   </div>
                   <div className={`${ledgerData.summary.closing_balance > 0 ? 'bg-red-50' : 'bg-green-50'} bg-opacity-60 rounded-lg p-4`}>

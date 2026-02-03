@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, send_file
 from flask_jwt_extended import jwt_required, get_jwt
-from models import db, Order, Buyer, OrderItem
+from models import db, Order, Buyer, OrderItem, Payment
 from utils import get_company_id_from_token, format_date_display
 from datetime import datetime, timedelta
 from reportlab.lib.pagesizes import letter
@@ -54,31 +54,92 @@ def get_ledger(buyer_id):
     
     orders = query.order_by(Order.order_date).all()
     
-    # Calculate ledger entries from orders
+    # Get all payments for these orders
+    order_ids = [order.id for order in orders]
+    payments_query = Payment.query.filter(
+        Payment.order_id.in_(order_ids),
+        Payment.company_id == company_id
+    )
+    
+    # Apply date filters to payments as well
+    if start_date:
+        payments_query = payments_query.filter(Payment.payment_date >= start)
+    if end_date:
+        payments_query = payments_query.filter(Payment.payment_date <= end)
+    
+    payments = payments_query.order_by(Payment.payment_date).all()
+    
+    # Calculate ledger entries from orders and payments (order-wise)
     ledger_entries = []
     running_balance = 0
     
+    # Combine orders and payments, sort by date
+    all_transactions = []
+    
+    # Add orders as transactions
     for order in orders:
-        # Add order entries (debit)
-        for item in order.items:
-            running_balance += item.line_total
+        all_transactions.append({
+            'date': order.order_date,
+            'type': 'order',
+            'data': order
+        })
+    
+    # Add payments as transactions
+    for payment in payments:
+        all_transactions.append({
+            'date': payment.payment_date,
+            'type': 'payment',
+            'data': payment
+        })
+    
+    # Sort all transactions by date
+    all_transactions.sort(key=lambda x: x['date'])
+    
+    # Process transactions in chronological order
+    for transaction in all_transactions:
+        if transaction['type'] == 'order':
+            order = transaction['data']
+            running_balance += order.total_amount
+            
+            # Create order description from items
+            item_names = [item.item.name for item in order.items[:3]]  # First 3 items
+            if len(order.items) > 3:
+                item_names.append(f"+ {len(order.items) - 3} more")
+            description = ", ".join(item_names)
             
             ledger_entries.append({
                 'date': format_date_display(order.order_date),
-                'invoice_number': order.order_number,
-                'item_name': item.item.name,
-                'quantity': item.quantity,
-                'rate': item.unit_price,
-                'amount': item.line_total,
-                'tax': order.tax_amount,
-                'total': item.line_total,
+                'reference': order.order_number,
+                'description': description,
+                'debit': order.total_amount,
+                'credit': 0,
+                'sales_tax': order.tax_amount,
+                'income_tax': 0,
                 'type': 'debit',
+                'balance': running_balance
+            })
+        
+        elif transaction['type'] == 'payment':
+            payment = transaction['data']
+            running_balance -= payment.amount
+            
+            ledger_entries.append({
+                'date': format_date_display(payment.payment_date),
+                'reference': f"Payment - {payment.order.order_number if payment.order else 'N/A'}",
+                'description': f"{payment.payment_method.replace('_', ' ').title()} - {payment.notes if payment.notes else 'Payment received'}",
+                'debit': 0,
+                'credit': payment.amount,
+                'sales_tax': 0,
+                'income_tax': payment.income_tax_amount if payment.income_tax_amount else 0,
+                'type': 'credit',
                 'balance': running_balance
             })
     
     # Calculate summary
-    total_debits = sum([e['total'] for e in ledger_entries if e['type'] == 'debit'])
-    total_credits = 0  # No payments yet
+    total_debits = sum([e['debit'] for e in ledger_entries if e['type'] == 'debit'])
+    total_credits = sum([e['credit'] for e in ledger_entries if e['type'] == 'credit'])
+    total_sales_tax = sum([e['sales_tax'] for e in ledger_entries])
+    total_income_tax = sum([e['income_tax'] for e in ledger_entries])
     closing_balance = total_debits - total_credits
     
     return jsonify({
@@ -97,6 +158,8 @@ def get_ledger(buyer_id):
             'opening_balance': 0,
             'total_debits': total_debits,
             'total_credits': total_credits,
+            'total_sales_tax': total_sales_tax,
+            'total_income_tax': total_income_tax,
             'closing_balance': closing_balance
         },
         'date_range': {

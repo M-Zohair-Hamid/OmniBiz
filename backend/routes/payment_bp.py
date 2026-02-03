@@ -53,6 +53,8 @@ def get_payments():
             'payment_method': p.payment_method,
             'payment_type': p.payment_type,
             'notes': p.notes,
+            'income_tax_rate': round(p.income_tax_rate, 2) if p.income_tax_rate else 0,
+            'income_tax_amount': round(p.income_tax_amount, 2) if p.income_tax_amount else 0,
             'created_at': format_date_display(p.created_at)
         } for p in payments],
         'total': total,
@@ -82,6 +84,8 @@ def get_payment(payment_id):
         'payment_method': payment.payment_method,
         'payment_type': payment.payment_type,
         'notes': payment.notes,
+        'income_tax_rate': round(payment.income_tax_rate, 2) if payment.income_tax_rate else 0,
+        'income_tax_amount': round(payment.income_tax_amount, 2) if payment.income_tax_amount else 0,
         'order_total': payment.order.total_amount if payment.order else 0,
         'created_at': format_date_display(payment.created_at)
     }), 200
@@ -121,6 +125,11 @@ def create_payment():
     try:
         # Calculate remaining balance after this payment
         remaining_balance = round(order_total - (total_paid + amount), 2)
+        
+        # Get income tax rate and calculate amount
+        income_tax_rate = float(data.get('income_tax_rate', 0))
+        income_tax_rate = round(income_tax_rate, 2)
+        income_tax_amount = round((amount * income_tax_rate / 100), 2)
 
         payment = Payment(
             order_id=data['order_id'],
@@ -130,7 +139,9 @@ def create_payment():
             balance=remaining_balance,
             payment_method=data['payment_method'],
             payment_type=data.get('payment_type', 'partial'),
-            notes=data.get('notes', '')
+            notes=data.get('notes', ''),
+            income_tax_rate=income_tax_rate,
+            income_tax_amount=income_tax_amount
         )
 
         session.add(payment)
@@ -216,6 +227,8 @@ def get_order_payments(order_id):
             'amount': p.amount,
             'payment_method': p.payment_method,
             'payment_type': p.payment_type,
-            'notes': p.notes
+            'notes': p.notes,
+            'income_tax_rate': round(p.income_tax_rate, 2) if p.income_tax_rate else 0,
+            'income_tax_amount': round(p.income_tax_amount, 2) if p.income_tax_amount else 0
         } for p in payments]
     }), 200
