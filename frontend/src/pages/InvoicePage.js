@@ -51,8 +51,8 @@ const InvoicePage = () => {
         setCompanyData(companyConfig[companyCode]);
       }
       
-      // Set document title to order number (ID)
-      document.title = response.data.order_number;
+      // Set document title to order number (ID) with STI suffix
+      document.title = `${response.data.order_number}-STI`;
       
       setLoading(false);
     } catch (error) {

@@ -39,29 +39,29 @@ const BillPage = () => {
   const [companyData, setCompanyData] = useState(companyConfig.umarsons);
 
   useEffect(() => {
-    fetchOrder();
-  }, [orderId]);
-
-  const fetchOrder = async () => {
-    try {
-      const response = await getOrder(orderId);
-      setOrder(response.data);
-      
-      // Set company configuration based on order's company
-      const companyCode = response.data.company_name?.toLowerCase().replace(/\s+/g, '_') || 'umarsons';
-      if (companyConfig[companyCode]) {
-        setCompanyData(companyConfig[companyCode]);
+    const fetchOrder = async () => {
+      try {
+        const response = await getOrder(orderId);
+        setOrder(response.data);
+        
+        // Set company configuration based on order's company
+        const companyCode = response.data.company_name?.toLowerCase().replace(/\s+/g, '_') || 'umarsons';
+        if (companyConfig[companyCode]) {
+          setCompanyData(companyConfig[companyCode]);
+        }
+        
+        // Set document title to order number (ID) with BILL suffix
+        document.title = `${response.data.order_number}-BILL`;
+        
+        setLoading(false);
+      } catch (error) {
+        showToast('Failed to load bill', 'error');
+        setLoading(false);
       }
-      
-      // Set document title to order number (ID)
-      document.title = response.data.order_number;
-      
-      setLoading(false);
-    } catch (error) {
-      showToast('Failed to load bill', 'error');
-      setLoading(false);
-    }
-  };
+    };
+
+    fetchOrder();
+  }, [orderId, showToast]);
 
   const handlePrint = () => {
     window.print();
