@@ -398,8 +398,11 @@ def delete_order(order_id):
         item = session.query(Item).filter_by(id=order_item.item_id).first()
         if item:
             item.quantity_in_stock += order_item.quantity
+
+    # Delete all payments linked to this order
+    session.query(Payment).filter_by(order_id=order.id).delete()
     
     session.delete(order)
     session.commit()
     
-    return jsonify({'message': 'Order deleted successfully and stock restored'}), 200
+    return jsonify({'message': 'Order deleted successfully, payments removed, and stock restored'}), 200

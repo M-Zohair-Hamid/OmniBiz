@@ -316,7 +316,7 @@ const OrdersPage = () => {
   };
 
   const handleDeleteOrder = async (id) => {
-    if (window.confirm('Are you sure?')) {
+    if (window.confirm('Are you sure? Deleting this order will also delete all related payments.')) {
       try {
         await deleteOrder(id);
         showToast('Order deleted', 'success');

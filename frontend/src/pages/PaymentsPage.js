@@ -128,8 +128,9 @@ const PaymentsPage = () => {
   const handleCompletePayment = (payment) => {
     setViewingPayment(payment);
     // Calculate remaining amount
-    const remainingAmount = payment.orderDetails ? 
-      (payment.orderDetails.total_amount - payment.amount) : 0;
+    const remainingAmount = typeof payment.order_remaining === 'number'
+      ? payment.order_remaining
+      : (payment.orderDetails ? (payment.orderDetails.total_amount - payment.amount) : 0);
     
     setCompletePaymentForm({
       amount: remainingAmount > 0 ? remainingAmount.toString() : '',
@@ -404,7 +405,7 @@ const PaymentsPage = () => {
                       <p className="text-sm text-gray-700"><strong>Buyer:</strong> {viewingPayment.buyer_name}</p>
                       <p className="text-sm text-gray-700"><strong>Order Date:</strong> {formatDate(viewingPayment.orderDetails.order_date)}</p>
                       <p className="text-sm text-gray-700"><strong>Order Total:</strong> ₨ {formatRoundedAmount(viewingPayment.orderDetails.total_amount)}</p>
-                      <p className="text-sm text-gray-700"><strong>Remaining Amount:</strong> ₨ {formatRoundedAmount(viewingPayment.orderDetails.total_amount - viewingPayment.amount)}</p>
+                      <p className="text-sm text-gray-700"><strong>Remaining Amount:</strong> ₨ {formatRoundedAmount(typeof viewingPayment.order_remaining === 'number' ? viewingPayment.order_remaining : (viewingPayment.orderDetails.total_amount - viewingPayment.amount))}</p>
                     </div>
                   </div>
                 )}
@@ -418,7 +419,7 @@ const PaymentsPage = () => {
                 )}
 
                 {/* Complete Payment Button for Partial Payments */}
-                {viewingPayment.payment_type === 'partial' && (
+                {viewingPayment.payment_type === 'partial' && (typeof viewingPayment.order_remaining !== 'number' || viewingPayment.order_remaining > 0) && (
                   <div className="p-4 backdrop-blur-sm bg-blue-50 bg-opacity-50 rounded-lg border border-blue-300 border-opacity-30">
                     <p className="text-sm text-blue-800 mb-3">⚠️ This payment is partial. You can complete the remaining amount.</p>
                     <button

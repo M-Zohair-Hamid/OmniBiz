@@ -3,6 +3,7 @@ from flask_jwt_extended import jwt_required
 from models import db, Payment, Order
 from utils import get_company_id_from_token, format_date_display
 from datetime import datetime
+from sqlalchemy import func
 
 bp = Blueprint('payments', __name__, url_prefix='/api/payments')
 
@@ -37,12 +38,39 @@ def get_payments():
     # Apply pagination
     offset = (page - 1) * per_page
     payments = query.order_by(Payment.created_at.desc()).offset(offset).limit(per_page).all()
-    
-    # Calculate total pages
-    pages = (total + per_page - 1) // per_page
-    
-    return jsonify({
-        'data': [{
+
+    order_ids = {p.order_id for p in payments if p.order_id}
+    order_totals = {}
+    if order_ids:
+        totals = (
+            session.query(Payment.order_id, func.coalesce(func.sum(Payment.amount), 0))
+            .filter(Payment.order_id.in_(order_ids))
+            .group_by(Payment.order_id)
+            .all()
+        )
+        order_totals = {order_id: round(total_paid, 2) for order_id, total_paid in totals}
+
+    status_updated = False
+    data = []
+
+    for p in payments:
+        total_paid = order_totals.get(p.order_id, 0)
+        order_total = round(p.order.total_amount, 2) if p.order else 0
+        remaining = round((order_total - total_paid) if p.order else 0, 2)
+
+        if p.order:
+            if total_paid <= 0:
+                computed_status = 'pending'
+            elif remaining <= 0:
+                computed_status = 'paid'
+            else:
+                computed_status = 'partial'
+
+            if p.order.status != computed_status:
+                p.order.status = computed_status
+                status_updated = True
+
+        data.append({
             'id': p.id,
             'order_id': p.order_id,
             'order_number': p.order.order_number if p.order else 'N/A',
@@ -55,8 +83,20 @@ def get_payments():
             'notes': p.notes,
             'income_tax_rate': round(p.income_tax_rate, 2) if p.income_tax_rate else 0,
             'income_tax_amount': round(p.income_tax_amount, 2) if p.income_tax_amount else 0,
+            'order_total': order_total,
+            'order_remaining': remaining,
+            'order_status': p.order.status if p.order else 'N/A',
             'created_at': format_date_display(p.created_at)
-        } for p in payments],
+        })
+
+    if status_updated:
+        session.commit()
+
+    # Calculate total pages
+    pages = (total + per_page - 1) // per_page
+
+    return jsonify({
+        'data': data,
         'total': total,
         'pages': pages,
         'current_page': page
@@ -230,8 +270,17 @@ def get_order_payments(order_id):
     
     payments = session.query(Payment).filter_by(order_id=order_id).order_by(Payment.payment_date.desc()).all()
     
-    total_paid = sum(p.amount for p in payments)
-    remaining = order.total_amount - total_paid
+    total_paid = round(sum(p.amount for p in payments), 2)
+    remaining = round(order.total_amount - total_paid, 2)
+
+    if total_paid <= 0:
+        order.status = 'pending'
+    elif remaining <= 0:
+        order.status = 'paid'
+    else:
+        order.status = 'partial'
+
+    session.commit()
     
     return jsonify({
         'order_id': order_id,
@@ -239,6 +288,7 @@ def get_order_payments(order_id):
         'order_total': order.total_amount,
         'total_paid': total_paid,
         'remaining': remaining,
+        'order_status': order.status,
         'payments': [{
             'id': p.id,
             'payment_date': format_date_display(p.payment_date),
