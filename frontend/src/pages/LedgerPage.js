@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useContext } from 'react';
 import Sidebar from '../components/Sidebar';
-import { getLedger, getBuyers } from '../services/api';
+import { getLedger, getBuyers, getOrder } from '../services/api';
 import { ToastContext } from '../context/ToastContext';
 import { AuthContext } from '../context/AuthContext';
+import { formatDate } from '../utils/dateUtils';
 
 const LedgerPage = () => {
   const [buyers, setBuyers] = useState([]);
@@ -11,6 +12,9 @@ const LedgerPage = () => {
   const [loading, setLoading] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [showOrderModal, setShowOrderModal] = useState(false);
+  const [viewingOrder, setViewingOrder] = useState(null);
+  const [orderLoading, setOrderLoading] = useState(false);
   
   const { showToast } = useContext(ToastContext);
   const { user } = useContext(AuthContext);
@@ -44,6 +48,26 @@ const LedgerPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleViewOrder = async (orderId) => {
+    setOrderLoading(true);
+    try {
+      const response = await getOrder(orderId);
+      setViewingOrder(response.data);
+      setShowOrderModal(true);
+    } catch (error) {
+      showToast('Failed to load order details', 'error');
+    } finally {
+      setOrderLoading(false);
+    }
+  };
+
+  const formatRoundedAmount = (value) => {
+    const number = Math.round(Number(value) || 0);
+    const lastDigit = number % 10;
+    const rounded = lastDigit <= 5 ? number - lastDigit : number + (10 - lastDigit);
+    return rounded.toLocaleString('en-PK');
   };
 
 
@@ -177,13 +201,12 @@ const LedgerPage = () => {
                   <table className="w-full">
                     <thead className="bg-gradient-to-r from-[#17144B] to-[#3A3F8C]">
                       <tr>
-                        <th className="px-4 py-3 text-left text-sm font-bold text-black">Order ID</th>
-                        <th className="px-4 py-3 text-left text-sm font-bold text-black">Order Number</th>
-                        <th className="px-4 py-3 text-right text-sm font-bold text-black">Amount (Before Tax)</th>
-                        <th className="px-4 py-3 text-right text-sm font-bold text-black">Amount (After Tax)</th>
-                        <th className="px-4 py-3 text-center text-sm font-bold text-black">Status</th>
-                        <th className="px-4 py-3 text-right text-sm font-bold text-black">Due Payment</th>
-                        <th className="px-4 py-3 text-right text-sm font-bold text-purple-900">Income Tax</th>
+                        <th className="px-4 py-3 text-left text-sm font-bold text-white">Order-Details</th>
+                        <th className="px-4 py-3 text-right text-sm font-bold text-white">Amount (Before Tax)</th>
+                        <th className="px-4 py-3 text-right text-sm font-bold text-white">Amount (After Tax)</th>
+                        <th className="px-4 py-3 text-center text-sm font-bold text-white">Status</th>
+                        <th className="px-4 py-3 text-right text-sm font-bold text-white">Due Payment</th>
+                        <th className="px-4 py-3 text-right text-sm font-bold text-white">Income Tax</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
@@ -192,12 +215,18 @@ const LedgerPage = () => {
                           key={index}
                           className={`${index % 2 === 0 ? 'bg-white bg-opacity-60' : 'bg-blue-50 bg-opacity-60'} hover:bg-blue-100 hover:bg-opacity-80 transition-all`}
                         >
-                          <td className="px-4 py-3 text-sm text-black font-semibold">#{order.order_id}</td>
-                          <td className="px-4 py-3 text-sm font-medium text-[#00D4FF]">{order.order_number}</td>
-                          <td className="px-4 py-3 text-sm text-right text-black font-semibold">
+                          <td className="px-4 py-3 text-sm font-bold">
+                            <button
+                              onClick={() => handleViewOrder(order.order_id)}
+                              className="text-[#00D4FF] hover:text-[#00B8E0] hover:underline font-semibold transition-all"
+                            >
+                              {order.order_number}
+                            </button>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-right font-bold text-[#17144B]">
                             ₨ {order.subtotal.toLocaleString('en-PK', {minimumFractionDigits: 2})}
                           </td>
-                          <td className="px-4 py-3 text-sm text-right text-black font-semibold">
+                          <td className="px-4 py-3 text-sm text-right font-bold text-[#17144B]">
                             ₨ {order.total_amount.toLocaleString('en-PK', {minimumFractionDigits: 2})}
                           </td>
                           <td className="px-4 py-3 text-sm text-center">
@@ -209,10 +238,10 @@ const LedgerPage = () => {
                               {order.status.toUpperCase()}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-sm text-right text-black font-semibold">
+                          <td className="px-4 py-3 text-sm text-right font-bold text-[#17144B]">
                             ₨ {order.due_payment.toLocaleString('en-PK', {minimumFractionDigits: 2})}
                           </td>
-                          <td className="px-4 py-3 text-sm text-right text-purple-900 font-semibold">
+                          <td className="px-4 py-3 text-sm text-right font-bold text-[#17144B]">
                             ₨ {order.income_tax.toLocaleString('en-PK', {minimumFractionDigits: 2})}
                           </td>
                         </tr>
@@ -230,6 +259,119 @@ const LedgerPage = () => {
               <div className="text-6xl mb-4">📊</div>
               <h3 className="text-xl font-bold text-white mb-2">No Ledger Generated</h3>
               <p className="text-gray-600">Select a buyer and click "Generate" to view ledger details</p>
+            </div>
+          )}
+
+          {/* Order Details Modal - Right Slide Panel */}
+          {showOrderModal && viewingOrder && (
+            <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex z-50">
+              {/* Left Click Area - Closes Modal */}
+              <div 
+                className="flex-1 cursor-pointer" 
+                onClick={() => setShowOrderModal(false)}
+              />
+              
+              {/* Right Side Panel */}
+              <div className="w-96 bg-gradient-to-br from-[#17144B] via-[#3A3F8C] to-[#17144B] backdrop-blur-xl border-l border-white border-opacity-30 flex flex-col overflow-hidden">
+                {/* Header */}
+                <div className="flex justify-between items-center p-6 border-b border-white border-opacity-20 flex-shrink-0">
+                  <h2 className="text-2xl font-bold text-white">📋 Order Details</h2>
+                  <button
+                    onClick={() => setShowOrderModal(false)}
+                    className="text-white hover:text-[#00D4FF] text-2xl transition-colors"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {/* Scrollable Content */}
+                <div className="flex-1 overflow-y-auto p-6 space-y-4" style={{scrollbarWidth: 'thin', scrollbarColor: '#00D4FF rgba(0,212,255,0.2)'}}>
+                  {/* Order Info Grid */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="backdrop-blur-sm bg-white bg-opacity-20 rounded-lg p-3 border border-white border-opacity-10">
+                      <p className="text-xs font-bold text-gray-300 uppercase tracking-wide">Order ID</p>
+                      <p className="text-xl font-bold text-[#00D4FF] mt-1">#{viewingOrder.id}</p>
+                    </div>
+                    <div className="backdrop-blur-sm bg-white bg-opacity-20 rounded-lg p-3 border border-white border-opacity-10">
+                      <p className="text-xs font-bold text-gray-300 uppercase tracking-wide">Order Number</p>
+                      <p className="text-lg font-bold text-white mt-1 break-words">{viewingOrder.order_number}</p>
+                    </div>
+                    <div className="backdrop-blur-sm bg-white bg-opacity-20 rounded-lg p-3 border border-white border-opacity-10">
+                      <p className="text-xs font-bold text-gray-300 uppercase tracking-wide">Date</p>
+                      <p className="text-lg font-bold text-white mt-1">{formatDate(viewingOrder.order_date)}</p>
+                    </div>
+                    <div className="backdrop-blur-sm bg-white bg-opacity-20 rounded-lg p-3 border border-white border-opacity-10">
+                      <p className="text-xs font-bold text-gray-300 uppercase tracking-wide">Status</p>
+                      <p className={`text-lg font-bold mt-1 ${
+                        viewingOrder.status === 'paid' ? 'text-green-400' :
+                        viewingOrder.status === 'partial' ? 'text-orange-400' :
+                        'text-red-400'
+                      }`}>
+                        {viewingOrder.status?.toUpperCase()}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Buyer Information */}
+                  <div className="backdrop-blur-sm bg-white bg-opacity-20 rounded-lg p-4 border border-white border-opacity-10">
+                    <h3 className="font-bold text-white mb-3 text-lg">👤 Buyer Information</h3>
+                    <p className="text-base text-gray-200 mb-2"><span className="font-bold">Company:</span> {viewingOrder.buyer_name}</p>
+                    <p className="text-base text-gray-200"><span className="font-bold">ID:</span> {viewingOrder.buyer_id}</p>
+                  </div>
+
+                  {/* Items List */}
+                  <div className="backdrop-blur-sm bg-white bg-opacity-20 rounded-lg p-4 border border-white border-opacity-10">
+                    <h3 className="font-bold text-white mb-3 text-lg">📦 Items</h3>
+                    <div className="space-y-2 max-h-64 overflow-y-auto" style={{scrollbarWidth: 'thin', scrollbarColor: '#00D4FF rgba(0,212,255,0.2)'}}>
+                      {viewingOrder.items && viewingOrder.items.map((item, idx) => (
+                        <div key={idx} className="bg-white bg-opacity-10 p-3 rounded border border-white border-opacity-20 hover:bg-opacity-20 transition-all">
+                          <p className="text-sm font-semibold text-white">{item.item?.name || 'Item'}</p>
+                          <p className="text-xs text-gray-300 mb-2">Code: {item.item?.code || 'N/A'}</p>
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs text-gray-300">Qty: <strong>{item.quantity}</strong></span>
+                            <span className="text-sm font-bold text-[#00D4FF]">₨ {(item.item?.unit_price * item.quantity).toLocaleString('en-PK', {minimumFractionDigits: 2})}</span>
+                          </div>
+                          <p className="text-xs text-gray-400 mt-1">Unit: ₨ {(item.item?.unit_price).toLocaleString('en-PK', {minimumFractionDigits: 2})}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Totals */}
+                  <div className="backdrop-blur-sm bg-white bg-opacity-20 rounded-lg p-4 border border-white border-opacity-10 space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-base text-gray-300 font-semibold">Subtotal:</span>
+                      <span className="font-bold text-gray-200 text-lg">₨ {((viewingOrder.total_amount / (1 + (viewingOrder.tax_rate || 0) / 100)) || 0).toLocaleString('en-PK', {minimumFractionDigits: 2})}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-base text-gray-300 font-semibold">Tax ({viewingOrder.tax_rate}%):</span>
+                      <span className="font-bold text-gray-200 text-lg">₨ {((viewingOrder.total_amount - (viewingOrder.total_amount / (1 + (viewingOrder.tax_rate || 0) / 100))) || 0).toLocaleString('en-PK', {minimumFractionDigits: 2})}</span>
+                    </div>
+                    <div className="flex justify-between items-center border-t border-white border-opacity-20 pt-3">
+                      <span className="font-bold text-white text-lg">Total:</span>
+                      <span className="font-bold text-emerald-400 text-2xl">₨ {viewingOrder.total_amount?.toLocaleString('en-PK', {minimumFractionDigits: 2})}</span>
+                    </div>
+                  </div>
+
+                  {/* Notes */}
+                  {viewingOrder.notes && (
+                    <div className="backdrop-blur-sm bg-white bg-opacity-20 rounded-lg p-4 border border-white border-opacity-10">
+                      <h3 className="font-bold text-white mb-3 text-lg">📝 Notes</h3>
+                      <p className="text-base text-gray-200">{viewingOrder.notes}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Close Button - Footer */}
+                <div className="flex-shrink-0 p-6 border-t border-white border-opacity-20">
+                  <button 
+                    onClick={() => setShowOrderModal(false)}
+                    className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-red-500/50 transform hover:scale-105 active:scale-95"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
             </div>
           )}
 
