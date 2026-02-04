@@ -74,8 +74,15 @@ const PaymentsPage = () => {
     if (!window.confirm('Are you sure you want to delete this payment record?')) return;
     
     try {
-      await deletePayment(paymentId);
-      showToast('Payment deleted successfully', 'success');
+      const response = await deletePayment(paymentId);
+      
+      // Check if order status changed to pending
+      if (response.data.order && response.data.order.status === 'pending') {
+        showToast(`✅ Payment deleted! Order ${response.data.order.order_number} reverted to PENDING`, 'success');
+      } else {
+        showToast('Payment deleted successfully', 'success');
+      }
+      
       fetchPayments();
     } catch (error) {
       showToast('Failed to delete payment', 'error');
@@ -155,7 +162,7 @@ const PaymentsPage = () => {
     income_tax_rate = Math.round(income_tax_rate * 100) / 100;
 
     try {
-      await createPayment({
+      const response = await createPayment({
         order_id: viewingPayment.order_id,
         amount: amount,
         payment_method: completePaymentForm.payment_method,
@@ -164,7 +171,14 @@ const PaymentsPage = () => {
         income_tax_rate: income_tax_rate,
         notes: completePaymentForm.notes
       });
-      showToast('Payment recorded successfully!', 'success');
+      
+      // Check if payment was auto-upgraded to full
+      if (response.data.auto_upgraded) {
+        showToast('✅ Payment recorded! Auto-upgraded from Partial to FULL (amount equals remaining balance)', 'success');
+      } else {
+        showToast('Payment recorded successfully!', 'success');
+      }
+      
       setShowCompletePaymentModal(false);
       setShowViewModal(false);
       fetchPayments();

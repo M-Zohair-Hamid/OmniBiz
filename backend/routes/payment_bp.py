@@ -131,6 +131,11 @@ def create_payment():
         income_tax_rate = round(income_tax_rate, 2)
         income_tax_amount = round((amount * income_tax_rate / 100), 2)
 
+        # Auto-upgrade to "full" if payment covers entire remaining balance
+        payment_type = data.get('payment_type', 'partial')
+        if remaining_balance <= 0:
+            payment_type = 'full'  # Auto-upgrade to full payment
+
         payment = Payment(
             order_id=data['order_id'],
             company_id=company_id,
@@ -138,7 +143,7 @@ def create_payment():
             amount=amount,
             balance=remaining_balance,
             payment_method=data['payment_method'],
-            payment_type=data.get('payment_type', 'partial'),
+            payment_type=payment_type,
             notes=data.get('notes', ''),
             income_tax_rate=income_tax_rate,
             income_tax_amount=income_tax_amount
@@ -158,7 +163,9 @@ def create_payment():
             'id': payment.id,
             'message': 'Payment recorded successfully',
             'total_paid': total_paid_after,
-            'remaining': remaining_balance
+            'remaining': remaining_balance,
+            'payment_type': payment_type,
+            'auto_upgraded': payment_type == 'full' and data.get('payment_type') == 'partial'
         }), 201
     except Exception as e:
         session.rollback()

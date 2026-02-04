@@ -505,7 +505,7 @@ const OrdersPage = () => {
     income_tax_rate = Math.round(income_tax_rate * 100) / 100;
 
     try {
-      await createPayment({
+      const response = await createPayment({
         order_id: selectedOrder.id,
         amount: amount,
         payment_method: paymentForm.payment_method,
@@ -515,7 +515,13 @@ const OrdersPage = () => {
         notes: paymentForm.notes
       });
       
-      showToast('Payment recorded successfully', 'success');
+      // Check if payment was auto-upgraded to full
+      if (response.data.auto_upgraded) {
+        showToast('✅ Payment recorded! Auto-upgraded from Partial to FULL (amount equals remaining balance)', 'success');
+      } else {
+        showToast('Payment recorded successfully', 'success');
+      }
+      
       setShowPaymentModal(false);
       setShowAdditionalPaymentModal(false);
       fetchOrders(); // Refresh orders list
