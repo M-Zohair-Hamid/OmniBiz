@@ -357,7 +357,30 @@ def update_order(order_id):
     
     try:
         session.commit()
-        return jsonify({'message': 'Order updated successfully'}), 200
+        
+        # Calculate and update the order status based on payments
+        computed_status = calculate_order_status(session, order)
+        if order.status != computed_status:
+            order.status = computed_status
+            session.commit()
+        
+        # Return the updated order with its data
+        return jsonify({
+            'message': 'Order updated successfully',
+            'order': {
+                'id': order.id,
+                'order_number': order.order_number,
+                'buyer_id': order.buyer_id,
+                'buyer_name': order.buyer.company_name,
+                'order_date': format_date_display(order.order_date),
+                'subtotal': order.subtotal,
+                'tax_rate': order.tax_rate,
+                'tax_amount': order.tax_amount,
+                'total_amount': order.total_amount,
+                'status': order.status,
+                'notes': order.notes
+            }
+        }), 200
     except Exception as e:
         session.rollback()
         return jsonify({'error': str(e)}), 500

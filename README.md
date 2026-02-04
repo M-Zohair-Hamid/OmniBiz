@@ -20,19 +20,46 @@ This cinematic color scheme provides:
 ## 🚀 Quick Start
 
 ### First Time Setup (New Computer)
-1. **Double-click** `INSTALLER.bat`
-   - Installs Python 3.11+ and Node.js 18+ (if needed)
-   - Installs all dependencies automatically
-   - Creates database and desktop shortcut
-   - Takes 10-15 minutes
+
+#### Windows (PowerShell)
+```powershell
+.\INSTALLER.ps1    # Run installer
+.\start.ps1        # Start application daily
+```
+
+#### Linux/Mac (Bash)
+```bash
+chmod +x INSTALLER.sh start.sh
+./INSTALLER.sh     # Run installer
+./start.sh         # Start application daily
+```
+
+The installer will:
+- ✅ Check Python 3.11+ and Node.js 18+
+- ✅ Create virtual environment
+- ✅ Install all dependencies
+- ✅ Initialize databases
+- ✅ Create desktop shortcut
+- ✅ Takes 10-15 minutes
 
 ### Daily Usage
-**Double-click** `start.bat` - That's it!
+
+**Just run the start script:**
+
+#### Windows
+```powershell
+.\start.ps1
+```
+
+#### Linux/Mac
+```bash
+./start.sh
+```
 
 The script will:
 - ✅ Start Flask backend (Port 5000)
 - ✅ Start React frontend (Port 3000)
-- ✅ Open browser automatically (once)
+- ✅ Open browser automatically
 
 **Login:**
 - Click **UmarSons** button (Company in Faisalabad)
@@ -41,23 +68,19 @@ The script will:
 
 ---
 
-## 🛠️ Utility Scripts
+## 🛠️ Available Scripts
 
-- **INSTALLER.bat** - Complete first-time setup (run this first on new computers)
-- **start.bat / start.ps1** - Start the application (backend + frontend)
-- **stop.bat** - Stop all services
-- **check-status.bat** - Verify system status and dependencies
-- **reinstall-dependencies.bat** - Fix corrupted packages
-- **backup-database.bat** - Create timestamped database backup
-- **create-shortcut.bat** - Create desktop shortcut
-
-See `README.txt` for detailed instructions on each script.
+- **INSTALLER.ps1** / **INSTALLER.sh** - Complete first-time setup (Windows/Linux/Mac)
+- **start.ps1** / **start.sh** - Start the application
+- **stop.ps1** - Stop all services
+- **check_items.py** - Verify database integrity
 
 ---
 
 ## 📁 Project Structure
 
-**Project Date**: January 31, 2026  
+**Project Date**: February 4, 2026  
+**Last Updated**: February 4, 2026
 
 ```
 Project-CS-L/
@@ -73,6 +96,7 @@ Project-CS-L/
 │   │   ├── pages/           # Page components with indigo/cyan theme
 │   │   │   ├── DashboardPage.js
 │   │   │   ├── OrdersPage.js
+
 │   │   │   ├── ItemsPage.js
 │   │   │   ├── BuyersPage.js
 │   │   │   ├── ReportsPage.js

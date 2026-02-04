@@ -181,6 +181,7 @@ def delete_payment(payment_id):
         session.delete(payment)
         session.flush()
 
+        updated_order = None
         if order:
             remaining_payments = session.query(Payment).filter_by(order_id=order.id).all()
             total_paid = round(sum(p.amount for p in remaining_payments), 2)
@@ -191,9 +192,19 @@ def delete_payment(payment_id):
                 order.status = 'paid'
             else:
                 order.status = 'partial'
+            
+            updated_order = {
+                'id': order.id,
+                'order_number': order.order_number,
+                'status': order.status,
+                'total_amount': order.total_amount
+            }
 
         session.commit()
-        return jsonify({'message': 'Payment deleted successfully'}), 200
+        return jsonify({
+            'message': 'Payment deleted successfully',
+            'order': updated_order
+        }), 200
     except Exception as e:
         session.rollback()
         print(f"Error deleting payment: {str(e)}")

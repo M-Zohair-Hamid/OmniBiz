@@ -34,6 +34,7 @@ const OrdersPage = () => {
     payment_method: 'cash',
     payment_type: 'full',
     payment_date: getCurrentDateForInput(),
+    income_tax_rate: '',
     notes: ''
   });
   
@@ -281,8 +282,14 @@ const OrdersPage = () => {
 
       if (editingId) {
         console.log('Updating order:', editingId, 'with data:', submitData); // Debug log
-        await updateOrder(editingId, submitData);
-        showToast('Order updated successfully', 'success');
+        const response = await updateOrder(editingId, submitData);
+        
+        // Check if status was automatically updated to 'paid'
+        if (response.data.order && response.data.order.status === 'paid') {
+          showToast('✅ Order updated! Amount now equals paid amount - Order marked as PAID', 'success');
+        } else {
+          showToast('Order updated successfully', 'success');
+        }
       } else {
         await createOrder(submitData);
         showToast('Order created successfully', 'success');
@@ -493,6 +500,10 @@ const OrdersPage = () => {
       return;
     }
 
+    // Parse income tax rate (percentage)
+    let income_tax_rate = parseFloat(paymentForm.income_tax_rate || 0);
+    income_tax_rate = Math.round(income_tax_rate * 100) / 100;
+
     try {
       await createPayment({
         order_id: selectedOrder.id,
@@ -500,6 +511,7 @@ const OrdersPage = () => {
         payment_method: paymentForm.payment_method,
         payment_type: paymentForm.payment_type,
         payment_date: paymentForm.payment_date,
+        income_tax_rate: income_tax_rate,
         notes: paymentForm.notes
       });
       
@@ -659,7 +671,17 @@ const OrdersPage = () => {
                           <td className="px-4 py-2 text-center">
                             <div className="flex gap-2 items-center justify-center flex-wrap">
                               <button onClick={() => handleViewOrder(order)} className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 transform hover:scale-105 active:scale-95">👁️ View</button>
-                              <button onClick={() => handleEditOrder(order)} className="bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] text-[#17144B] px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 transform hover:scale-105 active:scale-95">Edit</button>
+                              <button 
+                                onClick={() => handleEditOrder(order)} 
+                                disabled={String(order.status).toLowerCase() === 'paid'}
+                                className={`px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 ${
+                                  String(order.status).toLowerCase() === 'paid'
+                                    ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                                    : 'bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] text-[#17144B] transform hover:scale-105 active:scale-95'
+                                }`}
+                              >
+                                Edit
+                              </button>
                               <button onClick={() => handleDeleteOrder(order.id)} className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 transform hover:scale-105 active:scale-95">Delete</button>
                               <button onClick={() => handleOpenOptions(order)} className="bg-gradient-to-r from-green-400 to-green-500 hover:from-green-500 hover:to-green-600 text-white px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 transform hover:scale-105 active:scale-95">Options</button>
                             </div>
@@ -925,6 +947,20 @@ const OrdersPage = () => {
                       onChange={(e) => setPaymentForm({...paymentForm, payment_date: e.target.value})}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
+                  </div>
+
+                  {/* Income Tax Rate */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Income Tax Rate (%) - Optional</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={paymentForm.income_tax_rate}
+                      onChange={(e) => setPaymentForm({...paymentForm, income_tax_rate: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="e.g., 1.5 for 1.5%"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Income tax will be calculated as: Payment Amount × Rate / 100</p>
                   </div>
 
                   {/* Notes */}
