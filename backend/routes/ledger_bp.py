@@ -69,78 +69,45 @@ def get_ledger(buyer_id):
     
     payments = payments_query.order_by(Payment.payment_date).all()
     
-    # Calculate ledger entries from orders and payments (order-wise)
-    ledger_entries = []
-    running_balance = 0
+    # Build order summary with payments
+    order_summaries = []
+    total_income_tax_all = 0
     
-    # Combine orders and payments, sort by date
-    all_transactions = []
-    
-    # Add orders as transactions
     for order in orders:
-        all_transactions.append({
-            'date': order.order_date,
-            'type': 'order',
-            'data': order
-        })
-    
-    # Add payments as transactions
-    for payment in payments:
-        all_transactions.append({
-            'date': payment.payment_date,
-            'type': 'payment',
-            'data': payment
-        })
-    
-    # Sort all transactions by date
-    all_transactions.sort(key=lambda x: x['date'])
-    
-    # Process transactions in chronological order
-    for transaction in all_transactions:
-        if transaction['type'] == 'order':
-            order = transaction['data']
-            running_balance += order.total_amount
-            
-            # Create order description from items
-            item_names = [item.item.name for item in order.items[:3]]  # First 3 items
-            if len(order.items) > 3:
-                item_names.append(f"+ {len(order.items) - 3} more")
-            description = ", ".join(item_names)
-            
-            ledger_entries.append({
-                'date': format_date_display(order.order_date),
-                'reference': order.order_number,
-                'description': description,
-                'debit': order.total_amount,
-                'credit': 0,
-                'sales_tax': order.tax_amount,
-                'income_tax': 0,
-                'type': 'debit',
-                'balance': running_balance
-            })
+        # Calculate total payments for this order
+        order_payments = [p for p in payments if p.order_id == order.id]
+        total_paid = round(sum(p.amount for p in order_payments), 2)
+        remaining = round(order.total_amount - total_paid, 2)
         
-        elif transaction['type'] == 'payment':
-            payment = transaction['data']
-            running_balance -= payment.amount
-            
-            ledger_entries.append({
-                'date': format_date_display(payment.payment_date),
-                'reference': f"Payment - {payment.order.order_number if payment.order else 'N/A'}",
-                'description': f"{payment.payment_method.replace('_', ' ').title()} - {payment.notes if payment.notes else 'Payment received'}",
-                'debit': 0,
-                'credit': payment.amount,
-                'sales_tax': 0,
-                'income_tax': payment.income_tax_amount if payment.income_tax_amount else 0,
-                'type': 'credit',
-                'balance': running_balance
-            })
+        # Calculate order status
+        if total_paid <= 0:
+            order_status = 'pending'
+        elif remaining <= 0:
+            order_status = 'paid'
+        else:
+            order_status = 'partial'
+        
+        # Calculate total income tax for this order
+        order_income_tax = round(sum(p.income_tax_amount if p.income_tax_amount else 0 for p in order_payments), 2)
+        total_income_tax_all += order_income_tax
+        
+        order_summaries.append({
+            'order_id': order.id,
+            'order_number': order.order_number,
+            'subtotal': round(order.subtotal, 2),
+            'total_amount': round(order.total_amount, 2),
+            'status': order_status,
+            'total_paid': total_paid,
+            'due_payment': remaining if order_status == 'partial' else 0,
+            'income_tax': order_income_tax
+        })
     
-    # Calculate summary
-    total_debits = sum([e['debit'] for e in ledger_entries if e['type'] == 'debit'])
-    total_credits = sum([e['credit'] for e in ledger_entries if e['type'] == 'credit'])
-    total_sales_tax = sum([e['sales_tax'] for e in ledger_entries])
-    total_income_tax = sum([e['income_tax'] for e in ledger_entries])
-    closing_balance = total_debits - total_credits
+    # Calculate summary totals
+    total_sales = sum([o['total_amount'] for o in order_summaries])
+    total_payments = sum([o['total_paid'] for o in order_summaries])
+    total_due = sum([o['due_payment'] for o in order_summaries])
+    
+    ledger_entries = []  # Keep for backward compatibility but will show order summaries
     
     return jsonify({
         'buyer': {
@@ -153,14 +120,12 @@ def get_ledger(buyer_id):
             'phone': buyer.phone,
             'email': buyer.email
         },
-        'entries': ledger_entries,
+        'orders': order_summaries,
         'summary': {
-            'opening_balance': 0,
-            'total_debits': total_debits,
-            'total_credits': total_credits,
-            'total_sales_tax': total_sales_tax,
-            'total_income_tax': total_income_tax,
-            'closing_balance': closing_balance
+            'total_sales': total_sales,
+            'total_payments': total_payments,
+            'total_due': total_due,
+            'total_income_tax': total_income_tax_all
         },
         'date_range': {
             'start': start_date if start_date else 'All',

@@ -141,25 +141,25 @@ const LedgerPage = () => {
               </div>
 
               {/* Summary Card */}
-              <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-2xl shadow-glass-lg border border-white border-opacity-30 p-6">
+              <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-2xl shadow-glass-lg border border-white border-opacity-30 p-6 mb-6">
                 <h3 className="text-xl font-bold text-black mb-4">Summary</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div className="bg-[#3A3F8C] bg-opacity-60 rounded-lg p-4">
                     <p className="text-sm font-bold text-black mb-1">Total Sales</p>
                     <p className="text-2xl font-bold text-[#00D4FF]">
-                      ₨ {ledgerData.summary.total_debits.toLocaleString('en-PK', {minimumFractionDigits: 2})}
+                      ₨ {ledgerData.summary.total_sales.toLocaleString('en-PK', {minimumFractionDigits: 2})}
                     </p>
                   </div>
                   <div className="bg-green-50 bg-opacity-60 rounded-lg p-4">
                     <p className="text-sm font-bold text-black mb-1">Total Payments</p>
                     <p className="text-2xl font-bold text-green-600">
-                      ₨ {ledgerData.summary.total_credits.toLocaleString('en-PK', {minimumFractionDigits: 2})}
+                      ₨ {ledgerData.summary.total_payments.toLocaleString('en-PK', {minimumFractionDigits: 2})}
                     </p>
                   </div>
-                  <div className={`${ledgerData.summary.closing_balance > 0 ? 'bg-red-50' : 'bg-green-50'} bg-opacity-60 rounded-lg p-4`}>
+                  <div className={`${ledgerData.summary.total_due > 0 ? 'bg-red-50' : 'bg-green-50'} bg-opacity-60 rounded-lg p-4`}>
                     <p className="text-sm font-bold text-black mb-1">Due Payment</p>
-                    <p className={`text-2xl font-bold ${ledgerData.summary.closing_balance > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                      ₨ {ledgerData.summary.closing_balance.toLocaleString('en-PK', {minimumFractionDigits: 2})}
+                    <p className={`text-2xl font-bold ${ledgerData.summary.total_due > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                      ₨ {ledgerData.summary.total_due.toLocaleString('en-PK', {minimumFractionDigits: 2})}
                     </p>
                   </div>
                   <div className="bg-purple-50 bg-opacity-60 rounded-lg p-4">
@@ -168,6 +168,57 @@ const LedgerPage = () => {
                       ₨ {(ledgerData.summary.total_income_tax || 0).toLocaleString('en-PK', {minimumFractionDigits: 2})}
                     </p>
                   </div>
+                </div>
+              </div>
+
+              {/* Orders Table */}
+              <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-2xl shadow-glass-lg border border-white border-opacity-30 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gradient-to-r from-[#17144B] to-[#3A3F8C]">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-sm font-bold text-black">Order ID</th>
+                        <th className="px-4 py-3 text-left text-sm font-bold text-black">Order Number</th>
+                        <th className="px-4 py-3 text-right text-sm font-bold text-black">Amount (Before Tax)</th>
+                        <th className="px-4 py-3 text-right text-sm font-bold text-black">Amount (After Tax)</th>
+                        <th className="px-4 py-3 text-center text-sm font-bold text-black">Status</th>
+                        <th className="px-4 py-3 text-right text-sm font-bold text-black">Due Payment</th>
+                        <th className="px-4 py-3 text-right text-sm font-bold text-purple-900">Income Tax</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {ledgerData.orders && ledgerData.orders.map((order, index) => (
+                        <tr
+                          key={index}
+                          className={`${index % 2 === 0 ? 'bg-white bg-opacity-60' : 'bg-blue-50 bg-opacity-60'} hover:bg-blue-100 hover:bg-opacity-80 transition-all`}
+                        >
+                          <td className="px-4 py-3 text-sm text-black font-semibold">#{order.order_id}</td>
+                          <td className="px-4 py-3 text-sm font-medium text-[#00D4FF]">{order.order_number}</td>
+                          <td className="px-4 py-3 text-sm text-right text-black font-semibold">
+                            ₨ {order.subtotal.toLocaleString('en-PK', {minimumFractionDigits: 2})}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-right text-black font-semibold">
+                            ₨ {order.total_amount.toLocaleString('en-PK', {minimumFractionDigits: 2})}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-center">
+                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                              order.status === 'paid' ? 'bg-green-200 text-green-800' :
+                              order.status === 'partial' ? 'bg-orange-200 text-orange-800' :
+                              'bg-red-200 text-red-800'
+                            }`}>
+                              {order.status.toUpperCase()}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-right text-black font-semibold">
+                            ₨ {order.due_payment.toLocaleString('en-PK', {minimumFractionDigits: 2})}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-right text-purple-900 font-semibold">
+                            ₨ {order.income_tax.toLocaleString('en-PK', {minimumFractionDigits: 2})}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </>
