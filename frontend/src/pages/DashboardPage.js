@@ -55,6 +55,13 @@ const DashboardPage = () => {
     fetchDashboardData();
   }, [showToast, user]);
 
+  // Set page title based on company name
+  useEffect(() => {
+    if (user?.company_name) {
+      document.title = `${user.company_name} - Dashboard`;
+    }
+  }, [user?.company_name]);
+
   if (loading || !dashboardData) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#17144B] via-[#3A3F8C] to-[#17144B]">

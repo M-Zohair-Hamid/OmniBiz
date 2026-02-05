@@ -49,6 +49,13 @@ const ItemsPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Set page title based on company name
+  useEffect(() => {
+    if (user?.company_name) {
+      document.title = `${user.company_name} - Items`;
+    }
+  }, [user?.company_name]);
+
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
     fetchItems(e.target.value);

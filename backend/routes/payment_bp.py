@@ -24,51 +24,55 @@ def verify_company_access():
 @bp.route('', methods=['GET'])
 def get_payments():
     """Get all payments for the company"""
-    session = get_session()
-    company_id = verify_company_access()
-    
-    page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 10, type=int)
-    
-    query = session.query(Payment).filter_by(company_id=company_id)
-    
-    # Get total count
-    total = query.count()
-    
-    # Apply pagination
-    offset = (page - 1) * per_page
-    payments = query.order_by(Payment.created_at.desc()).offset(offset).limit(per_page).all()
+    try:
+        session = get_session()
+        company_code = getattr(g, 'company_code', 'unknown')
+        print(f"[GET_PAYMENTS] Fetching payments for company: {company_code}")
+        
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 10, type=int)
+        
+        # No need to filter by company_id - the database is already company-specific
+        query = session.query(Payment)
+        
+        # Get total count
+        total = query.count()
+        print(f"[GET_PAYMENTS] Total payments: {total}")
+        
+        # Apply pagination
+        offset = (page - 1) * per_page
+        payments = query.order_by(Payment.created_at.desc()).offset(offset).limit(per_page).all()
 
-    order_ids = {p.order_id for p in payments if p.order_id}
-    order_totals = {}
-    if order_ids:
-        totals = (
-            session.query(Payment.order_id, func.coalesce(func.sum(Payment.amount), 0))
-            .filter(Payment.order_id.in_(order_ids))
-            .group_by(Payment.order_id)
-            .all()
-        )
-        order_totals = {order_id: round(total_paid, 2) for order_id, total_paid in totals}
+        order_ids = {p.order_id for p in payments if p.order_id}
+        order_totals = {}
+        if order_ids:
+            totals = (
+                session.query(Payment.order_id, func.coalesce(func.sum(Payment.amount), 0))
+                .filter(Payment.order_id.in_(order_ids))
+                .group_by(Payment.order_id)
+                .all()
+            )
+            order_totals = {order_id: round(total_paid, 2) for order_id, total_paid in totals}
 
-    status_updated = False
-    data = []
+        status_updated = False
+        data = []
 
-    for p in payments:
-        total_paid = order_totals.get(p.order_id, 0)
-        order_total = round(p.order.total_amount, 2) if p.order else 0
-        remaining = round((order_total - total_paid) if p.order else 0, 2)
+        for p in payments:
+            total_paid = order_totals.get(p.order_id, 0)
+            order_total = round(p.order.total_amount, 2) if p.order else 0
+            remaining = round((order_total - total_paid) if p.order else 0, 2)
 
-        if p.order:
-            if total_paid <= 0:
-                computed_status = 'pending'
-            elif remaining <= 0:
-                computed_status = 'paid'
-            else:
-                computed_status = 'partial'
+            if p.order:
+                if total_paid <= 0:
+                    computed_status = 'pending'
+                elif remaining <= 0:
+                    computed_status = 'paid'
+                else:
+                    computed_status = 'partial'
 
-            if p.order.status != computed_status:
-                p.order.status = computed_status
-                status_updated = True
+                if p.order.status != computed_status:
+                    p.order.status = computed_status
+                    status_updated = True
 
         data.append({
             'id': p.id,
@@ -89,18 +93,24 @@ def get_payments():
             'created_at': format_date_display(p.created_at)
         })
 
-    if status_updated:
-        session.commit()
+        if status_updated:
+            session.commit()
 
-    # Calculate total pages
-    pages = (total + per_page - 1) // per_page
+        # Calculate total pages
+        pages = (total + per_page - 1) // per_page
+        print(f"[GET_PAYMENTS] Returning {len(data)} payments")
 
-    return jsonify({
-        'data': data,
-        'total': total,
-        'pages': pages,
-        'current_page': page
-    }), 200
+        return jsonify({
+            'data': data,
+            'total': total,
+            'pages': pages,
+            'current_page': page
+        }), 200
+    except Exception as e:
+        print(f"[GET_PAYMENTS] Error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
 
 @bp.route('/<int:payment_id>', methods=['GET'])
 def get_payment(payment_id):

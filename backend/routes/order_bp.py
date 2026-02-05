@@ -64,55 +64,65 @@ def calculate_order_status(session, order):
 @bp.route('', methods=['GET'])
 def get_orders():
     session = get_session()
+    company_code = getattr(g, 'company_code', 'unknown')
+    print(f"[GET_ORDERS] Fetching orders for company: {company_code}")
     
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
     status = request.args.get('status', '', type=str)
     
-    query = session.query(Order)
-    
-    if status:
-        query = query.filter_by(status=status)
-    
-    # Get total count before pagination
-    total = query.count()
-    
-    # Apply ordering and pagination using offset/limit
-    offset = (page - 1) * per_page
-    items = query.order_by(Order.created_at.desc()).offset(offset).limit(per_page).all()
-    
-    # Calculate total pages
-    pages = (total + per_page - 1) // per_page
-    
-    status_updated = False
-    data = []
-    for o in items:
-        computed_status = calculate_order_status(session, o)
-        if o.status != computed_status:
-            o.status = computed_status
-            status_updated = True
-        data.append({
-            'id': o.id,
-            'order_number': o.order_number,
-            'buyer_id': o.buyer_id,
-            'buyer_name': o.buyer.company_name,
-            'order_date': format_date_display(o.order_date),
-            'subtotal': o.subtotal,
-            'tax_amount': o.tax_amount,
-            'total_amount': o.total_amount,
-            'status': o.status,
-            'created_at': format_date_display(o.created_at)
-        })
+    try:
+        query = session.query(Order)
+        
+        if status:
+            query = query.filter_by(status=status)
+        
+        # Get total count before pagination
+        total = query.count()
+        print(f"[GET_ORDERS] Total orders: {total}")
+        
+        # Apply ordering and pagination using offset/limit
+        offset = (page - 1) * per_page
+        items = query.order_by(Order.created_at.desc()).offset(offset).limit(per_page).all()
+        
+        # Calculate total pages
+        pages = (total + per_page - 1) // per_page
+        
+        status_updated = False
+        data = []
+        for o in items:
+            computed_status = calculate_order_status(session, o)
+            if o.status != computed_status:
+                o.status = computed_status
+                status_updated = True
+            data.append({
+                'id': o.id,
+                'order_number': o.order_number,
+                'buyer_id': o.buyer_id,
+                'buyer_name': o.buyer.company_name,
+                'order_date': format_date_display(o.order_date),
+                'subtotal': o.subtotal,
+                'tax_amount': o.tax_amount,
+                'total_amount': o.total_amount,
+                'status': o.status,
+                'created_at': format_date_display(o.created_at)
+            })
 
-    if status_updated:
-        session.commit()
+        if status_updated:
+            session.commit()
 
-    return jsonify({
-        'data': data,
-        'total': total,
-        'pages': pages,
-        'current_page': page
-    }), 200
+        print(f"[GET_ORDERS] Returning {len(data)} orders")
+        return jsonify({
+            'data': data,
+            'total': total,
+            'pages': pages,
+            'current_page': page
+        }), 200
+    except Exception as e:
+        print(f"[GET_ORDERS] Error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
 
 @bp.route('/<int:order_id>', methods=['GET'])
 def get_order(order_id):

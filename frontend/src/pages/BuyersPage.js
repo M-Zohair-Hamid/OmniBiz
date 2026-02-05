@@ -61,6 +61,13 @@ const BuyersPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Set page title based on company name
+  useEffect(() => {
+    if (user?.company_name) {
+      document.title = `${user.company_name} - Buyers`;
+    }
+  }, [user?.company_name]);
+
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
     setCurrentPage(1);

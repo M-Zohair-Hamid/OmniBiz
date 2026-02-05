@@ -115,6 +115,13 @@ const OrdersPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Set page title based on company name
+  useEffect(() => {
+    if (user?.company_name) {
+      document.title = `${user.company_name} - Orders`;
+    }
+  }, [user?.company_name]);
+
   // Apply client-side search for buyer, order number, date, month, or year
   const applyFilters = (list = orders, term = searchTerm) => {
     const search = (term || '').trim().toLowerCase();

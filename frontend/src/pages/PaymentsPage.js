@@ -43,6 +43,13 @@ const PaymentsPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [payments, searchTerm]);
 
+  // Set page title based on company name
+  useEffect(() => {
+    if (user?.company_name) {
+      document.title = `${user.company_name} - Payments`;
+    }
+  }, [user?.company_name]);
+
   const fetchPayments = async () => {
     setLoading(true);
     try {

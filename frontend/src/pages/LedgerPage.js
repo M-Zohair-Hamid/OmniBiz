@@ -27,6 +27,13 @@ const LedgerPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Set page title based on company name
+  useEffect(() => {
+    if (user?.company_name) {
+      document.title = `${user.company_name} - Ledger`;
+    }
+  }, [user?.company_name]);
+
   const fetchBuyers = async () => {
     try {
       const response = await getBuyers(1, 100);
