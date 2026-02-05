@@ -4,8 +4,8 @@ import Sidebar from '../components/Sidebar';
 import { getOrders, getOrder, createOrder, updateOrder, deleteOrder, getBuyers, getItems, createPayment, getOrderPayments } from '../services/api';
 import { ToastContext } from '../context/ToastContext';
 import { AuthContext } from '../context/AuthContext';
-import { exportTableToPDF, exportChartToImage } from '../utils/exportUtils';
 import { formatDate, getCurrentDateForInput } from '../utils/dateUtils';
+import { useModalAnimation, getBackdropAnimationClass, getModalAnimationClass } from '../hooks/useModalAnimation';
 
 const OrdersPage = () => {
   const navigate = useNavigate();
@@ -25,7 +25,6 @@ const OrdersPage = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showAdditionalPaymentModal, setShowAdditionalPaymentModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [itemSearchTerm, setItemSearchTerm] = useState('');
   const [openDropdownIdx, setOpenDropdownIdx] = useState(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [viewingOrder, setViewingOrder] = useState(null);
@@ -44,15 +43,14 @@ const OrdersPage = () => {
 
   const { showToast } = useContext(ToastContext);
   const { user } = useContext(AuthContext);
-
-  const filteredItems = items.filter(i => {
-    const term = itemSearchTerm.trim().toLowerCase();
-    if (!term) return true;
-    return (
-      String(i.name || '').toLowerCase().includes(term) ||
-      String(i.code || '').toLowerCase().includes(term)
-    );
-  });
+  
+  // Modal animation hooks
+  const viewModal = useModalAnimation();
+  const createModal = useModalAnimation();
+  const editModal = useModalAnimation();
+  const deleteModal = useModalAnimation();
+  const statusModal = useModalAnimation();
+  const billModal = useModalAnimation();
 
   const getFilteredItemsForRow = (query) => {
     if (!query.trim()) return items;
@@ -114,6 +112,7 @@ const OrdersPage = () => {
   useEffect(() => {
     fetchOrders();
     fetchBuyersAndItems();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Apply client-side search for buyer, order number, date, month, or year
@@ -152,12 +151,12 @@ const OrdersPage = () => {
   // Re-apply search when input or data changes
   useEffect(() => {
     applyFilters(orders, searchTerm);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm, orders]);
 
   const handleAddOrder = () => {
     setEditingId(null);
     setFormData({ buyer_id: '', order_date: getCurrentDateForInput(), status: 'pending', tax_rate: 0, notes: '', items: [{ item_id: '', quantity: 1, item_query: '' }] });
-    setItemSearchTerm('');
     fetchBuyersAndItems();
     setShowForm(true);
   };
@@ -232,7 +231,6 @@ const OrdersPage = () => {
           };
         })
       });
-      setItemSearchTerm('');
       setShowForm(true);
     } catch (error) {
       showToast('Failed to load order details', 'error');
@@ -1007,8 +1005,8 @@ const OrdersPage = () => {
 
           {/* View Order Details Modal */}
           {showViewModal && viewingOrder && (
-            <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-              <div className="backdrop-blur-xl bg-white bg-opacity-40 border border-white border-opacity-30 rounded-2xl shadow-glass-lg p-8 max-w-5xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+            <div className={`fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4 ${getBackdropAnimationClass(viewModal.isClosing)}`}>
+              <div className={`backdrop-blur-xl bg-white bg-opacity-40 border border-white border-opacity-30 rounded-2xl shadow-glass-lg p-8 max-w-5xl w-full max-h-[90vh] flex flex-col overflow-hidden ${getModalAnimationClass(viewModal.isClosing, 'scale')}`}>
                 <h2 className="text-2xl font-bold mb-6 text-[#17144B]">📋 Order Details</h2>
                 
                 <div className="flex gap-6 flex-1 min-h-0 overflow-hidden">
@@ -1099,7 +1097,7 @@ const OrdersPage = () => {
                 {/* Close Button */}
                 <div className="mt-6 flex-shrink-0">
                   <button 
-                    onClick={() => setShowViewModal(false)}
+                    onClick={() => viewModal.handleClose(() => setShowViewModal(false))}
                     className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-red-500/50 transform hover:scale-105 active:scale-95"
                   >
                     Close

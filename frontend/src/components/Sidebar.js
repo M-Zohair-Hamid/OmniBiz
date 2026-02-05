@@ -2,6 +2,7 @@ import React, { useState, useContext } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { ToastContext } from '../context/ToastContext';
+import BackupModal from './BackupModal';
 
 const Sidebar = ({ companyName }) => {
   const navigate = useNavigate();
@@ -9,6 +10,7 @@ const Sidebar = ({ companyName }) => {
   const { logout, user } = useContext(AuthContext);
   const { showToast } = useContext(ToastContext);
   const [isOpen, setIsOpen] = useState(true);
+  const [isBackupModalOpen, setIsBackupModalOpen] = useState(false);
 
   // Map company names to logo paths
   const getCompanyLogo = (companyName) => {
@@ -101,7 +103,13 @@ const Sidebar = ({ companyName }) => {
         ))}
       </nav>
 
-      <div className="absolute bottom-4 left-4 right-4">
+      <div className="absolute bottom-4 left-4 right-4 space-y-2">
+        <button
+          onClick={() => setIsBackupModalOpen(true)}
+          className="w-full px-4 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg transition-all duration-200 font-semibold shadow-lg hover:shadow-green-500/60 transform hover:scale-105 backdrop-blur-sm border border-green-400 border-opacity-40"
+        >
+          {isOpen ? '💾 Backup' : '💾'}
+        </button>
         <button
           onClick={handleLogout}
           className="w-full px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg transition-all duration-200 font-semibold shadow-lg hover:shadow-red-500/60 transform hover:scale-105 backdrop-blur-sm border border-red-400 border-opacity-40"
@@ -109,6 +117,8 @@ const Sidebar = ({ companyName }) => {
           {isOpen ? 'Logout' : '←'}
         </button>
       </div>
+
+      <BackupModal isOpen={isBackupModalOpen} onClose={() => setIsBackupModalOpen(false)} />
     </div>
   );
 };

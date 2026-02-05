@@ -41,9 +41,15 @@ def get_dashboard():
     ).all()
     
     # Order status counts
+    paid = Order.query.filter_by(company_id=company_id, status='paid').count()
+    partial = Order.query.filter_by(company_id=company_id, status='partial').count()
+    pending = Order.query.filter_by(company_id=company_id, status='pending').count()
+
+    # Legacy/alternate statuses (optional, included in pending if used)
     confirmed = Order.query.filter_by(company_id=company_id, status='confirmed').count()
     shipped = Order.query.filter_by(company_id=company_id, status='shipped').count()
-    pending = Order.query.filter_by(company_id=company_id, status='pending').count()
+    if confirmed or shipped:
+        pending += confirmed + shipped
     
     # Recent orders
     recent_orders_data = [{
@@ -82,8 +88,8 @@ def get_dashboard():
             'recent_orders_count': len(recent_orders)
         },
         'payment_status': {
-            'paid': confirmed,
-            'partial': shipped,
+            'paid': paid,
+            'partial': partial,
             'pending': pending
         },
         'recent_orders': recent_orders_data,

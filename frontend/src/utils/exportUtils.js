@@ -1,5 +1,4 @@
 import html2pdf from 'html2pdf.js';
-import * as XLSX from 'xlsx';
 import html2canvas from 'html2canvas';
 
 // Export table to PDF
@@ -21,13 +20,6 @@ export const exportTableToPDF = (elementId, fileName = 'export.pdf') => {
   html2pdf().set(opt).from(element).save();
 };
 
-// Export table to Excel
-export const exportTableToExcel = (tableData, fileName = 'export.xlsx') => {
-  const worksheet = XLSX.utils.json_to_sheet(tableData);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-  XLSX.writeFile(workbook, fileName);
-};
 
 // Export chart to PNG/Image
 export const exportChartToImage = async (elementId, fileName = 'chart.png') => {

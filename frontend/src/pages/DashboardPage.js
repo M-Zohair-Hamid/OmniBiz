@@ -66,16 +66,6 @@ const DashboardPage = () => {
     );
   }
 
-  // Map company names to logo paths
-  const getCompanyLogo = (companyName) => {
-    if (companyName?.toLowerCase().includes('umarsons')) {
-      return '/umarsons-logo.png';
-    } else if (companyName?.toLowerCase().includes('makkah')) {
-      return '/makkahpackages-logo.png';
-    }
-    return null;
-  };
-
   const chartColors = {
     primary: '#0066ff',
     success: '#22c55e',
@@ -105,10 +95,14 @@ const DashboardPage = () => {
     }]
   };
 
+  const paidCount = Number(dashboardData?.payment_status?.paid || 0);
+  const partialCount = Number(dashboardData?.payment_status?.partial || 0);
+  const pendingCount = Number(dashboardData?.payment_status?.pending || 0);
+
   const paymentStatusData = {
     labels: ['Paid', 'Partial', 'Pending'],
     datasets: [{
-      data: [dashboardData.payment_status.paid, dashboardData.payment_status.partial, dashboardData.payment_status.pending],
+      data: [paidCount, partialCount, pendingCount],
       backgroundColor: [chartColors.success, chartColors.warning, chartColors.error],
       borderColor: '#fff',
       borderWidth: 2,

@@ -4,6 +4,7 @@ import { getLedger, getBuyers, getOrder } from '../services/api';
 import { ToastContext } from '../context/ToastContext';
 import { AuthContext } from '../context/AuthContext';
 import { formatDate } from '../utils/dateUtils';
+import { useModalAnimation, getBackdropAnimationClass, getModalAnimationClass } from '../hooks/useModalAnimation';
 
 const LedgerPage = () => {
   const [buyers, setBuyers] = useState([]);
@@ -14,13 +15,16 @@ const LedgerPage = () => {
   const [endDate, setEndDate] = useState('');
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [viewingOrder, setViewingOrder] = useState(null);
-  const [orderLoading, setOrderLoading] = useState(false);
   
   const { showToast } = useContext(ToastContext);
   const { user } = useContext(AuthContext);
+  
+  // Modal animation hook
+  const orderModal = useModalAnimation();
 
   useEffect(() => {
     fetchBuyers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchBuyers = async () => {
@@ -51,23 +55,13 @@ const LedgerPage = () => {
   };
 
   const handleViewOrder = async (orderId) => {
-    setOrderLoading(true);
     try {
       const response = await getOrder(orderId);
       setViewingOrder(response.data);
       setShowOrderModal(true);
     } catch (error) {
       showToast('Failed to load order details', 'error');
-    } finally {
-      setOrderLoading(false);
     }
-  };
-
-  const formatRoundedAmount = (value) => {
-    const number = Math.round(Number(value) || 0);
-    const lastDigit = number % 10;
-    const rounded = lastDigit <= 5 ? number - lastDigit : number + (10 - lastDigit);
-    return rounded.toLocaleString('en-PK');
   };
 
 
@@ -264,20 +258,20 @@ const LedgerPage = () => {
 
           {/* Order Details Modal - Right Slide Panel */}
           {showOrderModal && viewingOrder && (
-            <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex z-50">
+            <div className={`fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex z-50 ${getBackdropAnimationClass(orderModal.isClosing)}`}>
               {/* Left Click Area - Closes Modal */}
               <div 
                 className="flex-1 cursor-pointer" 
-                onClick={() => setShowOrderModal(false)}
+                onClick={() => orderModal.handleClose(() => setShowOrderModal(false))}
               />
               
               {/* Right Side Panel */}
-              <div className="w-96 bg-gradient-to-br from-[#17144B] via-[#3A3F8C] to-[#17144B] backdrop-blur-xl border-l border-white border-opacity-30 flex flex-col overflow-hidden">
+              <div className={`w-96 bg-gradient-to-br from-[#17144B] via-[#3A3F8C] to-[#17144B] backdrop-blur-xl border-l border-white border-opacity-30 flex flex-col overflow-hidden ${getModalAnimationClass(orderModal.isClosing, 'slide')}`}>
                 {/* Header */}
                 <div className="flex justify-between items-center p-6 border-b border-white border-opacity-20 flex-shrink-0">
                   <h2 className="text-2xl font-bold text-white">📋 Order Details</h2>
                   <button
-                    onClick={() => setShowOrderModal(false)}
+                    onClick={() => orderModal.handleClose(() => setShowOrderModal(false))}
                     className="text-white hover:text-[#00D4FF] text-2xl transition-colors"
                   >
                     ✕

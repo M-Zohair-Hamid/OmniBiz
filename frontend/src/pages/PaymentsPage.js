@@ -4,7 +4,6 @@ import { getPayments, deletePayment, createPayment, getOrder } from '../services
 import { ToastContext } from '../context/ToastContext';
 import { AuthContext } from '../context/AuthContext';
 import { formatDate, getCurrentDateForInput } from '../utils/dateUtils';
-import { exportTableToPDF } from '../utils/exportUtils';
 
 const PaymentsPage = () => {
   const [payments, setPayments] = useState([]);
@@ -36,10 +35,12 @@ const PaymentsPage = () => {
 
   useEffect(() => {
     fetchPayments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage]);
 
   useEffect(() => {
     filterPayments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [payments, searchTerm]);
 
   const fetchPayments = async () => {
@@ -107,13 +108,6 @@ const PaymentsPage = () => {
   const cashPayments = payments.filter(p => p.payment_method === 'cash').length;
   const cardPayments = payments.filter(p => p.payment_method === 'card').length;
   const fullPayments = payments.filter(p => p.payment_type === 'full').length;
-
-  const handleExportPDF = () => {
-    const tableElement = document.getElementById('payments-table');
-    if (tableElement) {
-      exportTableToPDF(tableElement, 'Payments_Report');
-    }
-  };
 
   const handleViewPayment = async (payment) => {
     try {
@@ -360,8 +354,8 @@ const PaymentsPage = () => {
 
         {/* View Payment Details Modal */}
         {showViewModal && viewingPayment && (
-          <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="backdrop-blur-xl bg-white bg-opacity-40 border border-white border-opacity-30 rounded-2xl shadow-glass-lg p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
+            <div className="backdrop-blur-xl bg-white bg-opacity-40 border border-white border-opacity-30 rounded-2xl shadow-glass-lg p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-scaleIn">
               <h2 className="text-2xl font-bold mb-6 text-[#17144B]">💳 Payment Details</h2>
               
               <div className="space-y-4">
@@ -447,8 +441,8 @@ const PaymentsPage = () => {
 
         {/* Complete Payment Modal */}
         {showCompletePaymentModal && viewingPayment && (
-          <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="backdrop-blur-xl bg-white bg-opacity-40 border border-white border-opacity-30 rounded-2xl shadow-glass-lg p-8 max-w-md w-full">
+          <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
+            <div className="backdrop-blur-xl bg-white bg-opacity-40 border border-white border-opacity-30 rounded-2xl shadow-glass-lg p-8 max-w-md w-full animate-scaleIn">
               <h2 className="text-2xl font-bold mb-6 text-[#17144B] text-center">💳 Record Additional Payment</h2>
               
               <div className="mb-4 p-4 bg-white bg-opacity-50 rounded-lg">

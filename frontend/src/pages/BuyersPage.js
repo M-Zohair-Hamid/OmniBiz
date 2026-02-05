@@ -3,7 +3,6 @@ import Sidebar from '../components/Sidebar';
 import { getBuyers, createBuyer, updateBuyer, deleteBuyer } from '../services/api';
 import { ToastContext } from '../context/ToastContext';
 import { AuthContext } from '../context/AuthContext';
-import { exportTableToPDF, exportChartToImage } from '../utils/exportUtils';
 
 const BuyersPage = () => {
   const [buyers, setBuyers] = useState([]);
@@ -242,8 +241,8 @@ const BuyersPage = () => {
 
           {/* Form Modal */}
           {showForm && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-lg p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fadeIn">
+              <div className="bg-white rounded-lg p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto animate-scaleIn">
                 <h2 className="text-2xl font-bold mb-6">{editingId ? 'Edit Buyer' : 'Add Buyer'}</h2>
                 <form onSubmit={handleSubmit}>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

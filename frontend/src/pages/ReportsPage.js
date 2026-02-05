@@ -1,18 +1,14 @@
 import React, { useState, useEffect, useContext } from 'react';
 import Sidebar from '../components/Sidebar';
-import { getReportSummary, getBuyerWiseReport, getItemWiseReport, exportOrdersCsv } from '../services/api';
+import { getReportSummary, getBuyerWiseReport, getItemWiseReport } from '../services/api';
 import { ToastContext } from '../context/ToastContext';
 import { AuthContext } from '../context/AuthContext';
-import { Bar } from 'react-chartjs-2';
-import { exportChartToImage } from '../utils/exportUtils';
 
 const ReportsPage = () => {
   const [reportData, setReportData] = useState(null);
   const [buyerData, setBuyerData] = useState([]);
   const [itemData, setItemData] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
 
   const { showToast } = useContext(ToastContext);
   const { user } = useContext(AuthContext);
@@ -37,23 +33,8 @@ const ReportsPage = () => {
 
   useEffect(() => {
     fetchReports();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const handleExportCsv = async () => {
-    try {
-      const response = await exportOrdersCsv(startDate, endDate);
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', 'orders-report.csv');
-      document.body.appendChild(link);
-      link.click();
-      link.parentNode.removeChild(link);
-      showToast('CSV exported successfully', 'success');
-    } catch (error) {
-      showToast('Failed to export CSV', 'error');
-    }
-  };
 
   if (loading || !reportData) {
     return (
@@ -63,65 +44,6 @@ const ReportsPage = () => {
       </div>
     );
   }
-
-  const buyerChartData = {
-    labels: buyerData.map(b => b.buyer_name),
-    datasets: [{
-      label: 'Total Orders (₨)',
-      data: buyerData.map(b => b.total_orders),
-      backgroundColor: '#0066ff'
-    }]
-  };
-
-  const itemChartData = {
-    labels: itemData.map(i => i.item_name),
-    datasets: [{
-      label: 'Total Value (₨)',
-      data: itemData.map(i => i.total_value),
-      backgroundColor: '#22c55e'
-    }]
-  };
-
-  const chartOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        labels: {
-          color: '#000000',
-          font: {
-            size: 16,
-            weight: 'bold'
-          }
-        }
-      }
-    },
-    scales: {
-      x: {
-        ticks: {
-          color: '#000000',
-          font: {
-            size: 14,
-            weight: 'bold'
-          }
-        },
-        grid: {
-          color: 'rgba(0, 0, 0, 0.1)'
-        }
-      },
-      y: {
-        ticks: {
-          color: '#000000',
-          font: {
-            size: 14,
-            weight: 'bold'
-          }
-        },
-        grid: {
-          color: 'rgba(0, 0, 0, 0.1)'
-        }
-      }
-    }
-  };
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-[#17144B] via-[#3A3F8C] to-[#17144B] relative overflow-hidden">
@@ -144,29 +66,11 @@ const ReportsPage = () => {
             </div>
             <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-2xl shadow-glass-lg p-6 border border-white border-opacity-30 hover:bg-opacity-60 transition-all duration-300 hover:shadow-xl hover:scale-105 hover:-translate-y-1 cursor-pointer transform">
               <h3 className="text-emerald-700 text-sm font-bold mb-3 uppercase tracking-wide">Recent Orders</h3>
-              <p className="text-3xl font-bold text-emerald-700">{reportData.recent_orders_count}</p>
+              <p className="text-3xl font-bold text-emerald-700">{reportData.recent_orders || 0}</p>
             </div>
-          </div>
-
-          {/* Charts */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-2xl shadow-glass-lg p-6 border border-white border-opacity-30">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-bold text-black">Buyer-Wise Sales</h2>
-                <button onClick={() => exportChartToImage('buyerChart', 'buyer-sales.png')} className="px-2 py-1 bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] text-black rounded-lg text-xs font-bold transition-all duration-200 hover:shadow-lg transform hover:scale-105 active:scale-95">📋 PNG</button>
-              </div>
-              <div id="buyerChart">
-                <Bar data={buyerChartData} options={chartOptions} />
-              </div>
-            </div>
-            <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-2xl shadow-glass-lg p-6 border border-white border-opacity-30">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-bold text-black">Item-Wise Sales</h2>
-                <button onClick={() => exportChartToImage('itemChart', 'item-sales.png')} className="px-2 py-1 bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] text-black rounded-lg text-xs font-bold transition-all duration-200 hover:shadow-lg transform hover:scale-105 active:scale-95">📊 PNG</button>
-              </div>
-              <div id="itemChart">
-                <Bar data={itemChartData} options={chartOptions} />
-              </div>
+            <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-2xl shadow-glass-lg p-6 border border-white border-opacity-30 hover:bg-opacity-60 transition-all duration-300 hover:shadow-xl hover:scale-105 hover:-translate-y-1 cursor-pointer transform">
+              <h3 className="text-purple-700 text-sm font-bold mb-3 uppercase tracking-wide">Total Buyers</h3>
+              <p className="text-3xl font-bold text-purple-700">{buyerData.length}</p>
             </div>
           </div>
 
@@ -174,23 +78,24 @@ const ReportsPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-2xl shadow-glass-lg p-6 border border-white border-opacity-30">
               <div className="mb-4">
-                <h2 className="text-lg font-bold text-black">Buyer-Wise Summary</h2>
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] bg-clip-text text-transparent">Buyer-Wise Sales Report</h2>
+                <p className="text-sm text-black mt-1 opacity-70">Detailed breakdown of sales by buyer</p>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-gradient-to-r from-[#17144B] to-[#3A3F8C] border-b border-[#17144B]">
+                <table className="w-full">
+                  <thead className="bg-gradient-to-r from-[#17144B] to-[#3A3F8C] border-b-2 border-[#00D4FF]">
                     <tr>
-                      <th className="px-3 py-2 text-center font-bold text-white">Buyer</th>
-                      <th className="px-3 py-2 text-center font-bold text-white">Orders</th>
-                      <th className="px-3 py-2 text-center font-bold text-white">Total</th>
+                      <th className="px-4 py-3 text-left font-bold text-white text-sm uppercase tracking-wider">Buyer Name</th>
+                      <th className="px-4 py-3 text-center font-bold text-white text-sm uppercase tracking-wider">Order Count</th>
+                      <th className="px-4 py-3 text-right font-bold text-white text-sm uppercase tracking-wider">Total Sales</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="divide-y divide-[#3A3F8C] divide-opacity-30">
                     {buyerData.map((buyer, idx) => (
-                      <tr key={idx} className="border-b border-[#3A3F8C] hover:bg-[#3A3F8C] hover:bg-opacity-50 transition-all duration-200 hover:scale-100 hover:shadow-md cursor-pointer">
-                        <td className="px-3 py-2 font-semibold text-black text-center">{buyer.buyer_name}</td>
-                        <td className="px-3 py-2 text-black text-center">{buyer.order_count}</td>
-                        <td className="px-3 py-2 font-bold text-black text-center">₨ {buyer.total_orders.toLocaleString('en-PK', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                      <tr key={idx} className="hover:bg-white hover:bg-opacity-20 transition-all duration-200 hover:shadow-md group">
+                        <td className="px-4 py-3 font-semibold text-black group-hover:text-[#00D4FF] transition-colors">{buyer.buyer_name}</td>
+                        <td className="px-4 py-3 text-black text-center font-medium">{buyer.order_count}</td>
+                        <td className="px-4 py-3 font-bold text-right text-emerald-700 group-hover:text-emerald-600">₨ {buyer.total_orders.toLocaleString('en-PK', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -200,23 +105,24 @@ const ReportsPage = () => {
 
             <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-2xl shadow-glass-lg p-6 border border-white border-opacity-30">
               <div className="mb-4">
-                <h2 className="text-lg font-bold text-black">Item-Wise Summary</h2>
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">Item-Wise Sales Report</h2>
+                <p className="text-sm text-black mt-1 opacity-70">Detailed breakdown of sales by item</p>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-gradient-to-r from-[#17144B] to-[#3A3F8C] border-b border-[#17144B]">
+                <table className="w-full">
+                  <thead className="bg-gradient-to-r from-[#17144B] to-[#3A3F8C] border-b-2 border-emerald-500">
                     <tr>
-                      <th className="px-3 py-2 text-center font-bold text-white">Item</th>
-                      <th className="px-3 py-2 text-center font-bold text-white">Qty</th>
-                      <th className="px-3 py-2 text-center font-bold text-white">Value</th>
+                      <th className="px-4 py-3 text-left font-bold text-white text-sm uppercase tracking-wider">Item Name</th>
+                      <th className="px-4 py-3 text-center font-bold text-white text-sm uppercase tracking-wider">Quantity</th>
+                      <th className="px-4 py-3 text-right font-bold text-white text-sm uppercase tracking-wider">Total Value</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="divide-y divide-[#3A3F8C] divide-opacity-30">
                     {itemData.map((item, idx) => (
-                      <tr key={idx} className="border-b border-[#3A3F8C] hover:bg-[#3A3F8C] hover:bg-opacity-50 transition-all duration-200 hover:scale-100 hover:shadow-md cursor-pointer">
-                        <td className="px-3 py-2 font-semibold text-black text-center">{item.item_name}</td>
-                        <td className="px-3 py-2 text-black text-center">{item.total_quantity}</td>
-                        <td className="px-3 py-2 font-bold text-black text-center">₨ {item.total_value.toLocaleString('en-PK', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                      <tr key={idx} className="hover:bg-white hover:bg-opacity-20 transition-all duration-200 hover:shadow-md group">
+                        <td className="px-4 py-3 font-semibold text-black group-hover:text-emerald-600 transition-colors">{item.item_name}</td>
+                        <td className="px-4 py-3 text-black text-center font-medium">{item.total_quantity}</td>
+                        <td className="px-4 py-3 font-bold text-right text-emerald-700 group-hover:text-emerald-600">₨ {item.total_value.toLocaleString('en-PK', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                       </tr>
                     ))}
                   </tbody>

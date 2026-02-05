@@ -5,6 +5,28 @@ import { ToastContext } from '../context/ToastContext';
 import { amountToWords } from '../utils/numberToWords';
 import './InvoicePage.css';
 
+// Company configuration
+const companyConfig = {
+  umarsons: {
+    name: 'UMARSONS',
+    address: 'P-5284, ST#09 REHMATABAD, SHEIKUPURA ROAD FAISALABAD.',
+    logo: '/logo.png',
+    watermark: '/watermark.png',
+    email: 'umarsons08@gmail.com',
+    phone: '0301-7194270',
+    whatsapp: '0313-7050844'
+  },
+  makkah_packages: {
+    name: 'MAKKAH PACKAGES',
+    address: 'P-5284, ST#09 REHMATABAD, SHEIKUPURA ROAD FAISALABAD.',
+    logo: '/assets/templates/makkahpackages/logo.png',
+    watermark: '/assets/templates/makkahpackages/watermark.png',
+    email: 'makkahpackages08@gmail.com',
+    phone: '0301-7194270',
+    whatsapp: '0313-7050844'
+  }
+};
+
 const BillPage = () => {
   const { orderId } = useParams();
   const navigate = useNavigate();
@@ -13,28 +35,6 @@ const BillPage = () => {
   const { showToast } = useContext(ToastContext);
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  // Company configuration
-  const companyConfig = {
-    umarsons: {
-      name: 'UMARSONS',
-      address: 'P-5284, ST#09 REHMATABAD, SHEIKUPURA ROAD FAISALABAD.',
-      logo: '/logo.png',
-      watermark: '/watermark.png',
-      email: 'umarsons08@gmail.com',
-      phone: '0301-7194270',
-      whatsapp: '0313-7050844'
-    },
-    makkah_packages: {
-      name: 'MAKKAH PACKAGES',
-      address: 'P-5284, ST#09 REHMATABAD, SHEIKUPURA ROAD FAISALABAD.',
-      logo: '/assets/templates/makkahpackages/logo.png',
-      watermark: '/assets/templates/makkahpackages/watermark.png',
-      email: 'makkahpackages08@gmail.com',
-      phone: '0301-7194270',
-      whatsapp: '0313-7050844'
-    }
-  };
 
   const [companyData, setCompanyData] = useState(companyConfig.umarsons);
 

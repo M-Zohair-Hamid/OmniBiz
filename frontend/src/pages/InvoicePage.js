@@ -5,6 +5,28 @@ import { ToastContext } from '../context/ToastContext';
 import { amountToWords } from '../utils/numberToWords';
 import './InvoicePage.css';
 
+// Company configuration
+const companyConfig = {
+  umarsons: {
+    name: 'UMARSONS',
+    address: 'P-5284, ST#09 REHMATABAD, SHEIKUPURA ROAD FAISALABAD.',
+    logo: '/logo.png',
+    watermark: '/watermark.png',
+    email: 'umarsons08@gmail.com',
+    phone: '0301-7194270',
+    whatsapp: '0313-7050844'
+  },
+  makkah_packages: {
+    name: 'MAKKAH PACKAGES',
+    address: 'P-5284, ST#09 REHMATABAD, SHEIKUPURA ROAD FAISALABAD.',
+    logo: '/assets/templates/makkahpackages/logo.png',
+    watermark: '/assets/templates/makkahpackages/watermark.png',
+    email: 'makkahpackages08@gmail.com',
+    phone: '0301-7194270',
+    whatsapp: '0313-7050844'
+  }
+};
+
 const InvoicePage = () => {
   const { orderId } = useParams();
   const navigate = useNavigate();
@@ -12,54 +34,32 @@ const InvoicePage = () => {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Company configuration
-  const companyConfig = {
-    umarsons: {
-      name: 'UMARSONS',
-      address: 'P-5284, ST#09 REHMATABAD, SHEIKUPURA ROAD FAISALABAD.',
-      logo: '/logo.png',
-      watermark: '/watermark.png',
-      email: 'umarsons08@gmail.com',
-      phone: '0301-7194270',
-      whatsapp: '0313-7050844'
-    },
-    makkah_packages: {
-      name: 'MAKKAH PACKAGES',
-      address: 'P-5284, ST#09 REHMATABAD, SHEIKUPURA ROAD FAISALABAD.',
-      logo: '/assets/templates/makkahpackages/logo.png',
-      watermark: '/assets/templates/makkahpackages/watermark.png',
-      email: 'makkahpackages08@gmail.com',
-      phone: '0301-7194270',
-      whatsapp: '0313-7050844'
-    }
-  };
-
   const [companyData, setCompanyData] = useState(companyConfig.umarsons);
 
   useEffect(() => {
-    fetchOrder();
-  }, [orderId]);
-
-  const fetchOrder = async () => {
-    try {
-      const response = await getOrder(orderId);
-      setOrder(response.data);
-      
-      // Set company configuration based on order's company
-      const companyCode = response.data.company_name?.toLowerCase().replace(/\s+/g, '_') || 'umarsons';
-      if (companyConfig[companyCode]) {
-        setCompanyData(companyConfig[companyCode]);
+    const fetchOrder = async () => {
+      try {
+        const response = await getOrder(orderId);
+        setOrder(response.data);
+        
+        // Set company configuration based on order's company
+        const companyCode = response.data.company_name?.toLowerCase().replace(/\s+/g, '_') || 'umarsons';
+        if (companyConfig[companyCode]) {
+          setCompanyData(companyConfig[companyCode]);
+        }
+        
+        // Set document title to order number (ID) with STI suffix
+        document.title = `${response.data.order_number}-STI`;
+        
+        setLoading(false);
+      } catch (error) {
+        showToast('Failed to load invoice', 'error');
+        setLoading(false);
       }
-      
-      // Set document title to order number (ID) with STI suffix
-      document.title = `${response.data.order_number}-STI`;
-      
-      setLoading(false);
-    } catch (error) {
-      showToast('Failed to load invoice', 'error');
-      setLoading(false);
-    }
-  };
+    };
+
+    fetchOrder();
+  }, [orderId, showToast]);
 
   const handlePrint = () => {
     window.print();

@@ -7,6 +7,7 @@ from . import report_bp
 from . import dashboard_bp
 from . import ledger_bp
 from . import payment_bp
+from . import backup_bp
 
 __all__ = [
     'auth_bp',
@@ -16,5 +17,6 @@ __all__ = [
     'report_bp',
     'dashboard_bp',
     'ledger_bp',
-    'payment_bp'
+    'payment_bp',
+    'backup_bp'
 ]

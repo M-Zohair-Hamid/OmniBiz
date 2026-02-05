@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, g, request
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, get_jwt
-from datetime import timedelta
+from datetime import timedelta, datetime
 import os
 import sqlite3
 from dotenv import load_dotenv
@@ -162,7 +162,7 @@ def after_request(response):
     return response
 
 # Register blueprints
-from routes import auth_bp, buyer_bp, item_bp, order_bp, report_bp, dashboard_bp, ledger_bp, payment_bp
+from routes import auth_bp, buyer_bp, item_bp, order_bp, report_bp, dashboard_bp, ledger_bp, payment_bp, backup_bp
 
 app.register_blueprint(auth_bp.bp)
 app.register_blueprint(buyer_bp.bp)
@@ -172,6 +172,7 @@ app.register_blueprint(report_bp.bp)
 app.register_blueprint(dashboard_bp.bp)
 app.register_blueprint(ledger_bp.bp)
 app.register_blueprint(payment_bp.bp)
+app.register_blueprint(backup_bp.bp)
 
 # JWT error handlers
 @jwt.invalid_token_loader
@@ -195,6 +196,37 @@ with app.app_context():
     ensure_database('umarsons')
     ensure_database('makkah_packages')
     print("Both company databases initialized successfully")
+    
+    # Auto-backup check on startup
+    try:
+        from routes import backup_bp
+        backup_config = backup_bp.get_backup_config()
+        if backup_config.get('auto_backup_enabled', False):
+            last_backup = backup_config.get('last_backup_time')
+            backup_location = backup_config.get('backup_location')
+            
+            # Check if we need to backup (more than 24 hours since last backup)
+            should_backup = False
+            if last_backup:
+                last_backup_dt = datetime.fromisoformat(last_backup)
+                time_diff = datetime.now() - last_backup_dt
+                should_backup = time_diff.total_seconds() > 86400  # 24 hours
+            else:
+                should_backup = True  # Never backed up before
+            
+            if should_backup and backup_location:
+                try:
+                    result = backup_bp.create_backup(backup_location)
+                    if result:
+                        print(f"[AUTO-BACKUP] Successfully created backup: {result}")
+                    else:
+                        print("[AUTO-BACKUP] Failed to create backup")
+                except Exception as e:
+                    print(f"[AUTO-BACKUP] Error creating backup: {e}")
+            elif should_backup and not backup_location:
+                print("[AUTO-BACKUP] Auto-backup enabled but no backup location configured")
+    except Exception as e:
+        print(f"[AUTO-BACKUP] Error checking backup configuration: {e}")
 
 @app.route('/api/health', methods=['GET'])
 def health():

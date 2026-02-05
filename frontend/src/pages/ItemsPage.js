@@ -3,7 +3,6 @@ import Sidebar from '../components/Sidebar';
 import { getItems, createItem, updateItem, deleteItem } from '../services/api';
 import { ToastContext } from '../context/ToastContext';
 import { AuthContext } from '../context/AuthContext';
-import { exportTableToPDF, exportChartToImage } from '../utils/exportUtils';
 
 const ItemsPage = () => {
   const [items, setItems] = useState([]);
@@ -47,6 +46,7 @@ const ItemsPage = () => {
 
   useEffect(() => {
     fetchItems();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSearch = (e) => {
@@ -244,8 +244,8 @@ const ItemsPage = () => {
 
           {/* Form Modal */}
           {showForm && (
-            <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-              <div className="backdrop-blur-xl bg-white bg-opacity-40 border border-white border-opacity-30 rounded-2xl shadow-glass-lg p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
+              <div className="backdrop-blur-xl bg-white bg-opacity-40 border border-white border-opacity-30 rounded-2xl shadow-glass-lg p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto animate-scaleIn">
                 <h2 className="text-2xl font-bold mb-6 text-white">{editingId ? 'Edit Item' : 'Add Item'}</h2>
                 <form onSubmit={handleSubmit}>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
