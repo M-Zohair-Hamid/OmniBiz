@@ -247,23 +247,54 @@ const OrdersPage = () => {
       return;
     }
 
+    // Validate stock for all items before submission
+    const itemMap = new Map();
+    for (const item of formData.items) {
+      const itemId = parseInt(item.item_id, 10);
+      const qty = Number.isFinite(parseFloat(item.quantity)) ? parseFloat(item.quantity) : 0;
+      
+      if (qty <= 0) {
+        showToast('Quantity must be greater than 0', 'error');
+        return;
+      }
+      
+      if (itemMap.has(itemId)) {
+        itemMap.set(itemId, itemMap.get(itemId) + qty);
+      } else {
+        itemMap.set(itemId, qty);
+      }
+    }
+
+    // Check stock for each item
+    for (const [itemId, totalQty] of itemMap) {
+      const itemDetail = items.find(i => i.id === itemId);
+      if (!itemDetail) {
+        showToast('Item not found', 'error');
+        return;
+      }
+
+      const availableStock = Number.isFinite(parseFloat(itemDetail.quantity_in_stock)) ? parseFloat(itemDetail.quantity_in_stock) : 0;
+
+      console.log(`Stock validation - Item: ${itemDetail.name}, Requested: ${totalQty}, Available: ${availableStock}`);
+
+      // Check if any quantity requested when stock is 0 or negative
+      if (availableStock <= 0) {
+        showToast(`${itemDetail.name}: No stock available (current stock: ${availableStock})`, 'error');
+        return;
+      }
+
+      // Check if total requested exceeds available
+      if (totalQty > availableStock) {
+        showToast(`${itemDetail.name}: Requested ${totalQty} but only ${availableStock} in stock`, 'error');
+        return;
+      }
+    }
+
     console.log('Submitting form data:', formData); // Debug log
 
     setSubmitting(true);
     try {
-      // Auto-merge duplicate items before submission
-      const itemMap = new Map();
-      for (const item of formData.items) {
-        const itemId = parseInt(item.item_id, 10);
-        const qty = Number.isFinite(parseFloat(item.quantity)) ? parseFloat(item.quantity) : 0;
-        
-        if (itemMap.has(itemId)) {
-          itemMap.set(itemId, itemMap.get(itemId) + qty);
-        } else {
-          itemMap.set(itemId, qty);
-        }
-      }
-      
+      // Merge duplicate items before submission
       const mergedItems = Array.from(itemMap, ([itemId, qty]) => ({
         item_id: itemId,
         quantity: qty
@@ -550,14 +581,33 @@ const OrdersPage = () => {
     const requestedQty = Number.isFinite(parseFloat(currentItem.quantity)) ? parseFloat(currentItem.quantity) : 0;
     const availableStock = Number.isFinite(parseFloat(itemDetail.quantity_in_stock)) ? parseFloat(itemDetail.quantity_in_stock) : 0;
     
-    // Check stock availability
-    if (requestedQty > availableStock) {
-      showToast(`Insufficient stock for ${itemDetail.name}. Available: ${availableStock}`, 'warning');
+    // Check if this item already exists in other rows
+    const currentItemId = parseInt(currentItem.item_id, 10);
+    const otherItemsCount = formData.items.reduce((sum, item, i) => {
+      if (i !== index && parseInt(item.item_id, 10) === currentItemId) {
+        const qty = Number.isFinite(parseFloat(item.quantity)) ? parseFloat(item.quantity) : 0;
+        return sum + qty;
+      }
+      return sum;
+    }, 0);
+    
+    // Calculate total quantity of this item across all rows (including current)
+    const totalQtyForItem = requestedQty + otherItemsCount;
+    
+    // Explicit stock validation
+    // Reject if: requested quantity is positive AND total exceeds or equals available stock (when stock is 0)
+    // OR total quantity exceeds available stock in any case
+    if (requestedQty > 0 && availableStock <= 0) {
+      showToast(`No stock available for ${itemDetail.name}`, 'error');
+      return;
+    }
+    
+    if (totalQtyForItem > availableStock) {
+      showToast(`Total quantity ${totalQtyForItem} exceeds available stock ${availableStock} for ${itemDetail.name}. Other rows have: ${otherItemsCount}`, 'warning');
       return;
     }
     
     // Check if this item already exists in other rows
-    const currentItemId = parseInt(currentItem.item_id, 10);
     const existingIndex = formData.items.findIndex((item, i) => 
       i !== index && parseInt(item.item_id, 10) === currentItemId
     );
@@ -569,17 +619,11 @@ const OrdersPage = () => {
       const existingQty = Number.isFinite(parseFloat(newItems[existingIndex].quantity)) ? parseFloat(newItems[existingIndex].quantity) : 0;
       const mergedQty = baseQty + existingQty;
       
-      // Check merged total doesn't exceed stock
-      if (mergedQty > availableStock) {
-        showToast(`Total quantity ${mergedQty} exceeds available stock ${availableStock}`, 'warning');
-        return;
-      }
-      
       newItems[index].quantity = mergedQty;
       newItems.splice(existingIndex, 1); // Remove the other row, keep current row visible
       
       setFormData({...formData, items: newItems});
-      showToast(`Merged quantities for "${itemDetail.name}"`, 'success');
+      showToast(`Merged quantities for "${itemDetail.name}" (Total: ${mergedQty} ${itemDetail.unit})`, 'success');
     } else {
       showToast('Item added', 'success');
     }
@@ -788,7 +832,12 @@ const OrdersPage = () => {
                                     >
                                       <div className="font-semibold">{suggestion.code}</div>
                                       <div className="text-xs text-gray-600">{suggestion.name}</div>
-                                      <div className="text-xs text-gray-500">₨{suggestion.unit_price}</div>
+                                      <div className="flex justify-between">
+                                        <span className="text-xs text-gray-500">₨{suggestion.unit_price}</span>
+                                        <span className={`text-xs font-semibold ${suggestion.quantity_in_stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                          Stock: {suggestion.quantity_in_stock} {suggestion.unit}
+                                        </span>
+                                      </div>
                                     </div>
                                   ))}
                                 </div>
