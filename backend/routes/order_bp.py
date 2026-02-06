@@ -88,6 +88,13 @@ def get_orders():
         # Calculate total pages
         pages = (total + per_page - 1) // per_page
         
+        # Fetch all buyers needed for the orders
+        buyer_ids = {o.buyer_id for o in items if o.buyer_id}
+        buyers_map = {}
+        if buyer_ids:
+            buyers = session.query(Buyer).filter(Buyer.id.in_(buyer_ids)).all()
+            buyers_map = {b.id: b for b in buyers}
+        
         status_updated = False
         data = []
         for o in items:
@@ -95,11 +102,13 @@ def get_orders():
             if o.status != computed_status:
                 o.status = computed_status
                 status_updated = True
+            
+            buyer = buyers_map.get(o.buyer_id) if o.buyer_id else None
             data.append({
                 'id': o.id,
                 'order_number': o.order_number,
                 'buyer_id': o.buyer_id,
-                'buyer_name': o.buyer.company_name,
+                'buyer_name': buyer.company_name if buyer else 'N/A',
                 'order_date': format_date_display(o.order_date),
                 'subtotal': o.subtotal,
                 'tax_amount': o.tax_amount,
@@ -261,6 +270,14 @@ def update_order(order_id):
     
     if not order:
         return jsonify({'error': 'Order not found'}), 404
+
+    computed_status = calculate_order_status(session, order)
+    if order.status != computed_status:
+        order.status = computed_status
+        session.commit()
+
+    if computed_status in ('paid', 'partial'):
+        return jsonify({'error': 'Paid or partially paid orders cannot be edited'}), 400
     
     data = request.get_json()
     # Validate buyer if being updated
@@ -402,6 +419,14 @@ def delete_order(order_id):
     
     if not order:
         return jsonify({'error': 'Order not found'}), 404
+
+    computed_status = calculate_order_status(session, order)
+    if order.status != computed_status:
+        order.status = computed_status
+        session.commit()
+
+    if computed_status in ('paid', 'partial'):
+        return jsonify({'error': 'Paid or partially paid orders cannot be deleted'}), 400
     
     # Restore stock for all items in the order
     for order_item in order.items:

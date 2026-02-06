@@ -1,17 +1,22 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 /**
  * Hook to handle smooth modal open/close animations
  * Returns closing state and handlers
  */
-export const useModalAnimation = () => {
+export const useModalAnimation = (isOpen = false) => {
   const [isClosing, setIsClosing] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setIsClosing(false);
+    }
+  }, [isOpen]);
 
   const handleClose = useCallback((onClose, delay = 400) => {
     setIsClosing(true);
     setTimeout(() => {
       onClose();
-      setIsClosing(false);
     }, delay);
   }, []);
 

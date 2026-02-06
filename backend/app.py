@@ -83,10 +83,11 @@ def ensure_database(company_code: str):
     db.metadata.create_all(bind=db.get_engine(bind=company_code))
     init_db(company_code)
     ensure_payment_balance_column(company_code)
+    ensure_order_income_tax_columns(company_code)
     print(f"[DB] {company_code} ready at {db_path}")
 
 def ensure_payment_balance_column(company_code: str):
-    """Ensure payments.balance column exists for legacy databases."""
+    """Ensure payments columns exist for legacy databases."""
     try:
         engine = db.get_engine(bind=company_code)
         with engine.connect() as connection:
@@ -95,14 +96,44 @@ def ensure_payment_balance_column(company_code: str):
             ).fetchone()
             if not table_exists:
                 db.metadata.create_all(bind=db.get_engine(bind=company_code))
+                return
 
             result = connection.execute(text("PRAGMA table_info(payments)"))
             columns = [row[1] for row in result.fetchall()]
+            
             if 'balance' not in columns:
                 connection.execute(text("ALTER TABLE payments ADD COLUMN balance FLOAT NOT NULL DEFAULT 0"))
                 print(f"[DB] Added payments.balance column for {company_code}")
+            if 'order_id' not in columns:
+                connection.execute(text("ALTER TABLE payments ADD COLUMN order_id INTEGER"))
+                print(f"[DB] Added payments.order_id column for {company_code}")
+            if 'income_tax_rate' not in columns:
+                connection.execute(text("ALTER TABLE payments ADD COLUMN income_tax_rate FLOAT NOT NULL DEFAULT 0"))
+                print(f"[DB] Added payments.income_tax_rate column for {company_code}")
+            if 'income_tax_amount' not in columns:
+                connection.execute(text("ALTER TABLE payments ADD COLUMN income_tax_amount FLOAT NOT NULL DEFAULT 0"))
+                print(f"[DB] Added payments.income_tax_amount column for {company_code}")
+            
+            connection.commit()
     except Exception as exc:
-        print(f"[DB] Failed to ensure payments.balance column for {company_code}: {exc}")
+        print(f"[DB] Failed to ensure payments columns for {company_code}: {exc}")
+
+def ensure_order_income_tax_columns(company_code: str):
+    """Ensure orders.income_tax_rate and income_tax_amount columns exist."""
+    try:
+        engine = db.get_engine(bind=company_code)
+        with engine.connect() as connection:
+            result = connection.execute(text("PRAGMA table_info(orders)"))
+            columns = [row[1] for row in result.fetchall()]
+            if 'income_tax_rate' not in columns:
+                connection.execute(text("ALTER TABLE orders ADD COLUMN income_tax_rate FLOAT NOT NULL DEFAULT 0"))
+                print(f"[DB] Added orders.income_tax_rate column for {company_code}")
+            if 'income_tax_amount' not in columns:
+                connection.execute(text("ALTER TABLE orders ADD COLUMN income_tax_amount FLOAT NOT NULL DEFAULT 0"))
+                print(f"[DB] Added orders.income_tax_amount column for {company_code}")
+            connection.commit()
+    except Exception as exc:
+        print(f"[DB] Failed to ensure order income tax columns for {company_code}: {exc}")
 
 @app.before_request
 def before_request():
@@ -216,7 +247,7 @@ with app.app_context():
             
             if should_backup and backup_location:
                 try:
-                    result = backup_bp.create_backup(backup_location)
+                    result = backup_bp.create_backup(backup_location, overwrite=True, scope='both')
                     if result:
                         print(f"[AUTO-BACKUP] Successfully created backup: {result}")
                     else:

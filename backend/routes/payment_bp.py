@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, g
 from flask_jwt_extended import jwt_required
 from models import db, Payment, Order
 from utils import get_company_id_from_token, format_date_display
@@ -43,9 +43,17 @@ def get_payments():
         offset = (page - 1) * per_page
         payments = query.order_by(Payment.created_at.desc()).offset(offset).limit(per_page).all()
 
+        # Fetch all orders needed for the payments
         order_ids = {p.order_id for p in payments if p.order_id}
+        orders_map = {}
         order_totals = {}
+        
         if order_ids:
+            # Get orders
+            orders = session.query(Order).filter(Order.id.in_(order_ids)).all()
+            orders_map = {o.id: o for o in orders}
+            
+            # Get totals for orders
             totals = (
                 session.query(Payment.order_id, func.coalesce(func.sum(Payment.amount), 0))
                 .filter(Payment.order_id.in_(order_ids))
@@ -58,11 +66,12 @@ def get_payments():
         data = []
 
         for p in payments:
+            order = orders_map.get(p.order_id) if p.order_id else None
             total_paid = order_totals.get(p.order_id, 0)
-            order_total = round(p.order.total_amount, 2) if p.order else 0
-            remaining = round((order_total - total_paid) if p.order else 0, 2)
+            order_total = round(order.total_amount, 2) if order else 0
+            remaining = round((order_total - total_paid) if order else 0, 2)
 
-            if p.order:
+            if order:
                 if total_paid <= 0:
                     computed_status = 'pending'
                 elif remaining <= 0:
@@ -70,28 +79,28 @@ def get_payments():
                 else:
                     computed_status = 'partial'
 
-                if p.order.status != computed_status:
-                    p.order.status = computed_status
+                if order.status != computed_status:
+                    order.status = computed_status
                     status_updated = True
 
-        data.append({
-            'id': p.id,
-            'order_id': p.order_id,
-            'order_number': p.order.order_number if p.order else 'N/A',
-            'buyer_name': p.order.buyer.company_name if p.order and p.order.buyer else 'N/A',
-            'payment_date': format_date_display(p.payment_date),
-            'amount': round(p.amount, 2),
-            'balance': round(p.balance, 2),
-            'payment_method': p.payment_method,
-            'payment_type': p.payment_type,
-            'notes': p.notes,
-            'income_tax_rate': round(p.income_tax_rate, 2) if p.income_tax_rate else 0,
-            'income_tax_amount': round(p.income_tax_amount, 2) if p.income_tax_amount else 0,
-            'order_total': order_total,
-            'order_remaining': remaining,
-            'order_status': p.order.status if p.order else 'N/A',
-            'created_at': format_date_display(p.created_at)
-        })
+            data.append({
+                'id': p.id,
+                'order_id': p.order_id,
+                'order_number': order.order_number if order else 'N/A',
+                'buyer_name': order.buyer.company_name if order and order.buyer else 'N/A',
+                'payment_date': format_date_display(p.payment_date),
+                'amount': round(p.amount, 2),
+                'balance': round(p.balance, 2),
+                'payment_method': p.payment_method,
+                'payment_type': p.payment_type,
+                'notes': p.notes,
+                'income_tax_rate': round(p.income_tax_rate, 2) if p.income_tax_rate else 0,
+                'income_tax_amount': round(p.income_tax_amount, 2) if p.income_tax_amount else 0,
+                'order_total': order_total,
+                'order_remaining': remaining,
+                'order_status': order.status if order else 'N/A',
+                'created_at': format_date_display(p.created_at)
+            })
 
         if status_updated:
             session.commit()
@@ -271,10 +280,9 @@ def delete_payment(payment_id):
 def get_order_payments(order_id):
     """Get all payments for a specific order"""
     session = get_session()
-    company_id = verify_company_access()
-    
-    # Verify order exists
-    order = session.query(Order).filter_by(id=order_id, company_id=company_id).first()
+
+    # Verify order exists (database is already company-specific)
+    order = session.query(Order).filter_by(id=order_id).first()
     if not order:
         return jsonify({'error': 'Order not found'}), 404
     
@@ -282,6 +290,7 @@ def get_order_payments(order_id):
     
     total_paid = round(sum(p.amount for p in payments), 2)
     remaining = round(order.total_amount - total_paid, 2)
+    last_income_tax_rate = next((round(p.income_tax_rate, 2) for p in payments if p.income_tax_rate), 0)
 
     if total_paid <= 0:
         order.status = 'pending'
@@ -299,6 +308,7 @@ def get_order_payments(order_id):
         'total_paid': total_paid,
         'remaining': remaining,
         'order_status': order.status,
+        'last_income_tax_rate': last_income_tax_rate,
         'payments': [{
             'id': p.id,
             'payment_date': format_date_display(p.payment_date),

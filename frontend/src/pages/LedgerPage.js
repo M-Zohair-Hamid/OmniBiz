@@ -20,7 +20,7 @@ const LedgerPage = () => {
   const { user } = useContext(AuthContext);
   
   // Modal animation hook
-  const orderModal = useModalAnimation();
+  const orderModal = useModalAnimation(showOrderModal);
 
   useEffect(() => {
     fetchBuyers();

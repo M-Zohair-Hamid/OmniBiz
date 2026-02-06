@@ -45,7 +45,7 @@ const OrdersPage = () => {
   const { user } = useContext(AuthContext);
   
   // Modal animation hooks
-  const viewModal = useModalAnimation();
+  const viewModal = useModalAnimation(showViewModal);
   const createModal = useModalAnimation();
   const editModal = useModalAnimation();
   const deleteModal = useModalAnimation();
@@ -351,7 +351,12 @@ const OrdersPage = () => {
     }
   };
 
-  const handleDeleteOrder = async (id) => {
+  const handleDeleteOrder = async (id, status) => {
+    if (status === 'partial' || status === 'paid') {
+      showToast('Paid or partially paid orders cannot be deleted', 'error');
+      return;
+    }
+
     if (window.confirm('Are you sure? Deleting this order will also delete all related payments.')) {
       try {
         await deleteOrder(id);
@@ -469,12 +474,14 @@ const OrdersPage = () => {
       try {
         const response = await getOrderPayments(selectedOrder.id);
         const remaining = response.data.remaining;
+        const previousTaxRate = response.data?.last_income_tax_rate ?? response.data?.payments?.find(p => Number(p.income_tax_rate) > 0)?.income_tax_rate ?? '';
         
         setPaymentForm({
           amount: remaining.toFixed(2),
           payment_method: 'cash',
           payment_type: remaining >= selectedOrder.total_amount ? 'full' : 'partial',
           payment_date: getCurrentDateForInput(),
+          income_tax_rate: previousTaxRate,
           notes: ''
         });
         setShowAdditionalPaymentModal(true);
@@ -494,12 +501,14 @@ const OrdersPage = () => {
     try {
       const response = await getOrderPayments(selectedOrder.id);
       const remaining = response.data.remaining;
+      const previousTaxRate = response.data?.last_income_tax_rate ?? response.data?.payments?.find(p => Number(p.income_tax_rate) > 0)?.income_tax_rate ?? '';
       
       setPaymentForm({
         amount: remaining.toFixed(2),
         payment_method: 'cash',
         payment_type: remaining >= selectedOrder.total_amount ? 'full' : 'partial',
         payment_date: getCurrentDateForInput(),
+        income_tax_rate: previousTaxRate,
         notes: ''
       });
       setShowPaymentModal(true);
@@ -728,16 +737,28 @@ const OrdersPage = () => {
                               <button onClick={() => handleViewOrder(order)} className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 transform hover:scale-105 active:scale-95">👁️ View</button>
                               <button 
                                 onClick={() => handleEditOrder(order)} 
-                                disabled={String(order.status).toLowerCase() === 'paid'}
+                                disabled={['paid', 'partial'].includes(String(order.status).toLowerCase())}
+                                title={['paid', 'partial'].includes(String(order.status).toLowerCase()) ? 'Paid or partially paid orders cannot be edited' : 'Edit order'}
                                 className={`px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 ${
-                                  String(order.status).toLowerCase() === 'paid'
+                                  ['paid', 'partial'].includes(String(order.status).toLowerCase())
                                     ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
                                     : 'bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] text-[#17144B] transform hover:scale-105 active:scale-95'
                                 }`}
                               >
                                 Edit
                               </button>
-                              <button onClick={() => handleDeleteOrder(order.id)} className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 transform hover:scale-105 active:scale-95">Delete</button>
+                              <button
+                                onClick={() => handleDeleteOrder(order.id, order.status)}
+                                disabled={order.status === 'partial' || order.status === 'paid'}
+                                title={order.status === 'partial' || order.status === 'paid' ? 'Paid or partially paid orders cannot be deleted' : 'Delete order'}
+                                className={`px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 ${
+                                  order.status === 'partial' || order.status === 'paid'
+                                    ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                                    : 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white transform hover:scale-105 active:scale-95'
+                                }`}
+                              >
+                                Delete
+                              </button>
                               <button onClick={() => handleOpenOptions(order)} className="bg-gradient-to-r from-green-400 to-green-500 hover:from-green-500 hover:to-green-600 text-white px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 transform hover:scale-105 active:scale-95">Options</button>
                             </div>
                           </td>
@@ -1224,6 +1245,20 @@ const OrdersPage = () => {
                       onChange={(e) => setPaymentForm({...paymentForm, payment_date: e.target.value})}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
+                  </div>
+
+                  {/* Income Tax Rate */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Income Tax Rate (%) - Optional</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={paymentForm.income_tax_rate}
+                      onChange={(e) => setPaymentForm({...paymentForm, income_tax_rate: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="e.g., 1.5 for 1.5%"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Income tax will be calculated as: Payment Amount × Rate / 100</p>
                   </div>
 
                   {/* Notes */}

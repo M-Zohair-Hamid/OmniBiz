@@ -17,13 +17,15 @@ apiClient.interceptors.request.use(
     const companyCode = localStorage.getItem('selectedCompanyCode');
     const companyId = localStorage.getItem('selectedCompanyId');
     console.log('API Request:', config.method.toUpperCase(), config.url, 'Token:', token ? 'Present' : 'MISSING');
-    if (token) {
+    if (token && !config.headers.Authorization) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    if (companyCode) {
+    const hasCompanyCode = config.headers['X-Company-Code'] || config.headers['x-company-code'];
+    const hasCompanyId = config.headers['X-Company-Id'] || config.headers['x-company-id'];
+    if (companyCode && !hasCompanyCode) {
       config.headers['X-Company-Code'] = companyCode;
     }
-    if (companyId) {
+    if (companyId && !hasCompanyId) {
       config.headers['X-Company-Id'] = companyId;
     }
     return config;
