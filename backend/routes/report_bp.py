@@ -1,9 +1,9 @@
 from flask import Blueprint, request, jsonify, send_file
 from flask_jwt_extended import jwt_required, get_jwt
-from models import db, Order, Buyer, Item, OrderItem
+from models import db, Order, Buyer, Item, OrderItem, Payment
 from utils import get_company_id_from_token, format_date_display
 from datetime import datetime, timedelta
-from sqlalchemy import func
+from sqlalchemy import func, case, and_
 from sqlalchemy.orm import joinedload
 import csv
 import io
@@ -14,6 +14,164 @@ bp = Blueprint('reports', __name__, url_prefix='/api/reports')
 
 def verify_company_access():
     return get_company_id_from_token()
+
+def _safe_date_range(start_date_str, end_date_str):
+    start_dt = None
+    end_dt = None
+    if start_date_str:
+        start_dt = datetime.fromisoformat(start_date_str)
+    if end_date_str:
+        end_dt = datetime.fromisoformat(end_date_str)
+        if end_dt.hour == 0 and end_dt.minute == 0 and end_dt.second == 0 and end_dt.microsecond == 0:
+            end_dt = end_dt.replace(hour=23, minute=59, second=59, microsecond=999999)
+    return start_dt, end_dt
+
+def _clamp_score(value):
+    return max(0, min(100, float(value)))
+
+def _relationship_label(score):
+    if score >= 80:
+        return "Strategic Partner"
+    if score >= 60:
+        return "Reliable Buyer"
+    if score >= 40:
+        return "Average / Watchlist"
+    if score >= 20:
+        return "Risky Buyer"
+    return "High Risk"
+
+def compute_buyer_relationships(company_id, buyer_id=None):
+    buyers_query = Buyer.query.filter_by(company_id=company_id)
+    if buyer_id:
+        buyers_query = buyers_query.filter_by(id=buyer_id)
+    buyers = buyers_query.all()
+    if not buyers:
+        return []
+
+    buyer_ids = [b.id for b in buyers]
+
+    sales_rows = db.session.query(
+        Order.buyer_id,
+        func.sum(Order.total_amount).label('total_sales'),
+        func.count(Order.id).label('order_count'),
+        func.min(Order.order_date).label('first_order'),
+        func.max(Order.order_date).label('last_order')
+    ).filter(
+        Order.company_id == company_id,
+        Order.buyer_id.in_(buyer_ids)
+    ).group_by(Order.buyer_id).all()
+    sales_map = {r.buyer_id: r for r in sales_rows}
+
+    delay_days = func.julianday(Payment.payment_date) - func.julianday(Order.order_date) - 30
+    payment_rows = db.session.query(
+        Order.buyer_id,
+        func.avg(delay_days).label('avg_delay'),
+        func.avg(case((delay_days <= 0, 1), else_=0)).label('on_time_ratio'),
+        func.sum(Payment.amount).label('total_paid')
+    ).join(Order, Payment.order_id == Order.id).filter(
+        Order.company_id == company_id,
+        Order.buyer_id.in_(buyer_ids)
+    ).group_by(Order.buyer_id).all()
+    payment_map = {r.buyer_id: r for r in payment_rows}
+
+    now = datetime.utcnow()
+    last3_start = now - timedelta(days=90)
+    prev3_start = now - timedelta(days=180)
+    growth_rows = db.session.query(
+        Order.buyer_id,
+        func.sum(case((Order.order_date >= last3_start, Order.total_amount), else_=0)).label('last3'),
+        func.sum(case((and_(Order.order_date >= prev3_start, Order.order_date < last3_start), Order.total_amount), else_=0)).label('prev3')
+    ).filter(
+        Order.company_id == company_id,
+        Order.buyer_id.in_(buyer_ids)
+    ).group_by(Order.buyer_id).all()
+    growth_map = {r.buyer_id: r for r in growth_rows}
+
+    company_total_sales = db.session.query(func.sum(Order.total_amount)).filter(
+        Order.company_id == company_id
+    ).scalar() or 0
+
+    results = []
+    for buyer in buyers:
+        sales = sales_map.get(buyer.id)
+        total_sales = float(sales.total_sales) if sales and sales.total_sales else 0
+        order_count = int(sales.order_count) if sales and sales.order_count else 0
+
+        active_months = 1
+        if sales and sales.first_order and sales.last_order:
+            first = sales.first_order
+            last = sales.last_order
+            active_months = (last.year * 12 + last.month) - (first.year * 12 + first.month) + 1
+            active_months = max(active_months, 1)
+
+        orders_per_month = order_count / active_months if active_months else 0
+        frequency_score = _clamp_score((orders_per_month / 10) * 100) if order_count else 0
+
+        revenue_pct = (total_sales / company_total_sales * 100) if company_total_sales else 0
+        revenue_score = _clamp_score(revenue_pct)
+
+        payment = payment_map.get(buyer.id)
+        avg_delay = float(payment.avg_delay) if payment and payment.avg_delay is not None else 0
+        on_time_ratio = float(payment.on_time_ratio) if payment and payment.on_time_ratio is not None else 0
+        total_paid = float(payment.total_paid) if payment and payment.total_paid else 0
+
+        outstanding = max(total_sales - total_paid, 0)
+        outstanding_ratio = (outstanding / total_sales) if total_sales else 0
+
+        avg_delay_score = _clamp_score(100 - max(avg_delay, 0) * 2)
+        on_time_score = _clamp_score(on_time_ratio * 100)
+        outstanding_score = _clamp_score(100 - outstanding_ratio * 100)
+        payment_score = _clamp_score((avg_delay_score + on_time_score + outstanding_score) / 3)
+
+        growth = growth_map.get(buyer.id)
+        last3 = float(growth.last3) if growth and growth.last3 else 0
+        prev3 = float(growth.prev3) if growth and growth.prev3 else 0
+        if prev3 == 0 and last3 == 0:
+            growth_score = 50
+        elif prev3 == 0 and last3 > 0:
+            growth_score = 100
+        else:
+            growth_rate = (last3 - prev3) / prev3 if prev3 else 0
+            growth_score = _clamp_score(50 + growth_rate * 50)
+
+        final_score = round(
+            payment_score * 0.4
+            + revenue_score * 0.3
+            + frequency_score * 0.2
+            + growth_score * 0.1
+        )
+
+        results.append({
+            'buyer_id': buyer.id,
+            'buyer_name': buyer.company_name,
+            'relationship_score': final_score,
+            'relationship_label': _relationship_label(final_score),
+            'metrics': {
+                'purchase_frequency': {
+                    'orders_per_active_month': round(orders_per_month, 2),
+                    'score': round(frequency_score, 2)
+                },
+                'revenue_contribution': {
+                    'buyer_total_sales': round(total_sales, 2),
+                    'company_total_sales': round(float(company_total_sales), 2),
+                    'buyer_sales_pct': round(revenue_pct, 2),
+                    'score': round(revenue_score, 2)
+                },
+                'payment_discipline': {
+                    'avg_delay_days': round(avg_delay, 2),
+                    'on_time_ratio': round(on_time_ratio, 2),
+                    'outstanding_ratio': round(outstanding_ratio, 2),
+                    'score': round(payment_score, 2)
+                },
+                'growth_trend': {
+                    'last_3_months_total': round(last3, 2),
+                    'previous_3_months_total': round(prev3, 2),
+                    'score': round(growth_score, 2)
+                }
+            }
+        })
+
+    return results
 
 @bp.route('/summary', methods=['GET'])
 def get_summary():
@@ -134,6 +292,143 @@ def get_orders_report():
         'total_amount': o.total_amount,
         'status': o.status
     } for o in orders]), 200
+
+@bp.route('/buyer-report', methods=['GET'])
+def get_buyer_report():
+    company_id = verify_company_access()
+
+    buyer_id = request.args.get('buyer_id', type=int)
+    start_date_str = request.args.get('start_date', '', type=str)
+    end_date_str = request.args.get('end_date', '', type=str)
+
+    if not buyer_id:
+        return jsonify({'error': 'buyer_id is required'}), 400
+
+    buyer = Buyer.query.filter_by(id=buyer_id, company_id=company_id).first()
+    if not buyer:
+        return jsonify({'error': 'Buyer not found'}), 404
+
+    start_dt, end_dt = _safe_date_range(start_date_str, end_date_str)
+
+    orders_query = Order.query.filter_by(company_id=company_id, buyer_id=buyer_id)
+    if start_dt:
+        orders_query = orders_query.filter(Order.order_date >= start_dt)
+    if end_dt:
+        orders_query = orders_query.filter(Order.order_date <= end_dt)
+
+    total_orders = orders_query.count()
+    total_sales = db.session.query(func.sum(Order.total_amount)).filter(
+        Order.company_id == company_id,
+        Order.buyer_id == buyer_id
+    )
+    if start_dt:
+        total_sales = total_sales.filter(Order.order_date >= start_dt)
+    if end_dt:
+        total_sales = total_sales.filter(Order.order_date <= end_dt)
+    total_sales = float(total_sales.scalar() or 0)
+
+    total_paid = db.session.query(func.sum(Payment.amount)).join(Order, Payment.order_id == Order.id).filter(
+        Order.company_id == company_id,
+        Order.buyer_id == buyer_id
+    )
+    if start_dt:
+        total_paid = total_paid.filter(Order.order_date >= start_dt)
+    if end_dt:
+        total_paid = total_paid.filter(Order.order_date <= end_dt)
+    total_paid = float(total_paid.scalar() or 0)
+    outstanding = max(total_sales - total_paid, 0)
+
+    delay_days = func.julianday(Payment.payment_date) - func.julianday(Order.order_date) - 30
+    payment_stats = db.session.query(
+        func.avg(delay_days).label('avg_delay'),
+        func.avg(case((delay_days <= 0, 1), else_=0)).label('on_time_ratio')
+    ).join(Order, Payment.order_id == Order.id).filter(
+        Order.company_id == company_id,
+        Order.buyer_id == buyer_id
+    )
+    if start_dt:
+        payment_stats = payment_stats.filter(Order.order_date >= start_dt)
+    if end_dt:
+        payment_stats = payment_stats.filter(Order.order_date <= end_dt)
+    payment_stats = payment_stats.first()
+    avg_delay = float(payment_stats.avg_delay) if payment_stats and payment_stats.avg_delay is not None else 0
+    on_time_ratio = float(payment_stats.on_time_ratio) if payment_stats and payment_stats.on_time_ratio is not None else 0
+
+    items_query = db.session.query(
+        Item.name.label('item_name'),
+        func.sum(OrderItem.quantity).label('total_quantity'),
+        func.sum(OrderItem.line_total).label('total_value')
+    ).join(OrderItem, OrderItem.item_id == Item.id).join(Order, OrderItem.order_id == Order.id).filter(
+        Order.company_id == company_id,
+        Order.buyer_id == buyer_id
+    )
+    if start_dt:
+        items_query = items_query.filter(Order.order_date >= start_dt)
+    if end_dt:
+        items_query = items_query.filter(Order.order_date <= end_dt)
+    items = items_query.group_by(Item.id).order_by(func.sum(OrderItem.line_total).desc()).all()
+
+    monthly_query = db.session.query(
+        func.strftime('%Y-%m', Order.order_date).label('month'),
+        func.sum(Order.total_amount).label('total_sales')
+    ).filter(
+        Order.company_id == company_id,
+        Order.buyer_id == buyer_id
+    )
+    if start_dt:
+        monthly_query = monthly_query.filter(Order.order_date >= start_dt)
+    if end_dt:
+        monthly_query = monthly_query.filter(Order.order_date <= end_dt)
+    monthly = monthly_query.group_by('month').order_by('month').all()
+
+    relationship = compute_buyer_relationships(company_id, buyer_id=buyer_id)
+    relationship_data = relationship[0] if relationship else None
+
+    return jsonify({
+        'buyer': {
+            'id': buyer.id,
+            'company_name': buyer.company_name,
+            'contact_person': buyer.contact_person,
+            'phone': buyer.phone,
+            'email': buyer.email,
+            'city': buyer.city
+        },
+        'summary': {
+            'total_orders': total_orders,
+            'total_sales': total_sales,
+            'total_paid': total_paid,
+            'outstanding': outstanding,
+            'avg_payment_delay_days': round(avg_delay, 2),
+            'on_time_ratio': round(on_time_ratio, 2)
+        },
+        'items': [
+            {
+                'item_name': row.item_name,
+                'total_quantity': float(row.total_quantity or 0),
+                'total_value': float(row.total_value or 0)
+            }
+            for row in items
+        ],
+        'monthly_sales': [
+            {
+                'month': row.month,
+                'total_sales': float(row.total_sales or 0)
+            }
+            for row in monthly
+        ],
+        'relationship': relationship_data,
+        'filters': {
+            'start_date': start_date_str or None,
+            'end_date': end_date_str or None
+        }
+    }), 200
+
+@bp.route('/buyer-relationship', methods=['GET'])
+def get_buyer_relationships():
+    company_id = verify_company_access()
+    buyer_id = request.args.get('buyer_id', type=int)
+    results = compute_buyer_relationships(company_id, buyer_id=buyer_id)
+    return jsonify(results), 200
 
 @bp.route('/orders/export-csv', methods=['GET'])
 def export_orders_csv():

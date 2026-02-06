@@ -8,6 +8,7 @@ import ItemsPage from './pages/ItemsPage';
 import OrdersPage from './pages/OrdersPage';
 import LedgerPage from './pages/LedgerPage';
 import ReportsPage from './pages/ReportsPage';
+import BuyerReportPage from './pages/BuyerReportPage';
 import InvoicePage from './pages/InvoicePage';
 import BillPage from './pages/BillPage';
 import PaymentsPage from './pages/PaymentsPage';
@@ -31,6 +32,7 @@ function App() {
             <Route path="/payments" element={<ProtectedRoute><PaymentsPage /></ProtectedRoute>} />
             <Route path="/ledger" element={<ProtectedRoute><LedgerPage /></ProtectedRoute>} />
             <Route path="/reports" element={<ProtectedRoute><ReportsPage /></ProtectedRoute>} />
+            <Route path="/report" element={<ProtectedRoute><BuyerReportPage /></ProtectedRoute>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Router>

@@ -33,6 +33,20 @@ const PaymentsPage = () => {
   const { showToast } = useContext(ToastContext);
   const { user } = useContext(AuthContext);
 
+  const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  const highlightText = (text) => {
+    const value = String(text ?? '');
+    const term = searchTerm.trim();
+    if (!term) return value;
+
+    const pattern = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+    return value.split(pattern).map((part, idx) => {
+      const match = part.toLowerCase() === term.toLowerCase();
+      return match ? <mark key={idx} className="bg-yellow-300 text-gray-900 px-0.5 rounded">{part}</mark> : part;
+    });
+  };
+
   useEffect(() => {
     fetchPayments();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -271,7 +285,7 @@ const PaymentsPage = () => {
                 {searchTerm ? 'No payments found matching your search.' : 'No payments recorded yet.'}
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto max-h-[60vh] overflow-y-auto">
                 <table id="payments-table" className="w-full">
                   <thead className="bg-white bg-opacity-20 backdrop-blur-sm">
                     <tr>
@@ -290,10 +304,10 @@ const PaymentsPage = () => {
                     {filteredPayments.map((payment) => (
                       <tr key={payment.id} className="hover:bg-white hover:bg-opacity-20 transition-all duration-200">
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-black">
-                          {payment.order_number}
+                          {highlightText(payment.order_number)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-black">
-                          {payment.buyer_name}
+                          {highlightText(payment.buyer_name)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-black">
                           {payment.payment_date}
@@ -305,13 +319,13 @@ const PaymentsPage = () => {
                           ₨ {formatRoundedAmount(payment.balance || 0)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-black">
-                          {getPaymentMethodDisplay(payment.payment_method)}
+                          {highlightText(getPaymentMethodDisplay(payment.payment_method))}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-black">
-                          {getPaymentTypeDisplay(payment.payment_type)}
+                          {highlightText(getPaymentTypeDisplay(payment.payment_type))}
                         </td>
                         <td className="px-6 py-4 text-sm text-black">
-                          {payment.notes || '-'}
+                          {highlightText(payment.notes || '-')}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex gap-2 justify-end">
                           <button
