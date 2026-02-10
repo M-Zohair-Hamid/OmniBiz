@@ -84,7 +84,30 @@ def ensure_database(company_code: str):
     init_db(company_code)
     ensure_payment_balance_column(company_code)
     ensure_order_income_tax_columns(company_code)
+    ensure_company_id_consistency(company_code)
     print(f"[DB] {company_code} ready at {db_path}")
+
+def ensure_company_id_consistency(company_code: str):
+    """Normalize company_id values inside a per-company database."""
+    expected_id = 1 if company_code == 'umarsons' else 2
+    expected_code = 'PC' if company_code == 'umarsons' else 'QP'
+    expected_name = 'UmarSons' if company_code == 'umarsons' else 'Makkah Packages'
+
+    try:
+        engine = db.get_engine(bind=company_code)
+        with engine.connect() as connection:
+            connection.execute(text("UPDATE buyers SET company_id = :cid"), {'cid': expected_id})
+            connection.execute(text("UPDATE items SET company_id = :cid"), {'cid': expected_id})
+            connection.execute(text("UPDATE orders SET company_id = :cid"), {'cid': expected_id})
+            connection.execute(text("UPDATE payments SET company_id = :cid"), {'cid': expected_id})
+            connection.execute(text("UPDATE users SET company_id = :cid"), {'cid': expected_id})
+            connection.execute(
+                text("UPDATE companies SET id = :cid, code = :ccode, name = :cname"),
+                {'cid': expected_id, 'ccode': expected_code, 'cname': expected_name}
+            )
+            connection.commit()
+    except Exception as exc:
+        print(f"[DB] Failed to normalize company_id for {company_code}: {exc}")
 
 def ensure_payment_balance_column(company_code: str):
     """Ensure payments columns exist for legacy databases."""

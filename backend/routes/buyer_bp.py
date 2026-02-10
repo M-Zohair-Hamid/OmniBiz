@@ -38,6 +38,18 @@ def get_buyers():
     
     # Get total count before pagination
     total = query.count()
+    if total == 0:
+        fallback_query = session.query(Buyer)
+        if search:
+            fallback_query = fallback_query.filter(
+                (Buyer.company_name.ilike(f'%{search}%')) |
+                (Buyer.email.ilike(f'%{search}%')) |
+                (Buyer.gst_number.ilike(f'%{search}%'))
+            )
+        fallback_total = fallback_query.count()
+        if fallback_total > 0:
+            query = fallback_query
+            total = fallback_total
     
     # Apply ordering and pagination using offset/limit
     offset = (page - 1) * per_page

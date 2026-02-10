@@ -24,8 +24,10 @@ const LedgerPage = () => {
 
   useEffect(() => {
     fetchBuyers();
+    setSelectedBuyer('');
+    setLedgerData(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [user?.company_id, user?.company_code]);
 
   // Set page title based on company name
   useEffect(() => {

@@ -28,6 +28,7 @@ const OrdersPage = () => {
   const [openDropdownIdx, setOpenDropdownIdx] = useState(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [viewingOrder, setViewingOrder] = useState(null);
+  const [originalItemQuantities, setOriginalItemQuantities] = useState({});
   const [paymentForm, setPaymentForm] = useState({
     amount: '',
     payment_method: 'cash',
@@ -164,6 +165,7 @@ const OrdersPage = () => {
   const handleAddOrder = () => {
     setEditingId(null);
     setFormData({ buyer_id: '', order_date: getCurrentDateForInput(), status: 'pending', tax_rate: 0, notes: '', items: [{ item_id: '', quantity: 1, item_query: '' }] });
+    setOriginalItemQuantities({});
     fetchBuyersAndItems();
     setShowForm(true);
   };
@@ -203,6 +205,13 @@ const OrdersPage = () => {
       }
       
       setEditingId(order.id);
+      const originalMap = fullOrder.items.reduce((acc, item) => {
+        const key = String(item.item_id);
+        const qty = Number.isFinite(parseFloat(item.quantity)) ? parseFloat(item.quantity) : 0;
+        acc[key] = (acc[key] || 0) + qty;
+        return acc;
+      }, {});
+      setOriginalItemQuantities(originalMap);
       setFormData({
         buyer_id: String(fullOrder.buyer_id),
         order_date: formattedDate,
@@ -281,18 +290,20 @@ const OrdersPage = () => {
       }
 
       const availableStock = Number.isFinite(parseFloat(itemDetail.quantity_in_stock)) ? parseFloat(itemDetail.quantity_in_stock) : 0;
+      const originalQty = Number.isFinite(parseFloat(originalItemQuantities[String(itemId)])) ? parseFloat(originalItemQuantities[String(itemId)]) : 0;
+      const effectiveAvailable = editingId ? (availableStock + originalQty) : availableStock;
 
-      console.log(`Stock validation - Item: ${itemDetail.name}, Requested: ${totalQty}, Available: ${availableStock}`);
+      console.log(`Stock validation - Item: ${itemDetail.name}, Requested: ${totalQty}, Available: ${availableStock}, Effective: ${effectiveAvailable}`);
 
       // Check if any quantity requested when stock is 0 or negative
-      if (availableStock <= 0) {
+      if (effectiveAvailable <= 0) {
         showToast(`${itemDetail.name}: No stock available (current stock: ${availableStock})`, 'error');
         return;
       }
 
       // Check if total requested exceeds available
-      if (totalQty > availableStock) {
-        showToast(`${itemDetail.name}: Requested ${totalQty} but only ${availableStock} in stock`, 'error');
+      if (totalQty > effectiveAvailable) {
+        showToast(`${itemDetail.name}: Requested ${totalQty} but only ${effectiveAvailable} available`, 'error');
         return;
       }
     }
@@ -596,6 +607,8 @@ const OrdersPage = () => {
     
     const requestedQty = Number.isFinite(parseFloat(currentItem.quantity)) ? parseFloat(currentItem.quantity) : 0;
     const availableStock = Number.isFinite(parseFloat(itemDetail.quantity_in_stock)) ? parseFloat(itemDetail.quantity_in_stock) : 0;
+    const originalQty = Number.isFinite(parseFloat(originalItemQuantities[String(currentItem.item_id)])) ? parseFloat(originalItemQuantities[String(currentItem.item_id)]) : 0;
+    const effectiveAvailable = editingId ? (availableStock + originalQty) : availableStock;
     
     // Check if this item already exists in other rows
     const currentItemId = parseInt(currentItem.item_id, 10);
@@ -613,13 +626,13 @@ const OrdersPage = () => {
     // Explicit stock validation
     // Reject if: requested quantity is positive AND total exceeds or equals available stock (when stock is 0)
     // OR total quantity exceeds available stock in any case
-    if (requestedQty > 0 && availableStock <= 0) {
+    if (requestedQty > 0 && effectiveAvailable <= 0) {
       showToast(`No stock available for ${itemDetail.name}`, 'error');
       return;
     }
     
-    if (totalQtyForItem > availableStock) {
-      showToast(`Total quantity ${totalQtyForItem} exceeds available stock ${availableStock} for ${itemDetail.name}. Other rows have: ${otherItemsCount}`, 'warning');
+    if (totalQtyForItem > effectiveAvailable) {
+      showToast(`Total quantity ${totalQtyForItem} exceeds available ${effectiveAvailable} for ${itemDetail.name}. Other rows have: ${otherItemsCount}`, 'warning');
       return;
     }
     
@@ -847,7 +860,16 @@ const OrdersPage = () => {
                               />
                               {showDropdown && suggestedItems.length > 0 && (
                                 <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded shadow-lg z-50" style={{ maxHeight: '300px', overflowY: 'auto', overflowX: 'hidden' }}>
-                                  {suggestedItems.map((suggestion) => (
+                                  {suggestedItems.map((suggestion) => {
+                                    const originalQty = Number.isFinite(parseFloat(originalItemQuantities[String(suggestion.id)]))
+                                      ? parseFloat(originalItemQuantities[String(suggestion.id)])
+                                      : 0;
+                                    const effectiveStock = editingId
+                                      ? (Number.isFinite(parseFloat(suggestion.quantity_in_stock))
+                                        ? parseFloat(suggestion.quantity_in_stock)
+                                        : 0) + originalQty
+                                      : suggestion.quantity_in_stock;
+                                    return (
                                     <div
                                       key={suggestion.id}
                                       onMouseDown={(e) => {
@@ -862,12 +884,13 @@ const OrdersPage = () => {
                                       <div className="text-xs text-gray-600">{suggestion.name}</div>
                                       <div className="flex justify-between">
                                         <span className="text-xs text-gray-500">₨{suggestion.unit_price}</span>
-                                        <span className={`text-xs font-semibold ${suggestion.quantity_in_stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                        <span className={`text-xs font-semibold ${effectiveStock > 0 ? 'text-green-600' : 'text-red-600'}`}>
                                           Stock: {suggestion.quantity_in_stock} {suggestion.unit}
                                         </span>
                                       </div>
                                     </div>
-                                  ))}
+                                  );
+                                  })}
                                 </div>
                               )}
                             </div>

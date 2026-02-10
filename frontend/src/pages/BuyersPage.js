@@ -189,17 +189,32 @@ const BuyersPage = () => {
                     <thead className="border-b border-[#17144B]">
                       <tr>
                         <th className="px-6 py-3 text-center font-bold text-[#17144B]">Company Name</th>
+                        <th className="px-6 py-3 text-center font-bold text-[#17144B]">Filer Status</th>
+                        <th className="px-6 py-3 text-center font-bold text-[#17144B]">Contact Person</th>
                         <th className="px-6 py-3 text-center font-bold text-[#17144B]">Email</th>
                         <th className="px-6 py-3 text-center font-bold text-[#17144B]">Phone</th>
+                        <th className="px-6 py-3 text-center font-bold text-[#17144B]">City</th>
                         <th className="px-6 py-3 text-center font-bold text-[#17144B]">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {buyers.map(buyer => (
+                        (() => {
+                          const gst = String(buyer.gst_number || '').trim().toUpperCase();
+                          const ntn = String(buyer.ntn_number || '').trim().toUpperCase();
+                          const isNonFiler = gst === 'N/A' || ntn === 'N/A' || (!gst && !ntn);
+                          return (
                         <tr key={buyer.id} className="border-b border-[#3A3F8C] hover:bg-[#3A3F8C] hover:bg-opacity-50 transition-all duration-200 hover:scale-100 hover:shadow-md cursor-pointer">
                           <td className="px-6 py-3 font-semibold text-black text-center">{highlightText(buyer.company_name)}</td>
-                          <td className="px-6 py-3 text-black text-center">{highlightText(buyer.email)}</td>
-                          <td className="px-6 py-3 text-black text-center">{highlightText(buyer.phone)}</td>
+                          <td className="px-6 py-3 text-black text-center font-semibold">
+                            <span className={`px-2 py-1 rounded text-xs font-bold ${isNonFiler ? 'bg-red-200 text-red-800' : 'bg-emerald-200 text-emerald-800'}`}>
+                              {isNonFiler ? 'Non-Filer' : 'Filer'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-3 text-black text-center">{highlightText(buyer.contact_person || '-')}</td>
+                          <td className="px-6 py-3 text-black text-center">{highlightText(buyer.email || '-')}</td>
+                          <td className="px-6 py-3 text-black text-center">{highlightText(buyer.phone || '-')}</td>
+                          <td className="px-6 py-3 text-black text-center">{highlightText(buyer.city || '-')}</td>
                           <td className="px-6 py-3 text-center">
                             <div className="flex gap-2 justify-center">
                               <button
@@ -217,6 +232,8 @@ const BuyersPage = () => {
                             </div>
                           </td>
                         </tr>
+                          );
+                        })()
                       ))}
                     </tbody>
                   </table>

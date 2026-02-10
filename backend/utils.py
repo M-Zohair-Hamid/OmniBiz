@@ -10,17 +10,32 @@ def get_company_id_from_token():
     X-Company-Id header. Each company has its own database, so company_id 
     will always be 1 for UmarSons and 2 for Makkah Packages.
     """
-    # Get company_id from X-Company-Id header
+    # Prefer mock token in Authorization header (dev mode)
+    auth_header = request.headers.get('Authorization', '')
+    if 'mock-token-MP' in auth_header or 'mock-token-QP' in auth_header:
+        return 2
+    if 'mock-token-PC' in auth_header:
+        return 1
+
+    # Prefer company code header (more reliable with per-company DBs)
+    company_code = request.headers.get('X-Company-Code', '')
+    company_code = (company_code or '').upper()
+    if company_code in ['PC', 'UMARSONS']:
+        return 1  # UmarSons
+    elif company_code in ['QP', 'MP', 'MAKKAH_PACKAGES', 'MAKKAH']:
+        return 2  # Makkah Packages
+
+    # Fallback: use current company code from context
+    current_code = getattr(g, 'company_code', '').lower()
+    if current_code == 'makkah_packages':
+        return 2
+    if current_code == 'umarsons':
+        return 1
+
+    # Final fallback: use X-Company-Id header if present
     company_id = request.headers.get('X-Company-Id')
     if company_id:
         return int(company_id)
-    
-    # Fallback: Try to get from company code header
-    company_code = request.headers.get('X-Company-Code', '')
-    if company_code == 'PC':
-        return 1  # UmarSons
-    elif company_code == 'QP':
-        return 2  # Makkah Packages
     
     # Default to company 1 (UmarSons)
     return 1

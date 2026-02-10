@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, send_file
+from flask import Blueprint, request, jsonify, send_file, g
 from flask_jwt_extended import jwt_required, get_jwt
 from models import db, Order, Buyer, Item, OrderItem, Payment
 from utils import get_company_id_from_token, format_date_display
@@ -11,6 +11,14 @@ import os
 import tempfile
 
 bp = Blueprint('reports', __name__, url_prefix='/api/reports')
+
+def get_session():
+    """Get the session bound to current company's database"""
+    company_code = getattr(g, 'company_code', 'umarsons')
+    engine = db.get_engine(bind=company_code)
+    from sqlalchemy.orm import sessionmaker
+    Session = sessionmaker(bind=engine)
+    return Session()
 
 def verify_company_access():
     return get_company_id_from_token()
@@ -41,7 +49,8 @@ def _relationship_label(score):
     return "High Risk"
 
 def compute_buyer_relationships(company_id, buyer_id=None):
-    buyers_query = Buyer.query.filter_by(company_id=company_id)
+    session = get_session()
+    buyers_query = session.query(Buyer).filter_by(company_id=company_id)
     if buyer_id:
         buyers_query = buyers_query.filter_by(id=buyer_id)
     buyers = buyers_query.all()
@@ -50,7 +59,7 @@ def compute_buyer_relationships(company_id, buyer_id=None):
 
     buyer_ids = [b.id for b in buyers]
 
-    sales_rows = db.session.query(
+    sales_rows = session.query(
         Order.buyer_id,
         func.sum(Order.total_amount).label('total_sales'),
         func.count(Order.id).label('order_count'),
@@ -63,7 +72,7 @@ def compute_buyer_relationships(company_id, buyer_id=None):
     sales_map = {r.buyer_id: r for r in sales_rows}
 
     delay_days = func.julianday(Payment.payment_date) - func.julianday(Order.order_date) - 30
-    payment_rows = db.session.query(
+    payment_rows = session.query(
         Order.buyer_id,
         func.avg(delay_days).label('avg_delay'),
         func.avg(case((delay_days <= 0, 1), else_=0)).label('on_time_ratio'),
@@ -77,7 +86,7 @@ def compute_buyer_relationships(company_id, buyer_id=None):
     now = datetime.utcnow()
     last3_start = now - timedelta(days=90)
     prev3_start = now - timedelta(days=180)
-    growth_rows = db.session.query(
+    growth_rows = session.query(
         Order.buyer_id,
         func.sum(case((Order.order_date >= last3_start, Order.total_amount), else_=0)).label('last3'),
         func.sum(case((and_(Order.order_date >= prev3_start, Order.order_date < last3_start), Order.total_amount), else_=0)).label('prev3')
@@ -87,7 +96,7 @@ def compute_buyer_relationships(company_id, buyer_id=None):
     ).group_by(Order.buyer_id).all()
     growth_map = {r.buyer_id: r for r in growth_rows}
 
-    company_total_sales = db.session.query(func.sum(Order.total_amount)).filter(
+    company_total_sales = session.query(func.sum(Order.total_amount)).filter(
         Order.company_id == company_id
     ).scalar() or 0
 
@@ -176,23 +185,24 @@ def compute_buyer_relationships(company_id, buyer_id=None):
 @bp.route('/summary', methods=['GET'])
 def get_summary():
     company_id = verify_company_access()
+    session = get_session()
     
     # Total sales
-    total_sales = db.session.query(func.sum(Order.total_amount)).filter_by(company_id=company_id).scalar() or 0
+    total_sales = session.query(func.sum(Order.total_amount)).filter_by(company_id=company_id).scalar() or 0
     
     # Pending orders as pending payments
-    pending_payments = db.session.query(func.sum(Order.total_amount)).filter(
+    pending_payments = session.query(func.sum(Order.total_amount)).filter(
         Order.company_id == company_id,
         Order.status == 'pending'
     ).scalar() or 0
     
     # Recent orders count
-    recent_orders = Order.query.filter_by(company_id=company_id).filter(
+    recent_orders = session.query(Order).filter_by(company_id=company_id).filter(
         Order.created_at >= datetime.utcnow() - timedelta(days=30)
     ).count()
     
     # Total buyers
-    total_buyers = Buyer.query.filter_by(company_id=company_id, is_active=True).count()
+    total_buyers = session.query(Buyer).filter_by(company_id=company_id, is_active=True).count()
     
     return jsonify({
         'total_sales': float(total_sales),
@@ -204,10 +214,11 @@ def get_summary():
 @bp.route('/payment-status', methods=['GET'])
 def get_payment_status():
     company_id = verify_company_access()
+    session = get_session()
     
-    confirmed = Order.query.filter_by(company_id=company_id, status='confirmed').count()
-    shipped = Order.query.filter_by(company_id=company_id, status='shipped').count()
-    pending = Order.query.filter_by(company_id=company_id, status='pending').count()
+    confirmed = session.query(Order).filter_by(company_id=company_id, status='confirmed').count()
+    shipped = session.query(Order).filter_by(company_id=company_id, status='shipped').count()
+    pending = session.query(Order).filter_by(company_id=company_id, status='pending').count()
     
     return jsonify({
         'paid': confirmed,
@@ -218,19 +229,20 @@ def get_payment_status():
 @bp.route('/buyer-wise', methods=['GET'])
 def get_buyer_wise():
     company_id = verify_company_access()
+    session = get_session()
     
-    buyers = Buyer.query.filter_by(company_id=company_id).all()
+    buyers = session.query(Buyer).filter_by(company_id=company_id).all()
     
     data = []
     for buyer in buyers:
-        total_orders = db.session.query(func.sum(Order.total_amount)).filter_by(
+        total_orders = session.query(func.sum(Order.total_amount)).filter_by(
             buyer_id=buyer.id, company_id=company_id
         ).scalar() or 0
         
         data.append({
             'buyer_name': buyer.company_name,
             'total_orders': float(total_orders),
-            'order_count': Order.query.filter_by(buyer_id=buyer.id, company_id=company_id).count()
+            'order_count': session.query(Order).filter_by(buyer_id=buyer.id, company_id=company_id).count()
         })
     
     return jsonify(data), 200
@@ -238,17 +250,18 @@ def get_buyer_wise():
 @bp.route('/item-wise', methods=['GET'])
 def get_item_wise():
     company_id = verify_company_access()
+    session = get_session()
     
-    items = Item.query.filter_by(company_id=company_id).all()
+    items = session.query(Item).filter_by(company_id=company_id).all()
     
     data = []
     for item in items:
         from models import OrderItem
-        total_quantity = db.session.query(func.sum(OrderItem.quantity)).filter(
+        total_quantity = session.query(func.sum(OrderItem.quantity)).filter(
             OrderItem.item_id == item.id
         ).scalar() or 0
         
-        total_value = db.session.query(func.sum(OrderItem.line_total)).filter(
+        total_value = session.query(func.sum(OrderItem.line_total)).filter(
             OrderItem.item_id == item.id
         ).scalar() or 0
         
@@ -266,13 +279,14 @@ def get_item_wise():
 @bp.route('/orders', methods=['GET'])
 def get_orders_report():
     company_id = verify_company_access()
+    session = get_session()
     
     start_date = request.args.get('start_date', '', type=str)
     end_date = request.args.get('end_date', '', type=str)
     buyer_id = request.args.get('buyer_id', '', type=int)
     status = request.args.get('status', '', type=str)
     
-    query = Order.query.filter_by(company_id=company_id)
+    query = session.query(Order).filter_by(company_id=company_id)
     
     if start_date:
         query = query.filter(Order.created_at >= datetime.fromisoformat(start_date))
@@ -296,6 +310,7 @@ def get_orders_report():
 @bp.route('/buyer-report', methods=['GET'])
 def get_buyer_report():
     company_id = verify_company_access()
+    session = get_session()
 
     buyer_id = request.args.get('buyer_id', type=int)
     start_date_str = request.args.get('start_date', '', type=str)
@@ -304,20 +319,20 @@ def get_buyer_report():
     if not buyer_id:
         return jsonify({'error': 'buyer_id is required'}), 400
 
-    buyer = Buyer.query.filter_by(id=buyer_id, company_id=company_id).first()
+    buyer = session.query(Buyer).filter_by(id=buyer_id, company_id=company_id).first()
     if not buyer:
         return jsonify({'error': 'Buyer not found'}), 404
 
     start_dt, end_dt = _safe_date_range(start_date_str, end_date_str)
 
-    orders_query = Order.query.filter_by(company_id=company_id, buyer_id=buyer_id)
+    orders_query = session.query(Order).filter_by(company_id=company_id, buyer_id=buyer_id)
     if start_dt:
         orders_query = orders_query.filter(Order.order_date >= start_dt)
     if end_dt:
         orders_query = orders_query.filter(Order.order_date <= end_dt)
 
     total_orders = orders_query.count()
-    total_sales = db.session.query(func.sum(Order.total_amount)).filter(
+    total_sales = session.query(func.sum(Order.total_amount)).filter(
         Order.company_id == company_id,
         Order.buyer_id == buyer_id
     )
@@ -327,7 +342,7 @@ def get_buyer_report():
         total_sales = total_sales.filter(Order.order_date <= end_dt)
     total_sales = float(total_sales.scalar() or 0)
 
-    total_paid = db.session.query(func.sum(Payment.amount)).join(Order, Payment.order_id == Order.id).filter(
+    total_paid = session.query(func.sum(Payment.amount)).join(Order, Payment.order_id == Order.id).filter(
         Order.company_id == company_id,
         Order.buyer_id == buyer_id
     )
@@ -339,7 +354,7 @@ def get_buyer_report():
     outstanding = max(total_sales - total_paid, 0)
 
     delay_days = func.julianday(Payment.payment_date) - func.julianday(Order.order_date) - 30
-    payment_stats = db.session.query(
+    payment_stats = session.query(
         func.avg(delay_days).label('avg_delay'),
         func.avg(case((delay_days <= 0, 1), else_=0)).label('on_time_ratio')
     ).join(Order, Payment.order_id == Order.id).filter(
@@ -354,7 +369,7 @@ def get_buyer_report():
     avg_delay = float(payment_stats.avg_delay) if payment_stats and payment_stats.avg_delay is not None else 0
     on_time_ratio = float(payment_stats.on_time_ratio) if payment_stats and payment_stats.on_time_ratio is not None else 0
 
-    items_query = db.session.query(
+    items_query = session.query(
         Item.name.label('item_name'),
         func.sum(OrderItem.quantity).label('total_quantity'),
         func.sum(OrderItem.line_total).label('total_value')
@@ -368,7 +383,7 @@ def get_buyer_report():
         items_query = items_query.filter(Order.order_date <= end_dt)
     items = items_query.group_by(Item.id).order_by(func.sum(OrderItem.line_total).desc()).all()
 
-    monthly_query = db.session.query(
+    monthly_query = session.query(
         func.strftime('%Y-%m', Order.order_date).label('month'),
         func.sum(Order.total_amount).label('total_sales')
     ).filter(

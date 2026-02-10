@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, send_file
+from flask import Blueprint, request, jsonify, send_file, g
 from flask_jwt_extended import jwt_required, get_jwt
 from models import db, Order, Buyer, OrderItem, Payment
 from utils import get_company_id_from_token, format_date_display
@@ -14,6 +14,14 @@ import io
 
 bp = Blueprint('ledgers', __name__, url_prefix='/api/ledgers')
 
+def get_session():
+    """Get the session bound to current company's database"""
+    company_code = getattr(g, 'company_code', 'umarsons')
+    engine = db.get_engine(bind=company_code)
+    from sqlalchemy.orm import sessionmaker
+    Session = sessionmaker(bind=engine)
+    return Session()
+
 def verify_company_access():
     return get_company_id_from_token()
 
@@ -21,18 +29,19 @@ def verify_company_access():
 def get_ledger(buyer_id):
     """Get ledger data for a specific buyer - simplified without invoices"""
     company_id = verify_company_access()
+    session = get_session()
     
     # Get date range from query params
     start_date = request.args.get('start_date', '')
     end_date = request.args.get('end_date', '')
     
     # Verify buyer belongs to company
-    buyer = Buyer.query.filter_by(id=buyer_id, company_id=company_id).first()
+    buyer = session.query(Buyer).filter_by(id=buyer_id, company_id=company_id).first()
     if not buyer:
         return jsonify({'error': 'Buyer not found'}), 404
     
     # Build query for orders
-    query = Order.query.filter(
+    query = session.query(Order).filter(
         Order.buyer_id == buyer_id,
         Order.company_id == company_id
     )
@@ -56,7 +65,7 @@ def get_ledger(buyer_id):
     
     # Get all payments for these orders
     order_ids = [order.id for order in orders]
-    payments_query = Payment.query.filter(
+    payments_query = session.query(Payment).filter(
         Payment.order_id.in_(order_ids),
         Payment.company_id == company_id
     )

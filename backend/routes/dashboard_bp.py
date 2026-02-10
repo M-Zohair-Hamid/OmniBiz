@@ -1,27 +1,14 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt, verify_jwt_in_request
 from models import db, Order, Buyer, Item, OrderItem
-from utils import format_date_display
+from utils import format_date_display, get_company_id_from_token
 from datetime import datetime, timedelta
 from sqlalchemy import func
 
 bp = Blueprint('dashboard', __name__, url_prefix='/api/dashboard')
 
 def verify_company_access():
-    try:
-        claims = get_jwt()
-        return claims.get('company_id')
-    except:
-        # For development: extract from Authorization header if it's a mock token
-        auth_header = request.headers.get('Authorization', '')
-        if auth_header.startswith('Bearer mock-token-'):
-            company_code = auth_header.replace('Bearer mock-token-', '')
-            # Map company codes to IDs
-            if company_code == 'PC':
-                return 1
-            elif company_code == 'QP':
-                return 2
-        return 1  # Default to first company
+    return get_company_id_from_token()
 
 @bp.route('', methods=['GET'])
 def get_dashboard():

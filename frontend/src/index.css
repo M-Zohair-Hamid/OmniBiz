@@ -219,25 +219,37 @@ thead.bg-gradient-to-r {
 
 .animate-fadeIn {
   animation: fadeIn 0.2s ease-out;
+  animation-fill-mode: both;
+  will-change: opacity;
 }
 
 .animate-fadeOut {
-  animation: fadeOut 0.2s ease-in;
+  animation: fadeOut 0.4s ease-in;
+  animation-fill-mode: both;
+  will-change: opacity;
 }
 
 .animate-scaleIn {
   animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: both;
+  will-change: transform, opacity;
 }
 
 .animate-scaleOut {
-  animation: scaleOut 0.3s cubic-bezier(0.7, 0, 0.84, 0);
+  animation: scaleOut 0.4s cubic-bezier(0.7, 0, 0.84, 0);
+  animation-fill-mode: both;
+  will-change: transform, opacity;
 }
 
 .animate-slideInRight {
   animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: both;
+  will-change: transform, opacity;
 }
 
 .animate-slideOutRight {
-  animation: slideOutRight 0.3s cubic-bezier(0.7, 0, 0.84, 0);
+  animation: slideOutRight 0.4s cubic-bezier(0.7, 0, 0.84, 0);
+  animation-fill-mode: both;
+  will-change: transform, opacity;
 }
 

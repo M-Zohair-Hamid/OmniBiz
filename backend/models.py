@@ -19,6 +19,12 @@ def switch_database(app, company_code):
         bind_key = 'umarsons'
     
     _current_db = bind_key
+
+    # Point the active session to the selected bind so model queries use correct DB
+    try:
+        db.session.bind = db.get_engine(bind=bind_key)
+    except Exception:
+        pass
     
     # Remove current session and connections
     try:
