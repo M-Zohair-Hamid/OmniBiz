@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, g
 from flask_jwt_extended import jwt_required, get_jwt, verify_jwt_in_request
 from models import db, Order, Buyer, Item, OrderItem
 from utils import format_date_display, get_company_id_from_token
@@ -7,34 +7,43 @@ from sqlalchemy import func
 
 bp = Blueprint('dashboard', __name__, url_prefix='/api/dashboard')
 
+def get_session():
+    """Get the session bound to current company's database"""
+    company_code = getattr(g, 'company_code', 'umarsons')
+    engine = db.get_engine(bind=company_code)
+    from sqlalchemy.orm import sessionmaker
+    Session = sessionmaker(bind=engine)
+    return Session()
+
 def verify_company_access():
     return get_company_id_from_token()
 
 @bp.route('', methods=['GET'])
 def get_dashboard():
     company_id = verify_company_access()
+    session = get_session()
     
     # Summary metrics
-    total_sales = db.session.query(func.sum(Order.total_amount)).filter_by(company_id=company_id).scalar() or 0
+    total_sales = session.query(func.sum(Order.total_amount)).filter_by(company_id=company_id).scalar() or 0
     
     # Count orders with pending status as pending payments
-    pending_orders_amount = db.session.query(func.sum(Order.total_amount)).filter(
+    pending_orders_amount = session.query(func.sum(Order.total_amount)).filter(
         Order.company_id == company_id,
         Order.status == 'pending'
     ).scalar() or 0
     
-    recent_orders = Order.query.filter_by(company_id=company_id).filter(
+    recent_orders = session.query(Order).filter_by(company_id=company_id).filter(
         Order.created_at >= datetime.utcnow() - timedelta(days=30)
     ).all()
     
     # Order status counts
-    paid = Order.query.filter_by(company_id=company_id, status='paid').count()
-    partial = Order.query.filter_by(company_id=company_id, status='partial').count()
-    pending = Order.query.filter_by(company_id=company_id, status='pending').count()
+    paid = session.query(Order).filter_by(company_id=company_id, status='paid').count()
+    partial = session.query(Order).filter_by(company_id=company_id, status='partial').count()
+    pending = session.query(Order).filter_by(company_id=company_id, status='pending').count()
 
     # Legacy/alternate statuses (optional, included in pending if used)
-    confirmed = Order.query.filter_by(company_id=company_id, status='confirmed').count()
-    shipped = Order.query.filter_by(company_id=company_id, status='shipped').count()
+    confirmed = session.query(Order).filter_by(company_id=company_id, status='confirmed').count()
+    shipped = session.query(Order).filter_by(company_id=company_id, status='shipped').count()
     if confirmed or shipped:
         pending += confirmed + shipped
     
@@ -49,7 +58,7 @@ def get_dashboard():
     } for o in sorted(recent_orders, key=lambda x: x.created_at, reverse=True)[:10]]
     
     # Buyer-wise sales (top 5)
-    buyers_query = db.session.query(
+    buyers_query = session.query(
         Buyer.company_name,
         func.sum(Order.total_amount).label('total')
     ).join(Order).filter(Order.company_id == company_id).group_by(Buyer.id).order_by(
@@ -59,7 +68,7 @@ def get_dashboard():
     buyer_data = [{'name': b[0], 'value': float(b[1])} for b in buyers_query]
     
     # Item-wise sales (top 5)
-    items_query = db.session.query(
+    items_query = session.query(
         Item.name,
         func.sum(OrderItem.line_total).label('total')
     ).join(OrderItem).filter(Item.company_id == company_id).group_by(Item.id).order_by(
