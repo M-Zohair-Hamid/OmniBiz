@@ -52,16 +52,31 @@ Declared in: backend/requirements.txt
 ### Key Backend Files
 - backend/app.py — app bootstrap, CORS, DB switching, auto-backup
 - backend/models.py — SQLAlchemy models
-- backend/routes/*.py — API routes
+- backend/routes/order_bp.py — Order API with 12-item validation and round_off_amount()
+- backend/routes/payment_bp.py — Payment API with ROUND_HALF_UP rounding
+- backend/routes/*.py — Other API routes
 - backend/utils.py — shared helpers
 
 ### Core API Endpoints (High-Level)
-- /api/orders
+- /api/orders (12-item limit validation, rounded status calculation)
 - /api/buyers
 - /api/items
-- /api/payments
+- /api/payments (whole-rupee rounding with ROUND_HALF_UP)
 - /api/reports/*
 - /api/backup, /api/backup/restore, /api/backup/periodic
+
+### Order Management Features
+- **MAX_ORDER_ITEMS = 12**: Hard limit enforced in create/update endpoints
+- **round_off_amount()**: Decimal ROUND_HALF_UP for consistent financial calculations
+- **calculate_order_status()**: Uses rounded values matching payment logic
+- **Frontend validation**: UI blocks adding items beyond 12-item limit
+- **Cart display**: Real-time "Cart: X/12 items | Qty: Y" indicator in modal
+
+### Payment Features
+- **Whole-rupee rounding**: All payment calculations use ROUND_HALF_UP
+- **Auto-detection**: Payment type (full/partial) auto-selected based on amount
+- **Status alignment**: Order status calculation matches payment rounding
+- **Partial unlock**: Orders with partial payments remain editable (only paid locked)
 
 ## 6) Frontend Dependencies (React)
 Declared in: frontend/package.json
@@ -85,13 +100,19 @@ Declared in: frontend/package.json
 
 ### Frontend Responsibilities
 - UI for orders, buyers, items, payments, ledgers, reports
+- 12-item order validation with real-time cart counter
+- Fixed 12-row print tables (Bill/STI) with serial numbers
+- Payment type auto-selection based on remaining balance
 - Modals, filters, and printable views
 - Report generation view in a separate tab
 
 ### Key Frontend Files
 - frontend/src/App.js — routing
 - frontend/src/services/api.js — API client and headers
-- frontend/src/pages/*.js — pages (Orders, Payments, Reports, BuyerReport, etc.)
+- frontend/src/pages/OrdersPage.js — Order management with 12-item validation and cart display
+- frontend/src/pages/BillPage.js — Fixed 12-row Bill print table
+- frontend/src/pages/InvoicePage.js — Fixed 12-row Sales Tax Invoice print table
+- frontend/src/pages/*.js — other pages (Payments, Reports, BuyerReport, etc.)
 - frontend/src/components/*.js — shared UI components
 
 ## 7) Root-Level package.json

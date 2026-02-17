@@ -112,8 +112,8 @@ The script will:
 
 ## 📁 Detailed Project Structure
 
-**Project Date**: February 4, 2026  
-**Last Updated**: February 4, 2026
+**Project Date**: February 2026  
+**Last Updated**: February 17, 2026
 
 ```
 Project-CS-L/
@@ -219,16 +219,21 @@ Project-CS-L/
    - Item details and description management
 
 5. **Order Management**
-   - Create dynamic orders with multiple items
+   - Create dynamic orders with up to 12 items per order (hard limit enforced)
+   - Live cart indicator showing "Cart: X/12 items | Qty: Y" in order modal
    - Automatic tax calculation (18% GST)
-   - Order status tracking
+   - Order status tracking (pending/partial/paid) with consistent rounding
    - Delivery date management
    - Real-time total updates
    - Item quantity and rate management
+   - Frontend and backend validation for 12-item maximum
 
-6. **Invoice Management**
+6. **Invoice & Print Management**
    - Professional HTML invoice templates (indigo theme)
-   - Regular invoice and Sales Tax Invoice templates
+   - Fixed 12-row print tables for Bills and Sales Tax Invoices
+   - Serial-numbered rows (1-12) with blank cells for unused slots
+   - Single-page print layout (no pagination)
+   - Regular Bill and Sales Tax Invoice templates
    - Company logo and watermark support
    - Auto-generate invoices from orders
    - Tax calculation and formatting
@@ -237,10 +242,13 @@ Project-CS-L/
    - Filename format: `invoice-YYYY-MM-DD-BuyerName.pdf`
 
 7. **Payment Management**
-   - Record partial/full payments
+   - Record partial/full payments with auto-detection
+   - Smart payment type selection based on remaining balance
+   - Whole-rupee rounding (ROUND_HALF_UP) for consistent calculations
    - Multiple payment methods (bank, cash, check)
-   - Auto-calculate balances
+   - Auto-calculate balances with rounded amounts
    - Payment tracking with status indicators
+   - Partial orders unlocked for payment (only paid orders locked)
 
 8. **Ledger System**
    - Party ledger with running balance
@@ -570,6 +578,11 @@ All components resize dynamically based on screen size.
 ✅ Dark green stock indicators for better contrast  
 ✅ Invoice templates with Montserrat font and company branding  
 ✅ Glassmorphism login page with gradient backgrounds  
+✅ 12-item order limit with frontend UI blocking and backend validation  
+✅ Fixed 12-row print tables (Bill/STI) with serial numbers and blanks  
+✅ Live cart counter in order modal ("Cart: X/12 items | Qty: Y")  
+✅ Smart payment type auto-selection (full/partial detection)  
+✅ Consistent whole-rupee rounding across all financial calculations  
 
 ## Future Enhancements
 
@@ -617,8 +630,9 @@ This project is proprietary and confidential.
 
 ---
 
-**Project Date**: January 2026  
-**Version**: 1.0.0  
+**Project Date**: February 2026  
+**Last Updated**: February 17, 2026  
+**Version**: 1.1.0  
 **Status**: Production Ready
 
 ```
