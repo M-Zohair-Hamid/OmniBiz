@@ -90,7 +90,6 @@ def setup_makkah_packages():
                 description='High-quality paper cones for large yarn spools',
                 unit='PCS',
                 unit_price=28.00,
-                quantity_in_stock=4000,
                 company_id=2
             ),
             Item(
@@ -99,7 +98,6 @@ def setup_makkah_packages():
                 description='Industrial grade paper cones for extra large spools',
                 unit='PCS',
                 unit_price=35.00,
-                quantity_in_stock=2500,
                 company_id=2
             ),
             Item(
@@ -108,7 +106,6 @@ def setup_makkah_packages():
                 description='Heavy duty paper cones for jumbo spools',
                 unit='PCS',
                 unit_price=42.00,
-                quantity_in_stock=1500,
                 company_id=2
             )
         ]

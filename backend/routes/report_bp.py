@@ -270,8 +270,7 @@ def get_item_wise():
             'item_code': item.code,
             'total_quantity': float(total_quantity),
             'total_value': float(total_value),
-            'unit_price': item.unit_price,
-            'stock': item.quantity_in_stock
+            'unit_price': item.unit_price
         })
     
     return jsonify(data), 200

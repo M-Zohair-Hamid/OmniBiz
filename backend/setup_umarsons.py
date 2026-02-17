@@ -101,7 +101,6 @@ def setup_umarsons():
                 description='Premium quality cardboard cones for small yarn spools',
                 unit='PCS',
                 unit_price=15.50,
-                quantity_in_stock=5000,
                 company_id=1
             ),
             Item(
@@ -110,7 +109,6 @@ def setup_umarsons():
                 description='Premium quality cardboard cones for medium yarn spools',
                 unit='PCS',
                 unit_price=22.00,
-                quantity_in_stock=3000,
                 company_id=1
             ),
             Item(
@@ -119,7 +117,6 @@ def setup_umarsons():
                 description='Premium quality cardboard cones for large yarn spools',
                 unit='PCS',
                 unit_price=28.00,
-                quantity_in_stock=2000,
                 company_id=1
             ),
             Item(
@@ -128,7 +125,6 @@ def setup_umarsons():
                 description='High-quality paper cheese for textile applications',
                 unit='PCS',
                 unit_price=10.50,
-                quantity_in_stock=8000,
                 company_id=1
             )
         ]

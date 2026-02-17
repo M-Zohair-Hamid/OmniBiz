@@ -24,13 +24,13 @@ def check_items():
                 if items:
                     print(f"First 5 items:")
                     for i, item in enumerate(items[:5], 1):
-                        print(f"  {i}. {item.code} | {item.name} | ₨{item.unit_price} | Stock: {item.quantity_in_stock}")
+                        print(f"  {i}. {item.code} | {item.name} | ₨{item.unit_price}")
                     
                     if len(items) > 5:
                         print(f"\n  ... and {len(items) - 5} more items")
                         print(f"\nLast 5 items:")
                         for i, item in enumerate(items[-5:], len(items)-4):
-                            print(f"  {i}. {item.code} | {item.name} | ₨{item.unit_price} | Stock: {item.quantity_in_stock}")
+                            print(f"  {i}. {item.code} | {item.name} | ₨{item.unit_price}")
                 else:
                     print("  NO ITEMS FOUND!")
                     

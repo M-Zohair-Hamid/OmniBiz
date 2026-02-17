@@ -127,7 +127,6 @@ class Item(db.Model):
     description = db.Column(db.Text)
     unit = db.Column(db.String(20), default='PCS')  # PCS, KG, etc.
     unit_price = db.Column(db.Float, nullable=False)
-    quantity_in_stock = db.Column(db.Float, default=0)
     company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False)
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -277,7 +276,6 @@ def init_db(company_code='umarsons'):
                 description='Premium quality cardboard cones for small yarn spools',
                 unit='PCS',
                 unit_price=15.50,
-                quantity_in_stock=5000,
                 company_id=company.id
             ),
             Item(
@@ -286,7 +284,6 @@ def init_db(company_code='umarsons'):
                 description='Premium quality cardboard cones for medium yarn spools',
                 unit='PCS',
                 unit_price=22.00,
-                quantity_in_stock=3000,
                 company_id=company.id
             ),
             Item(
@@ -295,7 +292,6 @@ def init_db(company_code='umarsons'):
                 description='Premium quality cardboard cones for large yarn spools',
                 unit='PCS',
                 unit_price=28.00,
-                quantity_in_stock=2000,
                 company_id=company.id
             )
         ]
@@ -331,7 +327,6 @@ def init_db(company_code='umarsons'):
                 description='High-quality paper cones for large yarn spools',
                 unit='PCS',
                 unit_price=28.00,
-                quantity_in_stock=4000,
                 company_id=company.id
             ),
             Item(
@@ -340,7 +335,6 @@ def init_db(company_code='umarsons'):
                 description='Industrial grade paper cones for extra large spools',
                 unit='PCS',
                 unit_price=35.00,
-                quantity_in_stock=2500,
                 company_id=company.id
             ),
             Item(
@@ -349,7 +343,6 @@ def init_db(company_code='umarsons'):
                 description='Heavy duty paper cones for jumbo spools',
                 unit='PCS',
                 unit_price=42.00,
-                quantity_in_stock=1500,
                 company_id=company.id
             )
         ]

@@ -52,7 +52,6 @@ def seed_items_for_company(bind_key: str, company_label: str, target_count: int 
 
             unit = random.choice(["PCS", "KG", "MTR"])
             unit_price = round(random.uniform(15, 80), 2)
-            quantity_in_stock = float(random.randint(200, 5000))
             description = f"{company_label} sample item for testing ({code})"
 
             items_to_add.append(
@@ -62,7 +61,6 @@ def seed_items_for_company(bind_key: str, company_label: str, target_count: int 
                     description=description,
                     unit=unit,
                     unit_price=unit_price,
-                    quantity_in_stock=quantity_in_stock,
                     company_id=company.id,
                 )
             )
