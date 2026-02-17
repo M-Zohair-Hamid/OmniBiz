@@ -12,7 +12,7 @@ def get_session():
     from flask import g
     company_code = getattr(g, 'company_code', 'umarsons')
     # Use db.get_engine with the correct bind
-    engine = db.get_engine(bind=company_code)
+    engine = db.engines[company_code]
     # Create a new session with this engine
     from sqlalchemy.orm import sessionmaker
     Session = sessionmaker(bind=engine)

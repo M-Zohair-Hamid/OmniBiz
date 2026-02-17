@@ -15,7 +15,7 @@ bp = Blueprint('reports', __name__, url_prefix='/api/reports')
 def get_session():
     """Get the session bound to current company's database"""
     company_code = getattr(g, 'company_code', 'umarsons')
-    engine = db.get_engine(bind=company_code)
+    engine = db.engines[company_code]
     from sqlalchemy.orm import sessionmaker
     Session = sessionmaker(bind=engine)
     return Session()
@@ -216,13 +216,13 @@ def get_payment_status():
     company_id = verify_company_access()
     session = get_session()
     
-    confirmed = session.query(Order).filter_by(company_id=company_id, status='confirmed').count()
-    shipped = session.query(Order).filter_by(company_id=company_id, status='shipped').count()
+    paid = session.query(Order).filter_by(company_id=company_id, status='paid').count()
+    partial = session.query(Order).filter_by(company_id=company_id, status='partial').count()
     pending = session.query(Order).filter_by(company_id=company_id, status='pending').count()
     
     return jsonify({
-        'paid': confirmed,
-        'partial': shipped,
+        'paid': paid,
+        'partial': partial,
         'pending': pending
     }), 200
 

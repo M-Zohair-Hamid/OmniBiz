@@ -80,7 +80,7 @@ def ensure_database(company_code: str):
             print(f"[DB] Failed to remove {db_path}: {exc}")
 
     switch_database(app, company_code)
-    db.metadata.create_all(bind=db.get_engine(bind=company_code))
+    db.metadata.create_all(bind=db.engines[company_code])
     init_db(company_code)
     ensure_payment_balance_column(company_code)
     ensure_order_income_tax_columns(company_code)
@@ -94,7 +94,7 @@ def ensure_company_id_consistency(company_code: str):
     expected_name = 'UmarSons' if company_code == 'umarsons' else 'Makkah Packages'
 
     try:
-        engine = db.get_engine(bind=company_code)
+        engine = db.engines[company_code]
         with engine.connect() as connection:
             connection.execute(text("UPDATE buyers SET company_id = :cid"), {'cid': expected_id})
             connection.execute(text("UPDATE items SET company_id = :cid"), {'cid': expected_id})
@@ -112,13 +112,13 @@ def ensure_company_id_consistency(company_code: str):
 def ensure_payment_balance_column(company_code: str):
     """Ensure payments columns exist for legacy databases."""
     try:
-        engine = db.get_engine(bind=company_code)
+        engine = db.engines[company_code]
         with engine.connect() as connection:
             table_exists = connection.execute(
                 text("SELECT name FROM sqlite_master WHERE type='table' AND name='payments'")
             ).fetchone()
             if not table_exists:
-                db.metadata.create_all(bind=db.get_engine(bind=company_code))
+                db.metadata.create_all(bind=db.engines[company_code])
                 return
 
             result = connection.execute(text("PRAGMA table_info(payments)"))
@@ -144,7 +144,7 @@ def ensure_payment_balance_column(company_code: str):
 def ensure_order_income_tax_columns(company_code: str):
     """Ensure orders.income_tax_rate and income_tax_amount columns exist."""
     try:
-        engine = db.get_engine(bind=company_code)
+        engine = db.engines[company_code]
         with engine.connect() as connection:
             result = connection.execute(text("PRAGMA table_info(orders)"))
             columns = [row[1] for row in result.fetchall()]

@@ -13,7 +13,7 @@ def get_session():
     """Get the session bound to current company's database"""
     company_code = getattr(g, 'company_code', 'umarsons')
     # Use db.get_engine with the correct bind
-    engine = db.get_engine(bind=company_code)
+    engine = db.engines[company_code]
     # Create a new session with this engine
     from sqlalchemy.orm import sessionmaker
     Session = sessionmaker(bind=engine)
@@ -336,13 +336,6 @@ def update_order(order_id):
             })
         
         # Handle items that were removed from order (restore their stock)
-        for old_item_id, old_qty in old_items.items():
-            if not any(int(item_data['item_id']) == old_item_id for item_data in data['items']):
-                item = session.query(Item).filter_by(id=old_item_id).first()
-                if item:
-                    item.quantity_in_stock += old_qty
-        
-        # Restore inventory for items that were removed from order
         for old_item_id, old_qty in old_items.items():
             if not any(int(item_data['item_id']) == old_item_id for item_data in data['items']):
                 item = session.query(Item).filter_by(id=old_item_id).first()

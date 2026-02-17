@@ -11,7 +11,7 @@ TARGET_COUNT = 120
 
 
 def seed_items_for_company(bind_key: str, company_label: str, target_count: int = TARGET_COUNT) -> None:
-    engine = db.get_engine(bind=bind_key)
+    engine = db.engines[bind_key]
     Session = sessionmaker(bind=engine)
     session = Session()
 

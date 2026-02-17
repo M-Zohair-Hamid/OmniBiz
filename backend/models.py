@@ -22,7 +22,7 @@ def switch_database(app, company_code):
 
     # Point the active session to the selected bind so model queries use correct DB
     try:
-        db.session.bind = db.get_engine(bind=bind_key)
+        db.session.bind = db.engines[bind_key]
     except Exception:
         pass
     
@@ -54,13 +54,13 @@ def get_current_bind():
 def get_db_for_company(company_code):
     """Get database engine for a specific company"""
     if company_code == 'makkah_packages':
-        return db.get_engine(bind='makkah_packages')
+        return db.engines['makkah_packages']
     else:
-        return db.get_engine(bind='umarsons')
+        return db.engines['umarsons']
 
 def get_current_db():
     """Get current database engine based on _current_db"""
-    return db.get_engine(bind=_current_db)
+    return db.engines[_current_db]
 
 # ========== COMPANY MODEL ==========
 class Company(db.Model):

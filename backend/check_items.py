@@ -8,7 +8,7 @@ from models import db, Item, Company
 def check_items():
     with app.app_context():
         for bind_key, company_label in [("umarsons", "UmarSons"), ("makkah_packages", "Makkah Packages")]:
-            engine = db.get_engine(bind=bind_key)
+            engine = db.engines[bind_key]
             Session = sessionmaker(bind=engine)
             session = Session()
             

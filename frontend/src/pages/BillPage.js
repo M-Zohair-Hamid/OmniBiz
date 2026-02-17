@@ -150,10 +150,12 @@ const BillPage = () => {
       </div>
 
       {/* Invoice pages */}
-      <div>
+      <div className="invoice-document">
         {itemPages.map((pageItems, pageIndex) => (
-          <div key={pageIndex}>
-          <div className="invoice-container">
+          <div
+            key={pageIndex}
+            className={`invoice-container ${pageIndex < itemPages.length - 1 ? 'page-break' : 'page-last'}`}
+          >
             {/* Watermark */}
             <div 
               className="watermark" 
@@ -258,7 +260,6 @@ const BillPage = () => {
 
             {/* Footer on every page */}
             {renderFooter()}
-          </div>
           </div>
         ))}
       </div>

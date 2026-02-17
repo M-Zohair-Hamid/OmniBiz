@@ -36,11 +36,11 @@ def verify_database(db_name, company_name):
             print(f"  ID: {user[0]}, Username: {user[1]}, Name: {user[2]}, Company ID: {user[3]}")
         
         # Check buyers table
-        cursor.execute("SELECT id, name, company_name, city, company_id FROM buyers")
+        cursor.execute("SELECT id, company_name, city, company_id FROM buyers")
         buyers = cursor.fetchall()
         print(f"\n✓ Buyers ({len(buyers)}):")
         for buyer in buyers:
-            print(f"  ID: {buyer[0]}, Name: {buyer[1]}, City: {buyer[3]}, Company ID: {buyer[4]}")
+            print(f"  ID: {buyer[0]}, Name: {buyer[1]}, City: {buyer[2]}, Company ID: {buyer[3]}")
         
         # Check items table
         cursor.execute("SELECT id, code, name, unit_price, company_id FROM items")

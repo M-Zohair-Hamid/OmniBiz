@@ -821,13 +821,29 @@ const OrdersPage = () => {
                     </div>
                   </div>
 
-                  <h3 className="font-semibold mb-2">Items</h3>
+                  <div className="mb-2">
+                    <div className="flex gap-2 items-center">
+                      <h3 className="font-semibold flex-1">Items</h3>
+                      <span className="w-24 text-center font-semibold">Qty</span>
+                      <span className="w-8"></span>
+                      <span className="w-8"></span>
+                    </div>
+                  </div>
                   <div className="border rounded p-3 mb-4 space-y-3">
                     {formData.items.map((item, idx) => {
                       const selectedItem = items.find(i => String(i.id) === String(item.item_id));
                       const displayValue = item.item_query || (selectedItem ? getItemLabel(selectedItem) : '');
                       const suggestedItems = getFilteredItemsForRow(displayValue);
                       const showDropdown = openDropdownIdx === idx;
+                      const selectedItemOriginalQty = selectedItem && Number.isFinite(parseFloat(originalItemQuantities[String(selectedItem.id)]))
+                        ? parseFloat(originalItemQuantities[String(selectedItem.id)])
+                        : 0;
+                      const selectedItemBaseStock = selectedItem && Number.isFinite(parseFloat(selectedItem.quantity_in_stock))
+                        ? parseFloat(selectedItem.quantity_in_stock)
+                        : 0;
+                      const selectedItemEffectiveStock = selectedItem
+                        ? (editingId ? (selectedItemBaseStock + selectedItemOriginalQty) : selectedItemBaseStock)
+                        : null;
 
                       return (
                         <div key={idx} className="relative">

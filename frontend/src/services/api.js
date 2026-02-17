@@ -81,14 +81,6 @@ export const createOrder = (data) => api.post('/orders', data);
 export const updateOrder = (id, data) => api.put(`/orders/${id}`, data);
 export const deleteOrder = (id) => api.delete(`/orders/${id}`);
 
-// Invoices
-export const getInvoices = (page = 1, perPage = 10, status = '') =>
-  api.get('/invoices', { params: { page, per_page: perPage, status } });
-export const getInvoice = (id) => api.get(`/invoices/${id}`);
-export const createInvoice = (data) => api.post('/invoices', data);
-export const updateInvoice = (id, data) => api.put(`/invoices/${id}`, data);
-export const downloadInvoicePdf = (id) => api.get(`/invoices/${id}/pdf`, { responseType: 'blob' });
-
 // Payments
 export const getPayments = (page = 1, perPage = 10) =>
   api.get('/payments', { params: { page, per_page: perPage } });

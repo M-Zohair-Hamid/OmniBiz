@@ -10,7 +10,7 @@ bp = Blueprint('dashboard', __name__, url_prefix='/api/dashboard')
 def get_session():
     """Get the session bound to current company's database"""
     company_code = getattr(g, 'company_code', 'umarsons')
-    engine = db.get_engine(bind=company_code)
+    engine = db.engines[company_code]
     from sqlalchemy.orm import sessionmaker
     Session = sessionmaker(bind=engine)
     return Session()

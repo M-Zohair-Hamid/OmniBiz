@@ -55,7 +55,6 @@ def setup_umarsons():
         # Create buyers
         buyers = [
             Buyer(
-                name='Al-Abbas Textiles',
                 company_name='Al-Abbas Textile Mills',
                 contact_person='Ahmed Khan',
                 email='ahmed@alabbas.com',
@@ -64,11 +63,9 @@ def setup_umarsons():
                 city='Lahore',
                 gst_number='GST-BUYER-001',
                 ntn_number='NTN-BUYER-001',
-                credit_limit=500000,
                 company_id=1
             ),
             Buyer(
-                name='Crescent Fabrics',
                 company_name='Crescent Textiles Ltd',
                 contact_person='Hassan Ali',
                 email='hassan@crescent.com',
@@ -77,11 +74,9 @@ def setup_umarsons():
                 city='Lahore',
                 gst_number='GST-BUYER-002',
                 ntn_number='NTN-BUYER-002',
-                credit_limit=300000,
                 company_id=1
             ),
             Buyer(
-                name='Sunrays Textile Mills Ltd',
                 company_name='Sunrays Textiles',
                 contact_person='Bilal Ahmed',
                 email='bilal@sunrays.com',
@@ -90,7 +85,6 @@ def setup_umarsons():
                 city='Karachi',
                 gst_number='GST-BUYER-003',
                 ntn_number='NTN-BUYER-003',
-                credit_limit=600000,
                 company_id=1
             )
         ]

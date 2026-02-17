@@ -147,7 +147,10 @@ const InvoicePage = () => {
       {/* Render each page */}
       <div className="invoice-document">
         {itemPages.map((pageItems, pageIndex) => (
-          <div key={pageIndex} className="invoice-container">
+          <div
+            key={pageIndex}
+            className={`invoice-container ${pageIndex < itemPages.length - 1 ? 'page-break' : 'page-last'}`}
+          >
           {/* Watermark */}
           <div className="watermark" style={{backgroundImage: `url('${companyData.watermark}')`}}></div>
 
