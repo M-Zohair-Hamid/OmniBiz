@@ -1,12 +1,17 @@
 # Node.js / frontend
 frontend/node_modules/
+node_modules/
 package-lock.json
+.package-lock.json
 
 # Python
 **/__pycache__/
 **/*.pyc
 backend/.env
 backend/instance/
+backend/.venv/
+.venv/
+venv/
 
 # Builds / output
 dist/
