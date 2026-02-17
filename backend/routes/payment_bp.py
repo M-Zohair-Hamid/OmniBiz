@@ -4,8 +4,13 @@ from models import db, Payment, Order
 from utils import get_company_id_from_token, format_date_display
 from datetime import datetime
 from sqlalchemy import func
+from decimal import Decimal, ROUND_HALF_UP
 
 bp = Blueprint('payments', __name__, url_prefix='/api/payments')
+
+
+def round_off_amount(value):
+    return float(Decimal(str(value or 0)).quantize(Decimal('1'), rounding=ROUND_HALF_UP))
 
 def get_session():
     """Get the session bound to current company's database"""
@@ -60,7 +65,7 @@ def get_payments():
                 .group_by(Payment.order_id)
                 .all()
             )
-            order_totals = {order_id: round(total_paid, 2) for order_id, total_paid in totals}
+            order_totals = {order_id: round_off_amount(total_paid) for order_id, total_paid in totals}
 
         status_updated = False
         data = []
@@ -68,8 +73,8 @@ def get_payments():
         for p in payments:
             order = orders_map.get(p.order_id) if p.order_id else None
             total_paid = order_totals.get(p.order_id, 0)
-            order_total = round(order.total_amount, 2) if order else 0
-            remaining = round((order_total - total_paid) if order else 0, 2)
+            order_total = round_off_amount(order.total_amount) if order else 0
+            remaining = round_off_amount((order_total - total_paid) if order else 0)
 
             if order:
                 if total_paid <= 0:
@@ -89,8 +94,8 @@ def get_payments():
                 'order_number': order.order_number if order else 'N/A',
                 'buyer_name': order.buyer.company_name if order and order.buyer else 'N/A',
                 'payment_date': format_date_display(p.payment_date),
-                'amount': round(p.amount, 2),
-                'balance': round(p.balance, 2),
+                'amount': round_off_amount(p.amount),
+                'balance': round_off_amount(p.balance),
                 'payment_method': p.payment_method,
                 'payment_type': p.payment_type,
                 'notes': p.notes,
@@ -138,8 +143,8 @@ def get_payment(payment_id):
         'order_number': payment.order.order_number if payment.order else 'N/A',
         'buyer_name': payment.order.buyer.company_name if payment.order and payment.order.buyer else 'N/A',
         'payment_date': payment.payment_date.isoformat(),
-        'amount': round(payment.amount, 2),
-        'balance': round(payment.balance, 2),
+        'amount': round_off_amount(payment.amount),
+        'balance': round_off_amount(payment.balance),
         'payment_method': payment.payment_method,
         'payment_type': payment.payment_type,
         'notes': payment.notes,
@@ -165,30 +170,29 @@ def create_payment():
         return jsonify({'error': 'Order not found'}), 404
     
     # Validate and round payment amount
-    amount = float(data['amount'])
-    amount = round(amount, 2)  # Round to 2 decimal places
+    amount = round_off_amount(data['amount'])
     
     if amount <= 0:
         return jsonify({'error': 'Payment amount must be greater than 0'}), 400
     
     # Calculate total payments for this order
     existing_payments = session.query(Payment).filter_by(order_id=data['order_id']).all()
-    total_paid = round(sum(p.amount for p in existing_payments), 2)
+    total_paid = round_off_amount(sum(p.amount for p in existing_payments))
     
     # Round order total
-    order_total = round(order.total_amount, 2)
+    order_total = round_off_amount(order.total_amount)
     
     if total_paid + amount > order_total:
         return jsonify({'error': f'Payment amount exceeds order balance. Order total: {order_total}, Already paid: {total_paid}, Remaining: {order_total - total_paid}'}), 400
     
     try:
         # Calculate remaining balance after this payment
-        remaining_balance = round(order_total - (total_paid + amount), 2)
+        remaining_balance = round_off_amount(order_total - (total_paid + amount))
         
         # Get income tax rate and calculate amount
         income_tax_rate = float(data.get('income_tax_rate', 0))
         income_tax_rate = round(income_tax_rate, 2)
-        income_tax_amount = round((amount * income_tax_rate / 100), 2)
+        income_tax_amount = round_off_amount(amount * income_tax_rate / 100)
 
         # Auto-upgrade to "full" if payment covers entire remaining balance
         payment_type = data.get('payment_type', 'partial')
@@ -210,7 +214,7 @@ def create_payment():
 
         session.add(payment)
 
-        total_paid_after = round(total_paid + amount, 2)
+        total_paid_after = round_off_amount(total_paid + amount)
         if remaining_balance <= 0:
             order.status = 'paid'
         else:
@@ -250,8 +254,8 @@ def delete_payment(payment_id):
         updated_order = None
         if order:
             remaining_payments = session.query(Payment).filter_by(order_id=order.id).all()
-            total_paid = round(sum(p.amount for p in remaining_payments), 2)
-            remaining = round(order.total_amount - total_paid, 2)
+            total_paid = round_off_amount(sum(p.amount for p in remaining_payments))
+            remaining = round_off_amount(order.total_amount - total_paid)
             if total_paid <= 0:
                 order.status = 'pending'
             elif remaining <= 0:
@@ -288,8 +292,8 @@ def get_order_payments(order_id):
     
     payments = session.query(Payment).filter_by(order_id=order_id).order_by(Payment.payment_date.desc()).all()
     
-    total_paid = round(sum(p.amount for p in payments), 2)
-    remaining = round(order.total_amount - total_paid, 2)
+    total_paid = round_off_amount(sum(p.amount for p in payments))
+    remaining = round_off_amount(order.total_amount - total_paid)
     last_income_tax_rate = next((round(p.income_tax_rate, 2) for p in payments if p.income_tax_rate), 0)
 
     if total_paid <= 0:
@@ -312,7 +316,7 @@ def get_order_payments(order_id):
         'payments': [{
             'id': p.id,
             'payment_date': format_date_display(p.payment_date),
-            'amount': p.amount,
+            'amount': round_off_amount(p.amount),
             'payment_method': p.payment_method,
             'payment_type': p.payment_type,
             'notes': p.notes,

@@ -8,6 +8,7 @@ import { formatDate, getCurrentDateForInput } from '../utils/dateUtils';
 import { useModalAnimation, getBackdropAnimationClass, getModalAnimationClass } from '../hooks/useModalAnimation';
 
 const OrdersPage = () => {
+  const MAX_ORDER_ITEMS = 12;
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
@@ -37,6 +38,7 @@ const OrdersPage = () => {
     income_tax_rate: '',
     notes: ''
   });
+  const [paymentRemaining, setPaymentRemaining] = useState(0);
   
   const [formData, setFormData] = useState({
     buyer_id: '', order_date: getCurrentDateForInput(), status: 'pending', tax_rate: 0, notes: '', items: [{ item_id: '', quantity: 1, item_query: '' }]
@@ -86,6 +88,7 @@ const OrdersPage = () => {
   };
 
   const formatRoundedAmount = (value) => roundToNearestTen(value).toLocaleString('en-PK');
+  const roundOffAmount = (value) => Math.round(Number(value) || 0);
 
   const highlightText = (text) => {
     const value = String(text ?? '');
@@ -263,7 +266,6 @@ const OrdersPage = () => {
       return;
     }
 
-    // Validate stock for all items before submission
     const itemMap = new Map();
     for (const item of formData.items) {
       const itemId = parseInt(item.item_id, 10);
@@ -281,31 +283,9 @@ const OrdersPage = () => {
       }
     }
 
-    // Check stock for each item
-    for (const [itemId, totalQty] of itemMap) {
-      const itemDetail = items.find(i => i.id === itemId);
-      if (!itemDetail) {
-        showToast('Item not found', 'error');
-        return;
-      }
-
-      const availableStock = Number.isFinite(parseFloat(itemDetail.quantity_in_stock)) ? parseFloat(itemDetail.quantity_in_stock) : 0;
-      const originalQty = Number.isFinite(parseFloat(originalItemQuantities[String(itemId)])) ? parseFloat(originalItemQuantities[String(itemId)]) : 0;
-      const effectiveAvailable = editingId ? (availableStock + originalQty) : availableStock;
-
-      console.log(`Stock validation - Item: ${itemDetail.name}, Requested: ${totalQty}, Available: ${availableStock}, Effective: ${effectiveAvailable}`);
-
-      // Check if any quantity requested when stock is 0 or negative
-      if (effectiveAvailable <= 0) {
-        showToast(`${itemDetail.name}: No stock available (current stock: ${availableStock})`, 'error');
-        return;
-      }
-
-      // Check if total requested exceeds available
-      if (totalQty > effectiveAvailable) {
-        showToast(`${itemDetail.name}: Requested ${totalQty} but only ${effectiveAvailable} available`, 'error');
-        return;
-      }
+    if (itemMap.size > MAX_ORDER_ITEMS) {
+      showToast(`Order cannot contain more than ${MAX_ORDER_ITEMS} items`, 'error');
+      return;
     }
 
     console.log('Submitting form data:', formData); // Debug log
@@ -395,11 +375,11 @@ const OrdersPage = () => {
   };
 
   const isPaymentLocked = (order) =>
-    order && ['partial', 'paid'].includes(String(order.status).toLowerCase());
+    order && String(order.status).toLowerCase() === 'paid';
 
   const getPaymentButtonLabel = (order) => {
     const status = String(order?.status || '').toLowerCase();
-    if (status === 'partial') return '🔒 Record Remaining';
+    if (status === 'partial') return '💰 Record Remaining';
     if (status === 'paid') return '🔒 Payment Recorded';
     return '💰 Record Payment';
   };
@@ -484,13 +464,14 @@ const OrdersPage = () => {
       setShowOptionsModal(false);
       try {
         const response = await getOrderPayments(selectedOrder.id);
-        const remaining = response.data.remaining;
+        const remaining = roundOffAmount(response.data.remaining);
         const previousTaxRate = response.data?.last_income_tax_rate ?? response.data?.payments?.find(p => Number(p.income_tax_rate) > 0)?.income_tax_rate ?? '';
+        setPaymentRemaining(remaining);
         
         setPaymentForm({
-          amount: remaining.toFixed(2),
+          amount: remaining.toString(),
           payment_method: 'cash',
-          payment_type: remaining >= selectedOrder.total_amount ? 'full' : 'partial',
+          payment_type: 'full',
           payment_date: getCurrentDateForInput(),
           income_tax_rate: previousTaxRate,
           notes: ''
@@ -511,13 +492,14 @@ const OrdersPage = () => {
     // Fetch existing payments to calculate remaining amount
     try {
       const response = await getOrderPayments(selectedOrder.id);
-      const remaining = response.data.remaining;
+      const remaining = roundOffAmount(response.data.remaining);
       const previousTaxRate = response.data?.last_income_tax_rate ?? response.data?.payments?.find(p => Number(p.income_tax_rate) > 0)?.income_tax_rate ?? '';
+      setPaymentRemaining(remaining);
       
       setPaymentForm({
-        amount: remaining.toFixed(2),
+        amount: remaining.toString(),
         payment_method: 'cash',
-        payment_type: remaining >= selectedOrder.total_amount ? 'full' : 'partial',
+        payment_type: 'full',
         payment_date: getCurrentDateForInput(),
         income_tax_rate: previousTaxRate,
         notes: ''
@@ -525,8 +507,10 @@ const OrdersPage = () => {
       setShowPaymentModal(true);
     } catch (error) {
       // If no payments yet, use full amount
+      const totalAmount = roundOffAmount(selectedOrder.total_amount);
+      setPaymentRemaining(totalAmount);
       setPaymentForm({
-        amount: selectedOrder.total_amount.toFixed(2),
+        amount: totalAmount.toString(),
         payment_method: 'cash',
         payment_type: 'full',
         payment_date: getCurrentDateForInput(),
@@ -547,14 +531,20 @@ const OrdersPage = () => {
       return;
     }
 
-    let amount = parseFloat(paymentForm.amount);
-    // Round amount to 2 decimal places
-    amount = Math.round(amount * 100) / 100;
+    let amount = roundOffAmount(paymentForm.amount);
     
     if (amount <= 0) {
       showToast('Payment amount must be greater than 0', 'error');
       return;
     }
+
+    const remainingAmount = roundOffAmount(paymentRemaining);
+    if (paymentForm.payment_type === 'full' && remainingAmount > 0 && amount < remainingAmount) {
+      showToast('For full payment, amount must be equal to remaining balance', 'warning');
+      return;
+    }
+
+    const effectivePaymentType = remainingAmount > 0 && amount >= remainingAmount ? 'full' : 'partial';
 
     // Parse income tax rate (percentage)
     let income_tax_rate = parseFloat(paymentForm.income_tax_rate || 0);
@@ -565,7 +555,7 @@ const OrdersPage = () => {
         order_id: selectedOrder.id,
         amount: amount,
         payment_method: paymentForm.payment_method,
-        payment_type: paymentForm.payment_type,
+        payment_type: effectivePaymentType,
         payment_date: paymentForm.payment_date,
         income_tax_rate: income_tax_rate,
         notes: paymentForm.notes
@@ -580,13 +570,30 @@ const OrdersPage = () => {
       
       setShowPaymentModal(false);
       setShowAdditionalPaymentModal(false);
+      setPaymentRemaining(0);
       fetchOrders(); // Refresh orders list
     } catch (error) {
       showToast(error.response?.data?.error || 'Failed to record payment', 'error');
     }
   };
 
+  const handlePaymentAmountChange = (value) => {
+    const roundedAmount = roundOffAmount(value);
+    const remainingAmount = roundOffAmount(paymentRemaining);
+    const autoType = remainingAmount > 0 && roundedAmount >= remainingAmount ? 'full' : 'partial';
+
+    setPaymentForm(prev => ({
+      ...prev,
+      amount: value,
+      payment_type: autoType
+    }));
+  };
+
   const addItemRow = () => {
+    if (formData.items.length >= MAX_ORDER_ITEMS) {
+      showToast(`You can add maximum ${MAX_ORDER_ITEMS} items in one order`, 'warning');
+      return;
+    }
     setFormData({...formData, items: [...formData.items, { item_id: '', quantity: 1, item_query: '' }]});
   };
 
@@ -598,7 +605,7 @@ const OrdersPage = () => {
       return;
     }
     
-    // Get item details and check stock
+    // Get item details
     const itemDetail = items.find(i => String(i.id) === String(currentItem.item_id));
     if (!itemDetail) {
       showToast('Item not found', 'error');
@@ -606,10 +613,6 @@ const OrdersPage = () => {
     }
     
     const requestedQty = Number.isFinite(parseFloat(currentItem.quantity)) ? parseFloat(currentItem.quantity) : 0;
-    const availableStock = Number.isFinite(parseFloat(itemDetail.quantity_in_stock)) ? parseFloat(itemDetail.quantity_in_stock) : 0;
-    const originalQty = Number.isFinite(parseFloat(originalItemQuantities[String(currentItem.item_id)])) ? parseFloat(originalItemQuantities[String(currentItem.item_id)]) : 0;
-    const effectiveAvailable = editingId ? (availableStock + originalQty) : availableStock;
-    
     // Check if this item already exists in other rows
     const currentItemId = parseInt(currentItem.item_id, 10);
     const otherItemsCount = formData.items.reduce((sum, item, i) => {
@@ -619,22 +622,6 @@ const OrdersPage = () => {
       }
       return sum;
     }, 0);
-    
-    // Calculate total quantity of this item across all rows (including current)
-    const totalQtyForItem = requestedQty + otherItemsCount;
-    
-    // Explicit stock validation
-    // Reject if: requested quantity is positive AND total exceeds or equals available stock (when stock is 0)
-    // OR total quantity exceeds available stock in any case
-    if (requestedQty > 0 && effectiveAvailable <= 0) {
-      showToast(`No stock available for ${itemDetail.name}`, 'error');
-      return;
-    }
-    
-    if (totalQtyForItem > effectiveAvailable) {
-      showToast(`Total quantity ${totalQtyForItem} exceeds available ${effectiveAvailable} for ${itemDetail.name}. Other rows have: ${otherItemsCount}`, 'warning');
-      return;
-    }
     
     // Check if this item already exists in other rows
     const existingIndex = formData.items.findIndex((item, i) => 
@@ -688,6 +675,13 @@ const OrdersPage = () => {
     const labelCode = item.code || '';
     return `${labelCode} | ${item.name} (₨${item.unit_price})`;
   };
+
+  const cartItemCount = formData.items.filter(item => String(item.item_id || '').trim() !== '').length;
+  const cartTotalQuantity = formData.items.reduce((sum, item) => {
+    if (!String(item.item_id || '').trim()) return sum;
+    const quantity = Number.isFinite(parseFloat(item.quantity)) ? parseFloat(item.quantity) : 0;
+    return sum + quantity;
+  }, 0);
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-[#17144B] via-[#3A3F8C] to-[#17144B] relative overflow-hidden">
@@ -824,6 +818,9 @@ const OrdersPage = () => {
                   <div className="mb-2">
                     <div className="flex gap-2 items-center">
                       <h3 className="font-semibold flex-1">Items</h3>
+                      <span className="text-xs font-semibold text-[#17144B] bg-white bg-opacity-60 px-2 py-1 rounded-md border border-[#3A3F8C] border-opacity-40">
+                        Cart: {cartItemCount}/{MAX_ORDER_ITEMS} items | Qty: {cartTotalQuantity}
+                      </span>
                       <span className="w-24 text-center font-semibold">Qty</span>
                       <span className="w-8"></span>
                       <span className="w-8"></span>
@@ -835,15 +832,6 @@ const OrdersPage = () => {
                       const displayValue = item.item_query || (selectedItem ? getItemLabel(selectedItem) : '');
                       const suggestedItems = getFilteredItemsForRow(displayValue);
                       const showDropdown = openDropdownIdx === idx;
-                      const selectedItemOriginalQty = selectedItem && Number.isFinite(parseFloat(originalItemQuantities[String(selectedItem.id)]))
-                        ? parseFloat(originalItemQuantities[String(selectedItem.id)])
-                        : 0;
-                      const selectedItemBaseStock = selectedItem && Number.isFinite(parseFloat(selectedItem.quantity_in_stock))
-                        ? parseFloat(selectedItem.quantity_in_stock)
-                        : 0;
-                      const selectedItemEffectiveStock = selectedItem
-                        ? (editingId ? (selectedItemBaseStock + selectedItemOriginalQty) : selectedItemBaseStock)
-                        : null;
 
                       return (
                         <div key={idx} className="relative">
@@ -877,14 +865,6 @@ const OrdersPage = () => {
                               {showDropdown && suggestedItems.length > 0 && (
                                 <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded shadow-lg z-50" style={{ maxHeight: '300px', overflowY: 'auto', overflowX: 'hidden' }}>
                                   {suggestedItems.map((suggestion) => {
-                                    const originalQty = Number.isFinite(parseFloat(originalItemQuantities[String(suggestion.id)]))
-                                      ? parseFloat(originalItemQuantities[String(suggestion.id)])
-                                      : 0;
-                                    const effectiveStock = editingId
-                                      ? (Number.isFinite(parseFloat(suggestion.quantity_in_stock))
-                                        ? parseFloat(suggestion.quantity_in_stock)
-                                        : 0) + originalQty
-                                      : suggestion.quantity_in_stock;
                                     return (
                                     <div
                                       key={suggestion.id}
@@ -900,9 +880,6 @@ const OrdersPage = () => {
                                       <div className="text-xs text-gray-600">{suggestion.name}</div>
                                       <div className="flex justify-between">
                                         <span className="text-xs text-gray-500">₨{suggestion.unit_price}</span>
-                                        <span className={`text-xs font-semibold ${effectiveStock > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                          Stock: {suggestion.quantity_in_stock} {suggestion.unit}
-                                        </span>
                                       </div>
                                     </div>
                                   );
@@ -918,7 +895,7 @@ const OrdersPage = () => {
                       );
                     })}
                   </div>
-                  <button type="button" onClick={addItemRow} className="mb-4 text-white hover:text-gray-200 font-semibold text-sm">+ Add Item</button>
+                  <button type="button" onClick={addItemRow} disabled={formData.items.length >= MAX_ORDER_ITEMS} className={`mb-4 font-semibold text-sm ${formData.items.length >= MAX_ORDER_ITEMS ? 'text-gray-300 cursor-not-allowed' : 'text-white hover:text-gray-200'}`}>+ Add Item</button>
 
                   <div className="flex gap-4">
                     <button 
@@ -1023,10 +1000,10 @@ const OrdersPage = () => {
                     <input
                       type="number"
                       value={paymentForm.amount}
-                      onChange={(e) => setPaymentForm({...paymentForm, amount: e.target.value})}
+                      onChange={(e) => handlePaymentAmountChange(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="0.00"
-                      step="0.01"
+                      step="1"
                     />
                   </div>
 
@@ -1240,10 +1217,10 @@ const OrdersPage = () => {
                     <input
                       type="number"
                       value={paymentForm.amount}
-                      onChange={(e) => setPaymentForm({...paymentForm, amount: e.target.value})}
+                      onChange={(e) => handlePaymentAmountChange(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="0.00"
-                      step="0.01"
+                      step="1"
                     />
                   </div>
 

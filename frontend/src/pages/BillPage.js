@@ -37,6 +37,8 @@ const BillPage = () => {
   const [loading, setLoading] = useState(true);
 
   const [companyData, setCompanyData] = useState(companyConfig.umarsons);
+  const roundOffAmount = (value) => Math.round(Number(value) || 0);
+  const formatRupees = (value) => roundOffAmount(value).toLocaleString('en-PK');
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -87,10 +89,10 @@ const BillPage = () => {
   let displayTotal, displayAmountInWords;
   if (taxMode === 'include') {
     displayTotal = subtotal + totalTax;
-    displayAmountInWords = amountToWords(displayTotal);
+    displayAmountInWords = amountToWords(roundOffAmount(displayTotal));
   } else {
     displayTotal = subtotal;
-    displayAmountInWords = amountToWords(displayTotal);
+    displayAmountInWords = amountToWords(roundOffAmount(displayTotal));
   }
 
   // Format date
@@ -99,24 +101,9 @@ const BillPage = () => {
   const dueDate = new Date(orderDate.getTime() + 30 * 24 * 60 * 60 * 1000);
   const dueDateStr = dueDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: '2-digit' });
 
-  // Pagination: Split items into pages
-  const ITEMS_PER_PAGE = 15;
-  const MAX_ITEMS_WITH_SUMMARY = 10;
-  const itemPages = [];
-  if (order.items && order.items.length > 0) {
-    for (let i = 0; i < order.items.length; i += ITEMS_PER_PAGE) {
-      itemPages.push(order.items.slice(i, i + ITEMS_PER_PAGE));
-    }
-  } else {
-    itemPages.push([]);
-  }
-
-  // If the last page is too full, move summary to a new page
-  let summaryPageIndex = itemPages.length - 1;
-  if (itemPages.length > 1 && itemPages[summaryPageIndex].length > MAX_ITEMS_WITH_SUMMARY) {
-    itemPages.push([]);
-    summaryPageIndex = itemPages.length - 1;
-  }
+  const MAX_TABLE_ROWS = 12;
+  const itemPages = [(order.items || []).slice(0, MAX_TABLE_ROWS)];
+  const summaryPageIndex = 0;
 
   // Render header component
   const renderHeader = () => (
@@ -168,7 +155,7 @@ const BillPage = () => {
 
             {/* Title */}
             <div className="invoice-title">
-              BILL {taxMode === 'include' ? '(INCLUDING TAX)' : '(EXCLUDING TAX)'} (PAGE {pageIndex + 1} OF {itemPages.length})
+              BILL {taxMode === 'include' ? '(INCLUDING TAX)' : '(EXCLUDING TAX)'}
             </div>
 
             {/* Details Grid - Only on first page */}
@@ -204,20 +191,22 @@ const BillPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {pageItems.map((item, idx) => {
-                  const globalIndex = pageIndex * ITEMS_PER_PAGE + idx;
-                  const itemAmount = taxMode === 'include' 
-                    ? item.line_total + (item.line_total * (order.tax_rate / 100))
-                    : item.line_total;
-                  
+                {Array.from({ length: MAX_TABLE_ROWS }, (_, idx) => {
+                  const item = pageItems[idx];
+                  const itemAmount = item
+                    ? (taxMode === 'include'
+                      ? item.line_total + (item.line_total * (order.tax_rate / 100))
+                      : item.line_total)
+                    : 0;
+
                   return (
-                    <tr key={item.id}>
-                      <td style={{ textAlign: 'center' }}>{globalIndex + 1}</td>
-                      <td style={{ textAlign: 'center' }}>{item.item?.code || 'N/A'}</td>
-                      <td>{item.item?.name || 'N/A'}</td>
-                      <td style={{ textAlign: 'center' }}>{item.quantity}</td>
-                      <td style={{ textAlign: 'right' }}>₨ {item.unit_price.toFixed(2)}</td>
-                      <td style={{ textAlign: 'right' }}>₨ {itemAmount.toFixed(2)}</td>
+                    <tr key={item?.id || `blank-${idx}`}>
+                      <td style={{ textAlign: 'center' }}>{idx + 1}</td>
+                      <td style={{ textAlign: 'center' }}>{item ? (item.item?.code || 'N/A') : ''}</td>
+                      <td>{item ? (item.item?.name || 'N/A') : ''}</td>
+                      <td style={{ textAlign: 'center' }}>{item ? item.quantity : ''}</td>
+                      <td style={{ textAlign: 'right' }}>{item ? `₨ ${formatRupees(item.unit_price)}` : ''}</td>
+                      <td style={{ textAlign: 'right' }}>{item ? `₨ ${formatRupees(itemAmount)}` : ''}</td>
                     </tr>
                   );
                 })}
@@ -231,21 +220,21 @@ const BillPage = () => {
                 <div className="summary-section">
                   <div className="summary-row subtotal">
                     <span>Subtotal:</span>
-                    <span>₨ {subtotal.toFixed(2)}</span>
+                    <span>₨ {formatRupees(subtotal)}</span>
                   </div>
                   {taxMode === 'include' && (
                     <div className="summary-row tax">
                       <span>Sales Tax ({order.tax_rate}%):</span>
-                      <span>₨ {totalTax.toFixed(2)}</span>
+                      <span>₨ {formatRupees(totalTax)}</span>
                     </div>
                   )}
                   <div className="summary-row">
                     <span>Additional Charges:</span>
-                    <span>₨ 0.00</span>
+                    <span>₨ 0</span>
                   </div>
                   <div className="summary-row total">
                     <span>TOTAL AMOUNT:</span>
-                    <span>₨ {displayTotal.toFixed(2)}</span>
+                    <span>₨ {formatRupees(displayTotal)}</span>
                   </div>
                 </div>
 

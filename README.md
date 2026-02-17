@@ -68,6 +68,39 @@ The script will:
 
 ---
 
+## � Repository Structure
+
+### 📁 Folders
+
+| Folder | Description |
+|--------|-------------|
+| **assets/** | Design assets including invoice templates for UmarSons and Makkah Packages with logos, watermarks, and print layouts |
+| **backend/** | Python Flask REST API with SQLAlchemy ORM, authentication, blueprints for orders, payments, items, buyers, and reports |
+| **frontend/** | React.js SPA with Tailwind CSS, Chart.js dashboards, responsive UI components, and service layer for API calls |
+| **imgs/** | Static image resources for branding and UI elements |
+| **instance/** | SQLite database files (umarsons.db, makkah_packages.db) - company-specific data storage |
+| **node_modules/** | NPM dependencies for the root workspace (auto-generated, not manually edited) |
+
+### 📄 Root Files
+
+| File | Purpose |
+|------|---------|
+| **.gitignore** | Git ignore rules for Python, Node.js, databases, and build artifacts |
+| **DEVELOPMENT.md** | Developer guide with architecture, API documentation, and contribution guidelines |
+| **INSTALLER.bat** | Windows batch installer (legacy alternative to PowerShell) |
+| **INSTALLER.ps1** | PowerShell installer script - checks dependencies, creates venv, installs packages, initializes databases |
+| **INSTALLER.sh** | Bash installer script for Linux/Mac - mirrors INSTALLER.ps1 functionality |
+| **package.json** | Root Node.js workspace configuration for managing frontend dependencies |
+| **PROJECT_SUMMARY.md** | Comprehensive project documentation with features, tech stack, and implementation details |
+| **PROJECT_SUMMARY_BRIEF.md** | Quick overview and executive summary of the project |
+| **README.md** | This file - main documentation with quick start, features, and usage instructions |
+| **start-venv.ps1** | Virtual environment launcher script for backend Python environment |
+| **start.ps1** | Daily startup script - activates venv, starts Flask backend and React frontend, opens browser |
+| **start.sh** | Bash version of start.ps1 for Linux/Mac systems |
+| **stop.ps1** | Cleanup script to stop all running Flask and React processes |
+
+---
+
 ## 🛠️ Available Scripts
 
 - **INSTALLER.ps1** / **INSTALLER.sh** - Complete first-time setup (Windows/Linux/Mac)
@@ -77,7 +110,7 @@ The script will:
 
 ---
 
-## 📁 Project Structure
+## 📁 Detailed Project Structure
 
 **Project Date**: February 4, 2026  
 **Last Updated**: February 4, 2026
@@ -181,10 +214,9 @@ Project-CS-L/
 4. **Item Management**
    - Product catalog management with auto-generated codes (HS-XXXX from 1000)
    - Unique item codes and names (prevents duplicates)
-   - Pricing and stock tracking
+   - Pricing management
    - Unit configuration (PCS, KG, MTR, BOX)
-   - Inventory management
-   - Stock quantity display with dark green indicators
+   - Item details and description management
 
 5. **Order Management**
    - Create dynamic orders with multiple items

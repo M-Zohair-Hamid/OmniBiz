@@ -35,6 +35,8 @@ const InvoicePage = () => {
   const [loading, setLoading] = useState(true);
 
   const [companyData, setCompanyData] = useState(companyConfig.umarsons);
+  const roundOffAmount = (value) => Math.round(Number(value) || 0);
+  const formatRupees = (value) => roundOffAmount(value).toLocaleString('en-PK');
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -90,24 +92,9 @@ const InvoicePage = () => {
   const dueDate = new Date(orderDate.getTime() + 30 * 24 * 60 * 60 * 1000);
   const dueDateStr = dueDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: '2-digit' });
 
-  // Pagination: Split items into pages (approximately 15 items per page for A4)
-  const ITEMS_PER_PAGE = 15;
-  const MAX_ITEMS_WITH_SUMMARY = 10;
-  const itemPages = [];
-  if (order.items && order.items.length > 0) {
-    for (let i = 0; i < order.items.length; i += ITEMS_PER_PAGE) {
-      itemPages.push(order.items.slice(i, i + ITEMS_PER_PAGE));
-    }
-  } else {
-    itemPages.push([]);
-  }
-
-  // If the last page is too full, move summary to a new page
-  let summaryPageIndex = itemPages.length - 1;
-  if (itemPages.length > 1 && itemPages[summaryPageIndex].length > MAX_ITEMS_WITH_SUMMARY) {
-    itemPages.push([]);
-    summaryPageIndex = itemPages.length - 1;
-  }
+  const MAX_TABLE_ROWS = 12;
+  const itemPages = [(order.items || []).slice(0, MAX_TABLE_ROWS)];
+  const summaryPageIndex = 0;
 
   // Render header component
   const renderHeader = () => (
@@ -159,7 +146,7 @@ const InvoicePage = () => {
             {renderHeader()}
 
             {/* Invoice Title */}
-            <div className="invoice-title">Sales Tax Invoice {itemPages.length > 1 && `(Page ${pageIndex + 1} of ${itemPages.length})`}</div>
+            <div className="invoice-title">Sales Tax Invoice</div>
 
             {/* Details Grid - Only on first page */}
             {pageIndex === 0 && (
@@ -196,21 +183,21 @@ const InvoicePage = () => {
                 </tr>
               </thead>
               <tbody>
-                {pageItems.map((item, idx) => {
-                  const globalIndex = pageIndex * ITEMS_PER_PAGE + idx;
-                  const amountBeforeTax = item.line_total;
-                  const taxAmount = amountBeforeTax * (order.tax_rate / 100);
+                {Array.from({ length: MAX_TABLE_ROWS }, (_, idx) => {
+                  const item = pageItems[idx];
+                  const amountBeforeTax = item ? item.line_total : 0;
+                  const taxAmount = item ? (amountBeforeTax * (order.tax_rate / 100)) : 0;
                   const amountAfterTax = amountBeforeTax + taxAmount;
                   return (
-                    <tr key={idx}>
-                      <td>{globalIndex + 1}</td>
-                      <td style={{ textAlign: 'center' }}>{item.item?.code || item.code || 'N/A'}</td>
-                      <td>{item.item?.name || item.name || 'Item'}</td>
-                      <td style={{ textAlign: 'center' }}>{item.quantity}</td>
-                      <td style={{ textAlign: 'right' }}>₨ {(item.item?.unit_price || item.unit_price || 0).toFixed(2)}</td>
-                      <td style={{ textAlign: 'center' }}>{order.tax_rate}%</td>
-                      <td style={{ textAlign: 'right' }}>₨ {amountBeforeTax.toFixed(2)}</td>
-                      <td style={{ textAlign: 'right' }}>₨ {amountAfterTax.toFixed(2)}</td>
+                    <tr key={item?.id || `blank-${idx}`}>
+                      <td>{idx + 1}</td>
+                      <td style={{ textAlign: 'center' }}>{item ? (item.item?.code || item.code || 'N/A') : ''}</td>
+                      <td>{item ? (item.item?.name || item.name || 'Item') : ''}</td>
+                      <td style={{ textAlign: 'center' }}>{item ? item.quantity : ''}</td>
+                      <td style={{ textAlign: 'right' }}>{item ? `₨ ${formatRupees(item.item?.unit_price || item.unit_price || 0)}` : ''}</td>
+                      <td style={{ textAlign: 'center' }}>{item ? `${order.tax_rate}%` : ''}</td>
+                      <td style={{ textAlign: 'right' }}>{item ? `₨ ${formatRupees(amountBeforeTax)}` : ''}</td>
+                      <td style={{ textAlign: 'right' }}>{item ? `₨ ${formatRupees(amountAfterTax)}` : ''}</td>
                     </tr>
                   );
                 })}
@@ -224,25 +211,25 @@ const InvoicePage = () => {
                 <div className="summary-section">
                   <div className="summary-row subtotal">
                     <span>Subtotal (Before Tax):</span>
-                    <span>₨ {subtotal.toFixed(2)}</span>
+                    <span>₨ {formatRupees(subtotal)}</span>
                   </div>
                   <div className="summary-row tax">
                     <span>Sales Tax ({order.tax_rate}%):</span>
-                    <span>₨ {totalTax.toFixed(2)}</span>
+                    <span>₨ {formatRupees(totalTax)}</span>
                   </div>
                   <div className="summary-row">
                     <span>Additional Charges:</span>
-                    <span>₨ 0.00</span>
+                    <span>₨ 0</span>
                   </div>
                   <div className="summary-row total">
                     <span>TOTAL AMOUNT:</span>
-                    <span>₨ {totalAmount.toFixed(2)}</span>
+                    <span>₨ {formatRupees(totalAmount)}</span>
                   </div>
                 </div>
 
                 {/* Amount in Words */}
                 <div className="amount-in-words">
-                  <strong>Amount in Words:</strong> {amountToWords(totalAmount)}
+                  <strong>Amount in Words:</strong> {amountToWords(roundOffAmount(totalAmount))}
                 </div>
 
                 {/* Tax Breakdown */}
@@ -252,15 +239,15 @@ const InvoicePage = () => {
                     <tbody>
                       <tr>
                         <td>Base Amount (Before Tax):</td>
-                        <td style={{ textAlign: 'right' }}>₨ {subtotal.toFixed(2)}</td>
+                        <td style={{ textAlign: 'right' }}>₨ {formatRupees(subtotal)}</td>
                       </tr>
                       <tr>
                         <td>GST @ {order.tax_rate}%:</td>
-                        <td style={{ textAlign: 'right' }}>₨ {totalTax.toFixed(2)}</td>
+                        <td style={{ textAlign: 'right' }}>₨ {formatRupees(totalTax)}</td>
                       </tr>
                       <tr>
                         <td style={{ borderTop: '1px solid #17144B', paddingTop: '8px' }}>Total Tax Amount:</td>
-                        <td style={{ borderTop: '1px solid #17144B', paddingTop: '8px', textAlign: 'right' }}>₨ {totalTax.toFixed(2)}</td>
+                        <td style={{ borderTop: '1px solid #17144B', paddingTop: '8px', textAlign: 'right' }}>₨ {formatRupees(totalTax)}</td>
                       </tr>
                     </tbody>
                   </table>
