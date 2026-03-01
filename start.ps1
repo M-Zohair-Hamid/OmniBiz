@@ -8,7 +8,7 @@ $DbDir = Join-Path $Backend 'instance'
 
 Write-Host ""
 Write-Host "=============================================" -ForegroundColor Cyan
-Write-Host "  Multi-Company Inventory Management System" -ForegroundColor Cyan
+Write-Host "  Business Management System" -ForegroundColor Cyan
 Write-Host "  Version: 1.0" -ForegroundColor Yellow
 Write-Host "=============================================" -ForegroundColor Cyan
 Write-Host ""
@@ -127,4 +127,3 @@ if ($FrontendProc -and !$FrontendProc.HasExited) { $FrontendProc | Stop-Process 
 Get-Process | Where-Object { $_.ProcessName -like '*python*' } | Stop-Process -Force -ErrorAction SilentlyContinue
 Get-Process | Where-Object { $_.ProcessName -like '*node*' } | Stop-Process -Force -ErrorAction SilentlyContinue
 Write-Host "All services stopped." -ForegroundColor Green
-Write-Host "`nStopping services..." -ForegroundColor Yellow
