@@ -12,7 +12,7 @@ const ItemsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   
   const [formData, setFormData] = useState({
-    code: '', name: '', description: '', unit: 'PCS', unit_price: 0, quantity_in_stock: 0, add_stock: 0
+    code: '', name: '', description: '', unit: 'PCS', unit_price: 0
   });
 
   const { showToast } = useContext(ToastContext);
@@ -63,7 +63,7 @@ const ItemsPage = () => {
 
   const handleAddItem = () => {
     setEditingId(null);
-    setFormData({ code: '', name: '', description: '', unit: 'PCS', unit_price: 0, quantity_in_stock: 0, add_stock: 0 });
+    setFormData({ code: '', name: '', description: '', unit: 'PCS', unit_price: 0 });
     setShowForm(true);
   };
 
@@ -82,12 +82,7 @@ const ItemsPage = () => {
     }
 
     try {
-      // If adding stock, update quantity_in_stock
       const submitData = { ...formData };
-      if (formData.add_stock && formData.add_stock > 0) {
-        submitData.quantity_in_stock = parseFloat(formData.quantity_in_stock) + parseFloat(formData.add_stock);
-        submitData.add_stock = 0; // Reset add_stock after using it
-      }
       
       if (editingId) {
         await updateItem(editingId, submitData);
@@ -135,57 +130,6 @@ const ItemsPage = () => {
             </button>
           </div>
 
-          {/* Stock Summary Section */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-xl shadow-glass-lg border border-white border-opacity-30 p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 font-semibold">Total Items</p>
-                  <p className="text-2xl font-bold text-[#00D4FF]">{items.length}</p>
-                </div>
-                <div className="bg-blue-500 bg-opacity-20 p-3 rounded-lg">
-                  <span className="text-2xl">📦</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-xl shadow-glass-lg border border-white border-opacity-30 p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 font-semibold">Total Stock</p>
-                  <p className="text-2xl font-bold text-emerald-700">{items.reduce((sum, item) => sum + item.quantity_in_stock, 0).toLocaleString()}</p>
-                </div>
-                <div className="bg-emerald-700 bg-opacity-20 p-3 rounded-lg">
-                  <span className="text-2xl">📊</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-xl shadow-glass-lg border border-white border-opacity-30 p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 font-semibold">Low Stock</p>
-                  <p className="text-2xl font-bold text-[#00D4FF]">{items.filter(item => item.quantity_in_stock > 0 && item.quantity_in_stock <= 10).length}</p>
-                </div>
-                <div className="bg-orange-500 bg-opacity-20 p-3 rounded-lg">
-                  <span className="text-2xl">⚠️</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-xl shadow-glass-lg border border-white border-opacity-30 p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 font-semibold">Out of Stock</p>
-                  <p className="text-2xl font-bold text-[#17144B]">{items.filter(item => item.quantity_in_stock === 0).length}</p>
-                </div>
-                <div className="bg-red-500 bg-opacity-20 p-3 rounded-lg">
-                  <span className="text-2xl">🚫</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
           {/* Search */}
           <div className="mb-6">
             <input
@@ -198,14 +142,14 @@ const ItemsPage = () => {
           </div>
 
           {/* Items Table */}
-          <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-2xl shadow-glass-lg border border-white border-opacity-30 overflow-hidden">
+          <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-2xl shadow-glass-lg border border-white border-opacity-30 overflow-hidden h-[calc(100vh-240px)]">
             {loading ? (
               <div className="p-8 text-center">Loading...</div>
             ) : items.length === 0 ? (
               <div className="p-8 text-center text-gray-600">No items found</div>
             ) : (
               <>
-                <div className="overflow-x-auto max-h-[60vh] overflow-y-auto">
+                <div className="overflow-x-auto h-full overflow-y-auto">
                   <table id="itemsTable" className="w-full">
                     <thead className="border-b border-[#17144B]">
                       <tr>
@@ -213,7 +157,6 @@ const ItemsPage = () => {
                         <th className="px-6 py-3 text-center font-bold text-[#17144B]">Name</th>
                         <th className="px-6 py-3 text-center font-bold text-[#17144B]">Unit</th>
                         <th className="px-6 py-3 text-center font-bold text-[#17144B]">Price (₨)</th>
-                        <th className="px-6 py-3 text-center font-bold text-[#17144B]">Stock</th>
                         <th className="px-6 py-3 text-center font-bold text-[#17144B]">Actions</th>
                       </tr>
                     </thead>
@@ -224,7 +167,6 @@ const ItemsPage = () => {
                           <td className="px-6 py-3 text-black text-center">{highlightText(item.name)}</td>
                           <td className="px-6 py-3 text-black text-center">{highlightText(item.unit)}</td>
                           <td className="px-6 py-3 font-semibold text-black text-center">{highlightText(`₨${item.unit_price.toLocaleString('en-PK', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`)}</td>
-                          <td className="px-6 py-3 font-semibold text-black text-center">{highlightText(item.quantity_in_stock)}</td>
                           <td className="px-6 py-3 text-center">
                             <button
                               onClick={() => handleEditItem(item)}
@@ -290,14 +232,6 @@ const ItemsPage = () => {
                     <div>
                       <label className="block text-[#17144B] font-bold mb-2">Unit Price (₨) *</label>
                       <input type="number" step="0.01" value={formData.unit_price} onChange={(e) => setFormData({...formData, unit_price: parseFloat(e.target.value)})} className="w-full px-3 py-2 backdrop-blur-sm bg-white bg-opacity-40 border border-[#3A3F8C] rounded-lg focus:border-[#00D4FF]" />
-                    </div>
-                    <div>
-                      <label className="block text-[#17144B] font-bold mb-2">Stock Quantity</label>
-                      <input type="number" step="0.01" value={formData.quantity_in_stock} onChange={(e) => setFormData({...formData, quantity_in_stock: parseFloat(e.target.value)})} className="w-full px-3 py-2 backdrop-blur-sm bg-white bg-opacity-40 border border-[#3A3F8C] rounded-lg focus:border-[#00D4FF]" />
-                    </div>
-                    <div>
-                      <label className="block text-[#17144B] font-bold mb-2">Add Stock</label>
-                      <input type="number" step="0.01" value={formData.add_stock} onChange={(e) => setFormData({...formData, add_stock: parseFloat(e.target.value) || 0})} placeholder="Enter amount to add" className="w-full px-3 py-2 backdrop-blur-sm bg-white bg-opacity-40 border border-[#3A3F8C] rounded-lg focus:border-[#00D4FF]" />
                     </div>
                     <div className="md:col-span-2">
                       <label className="block text-[#17144B] font-bold mb-2">Description</label>

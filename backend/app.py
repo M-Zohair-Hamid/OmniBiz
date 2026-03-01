@@ -82,6 +82,7 @@ def ensure_database(company_code: str):
     switch_database(app, company_code)
     db.metadata.create_all(bind=db.engines[company_code])
     init_db(company_code)
+    ensure_items_without_stock_column(company_code)
     ensure_payment_balance_column(company_code)
     ensure_order_income_tax_columns(company_code)
     ensure_company_id_consistency(company_code)
@@ -157,6 +158,56 @@ def ensure_order_income_tax_columns(company_code: str):
             connection.commit()
     except Exception as exc:
         print(f"[DB] Failed to ensure order income tax columns for {company_code}: {exc}")
+
+def ensure_items_without_stock_column(company_code: str):
+    """Remove legacy items.quantity_in_stock column if present."""
+    try:
+        engine = db.engines[company_code]
+        with engine.connect() as connection:
+            result = connection.execute(text("PRAGMA table_info(items)"))
+            columns = [row[1] for row in result.fetchall()]
+            if 'quantity_in_stock' not in columns:
+                return
+
+            try:
+                connection.execute(text("ALTER TABLE items DROP COLUMN quantity_in_stock"))
+                connection.commit()
+                print(f"[DB] Removed items.quantity_in_stock column for {company_code}")
+                return
+            except Exception:
+                connection.rollback()
+
+            connection.execute(text("PRAGMA foreign_keys=OFF"))
+            connection.execute(text("ALTER TABLE items RENAME TO items_old"))
+            connection.execute(text("""
+                CREATE TABLE items (
+                    id INTEGER NOT NULL,
+                    code VARCHAR(50) NOT NULL,
+                    name VARCHAR(100) NOT NULL,
+                    description TEXT,
+                    unit VARCHAR(20),
+                    unit_price FLOAT NOT NULL,
+                    company_id INTEGER NOT NULL,
+                    is_active BOOLEAN,
+                    created_at DATETIME,
+                    updated_at DATETIME,
+                    PRIMARY KEY (id),
+                    FOREIGN KEY(company_id) REFERENCES companies (id),
+                    UNIQUE (code),
+                    UNIQUE (name)
+                )
+            """))
+            connection.execute(text("""
+                INSERT INTO items (id, code, name, description, unit, unit_price, company_id, is_active, created_at, updated_at)
+                SELECT id, code, name, description, unit, unit_price, company_id, is_active, created_at, updated_at
+                FROM items_old
+            """))
+            connection.execute(text("DROP TABLE items_old"))
+            connection.execute(text("PRAGMA foreign_keys=ON"))
+            connection.commit()
+            print(f"[DB] Rebuilt items table without quantity_in_stock for {company_code}")
+    except Exception as exc:
+        print(f"[DB] Failed to remove stock column for {company_code}: {exc}")
 
 @app.before_request
 def before_request():

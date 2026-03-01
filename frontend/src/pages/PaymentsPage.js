@@ -23,13 +23,8 @@ const PaymentsPage = () => {
     income_tax_rate: '',
     notes: ''
   });
-  const roundToNearestTen = (value) => {
-    const number = Math.round(Number(value) || 0);
-    const lastDigit = number % 10;
-    return lastDigit <= 5 ? number - lastDigit : number + (10 - lastDigit);
-  };
-
-  const formatRoundedAmount = (value) => roundToNearestTen(value).toLocaleString('en-PK');
+  const roundOffAmount = (value) => Math.round(Number(value) || 0);
+  const formatRoundedAmount = (value) => roundOffAmount(value).toLocaleString('en-PK');
   const { showToast } = useContext(ToastContext);
   const { user } = useContext(AuthContext);
 
@@ -148,7 +143,7 @@ const PaymentsPage = () => {
       : (payment.orderDetails ? (payment.orderDetails.total_amount - payment.amount) : 0);
     
     setCompletePaymentForm({
-      amount: remainingAmount > 0 ? remainingAmount.toString() : '',
+      amount: remainingAmount > 0 ? roundOffAmount(remainingAmount).toString() : '',
       payment_method: 'cash',
       payment_type: 'full',
       payment_date: getCurrentDateForInput(),
@@ -170,8 +165,8 @@ const PaymentsPage = () => {
       return;
     }
 
-    // Round amount to 2 decimal places
-    amount = Math.round(amount * 100) / 100;
+    // Round payment amount to whole rupees
+    amount = roundOffAmount(amount);
     
     // Parse income tax rate (percentage)
     let income_tax_rate = parseFloat(completePaymentForm.income_tax_rate || 0);

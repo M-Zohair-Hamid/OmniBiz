@@ -67,6 +67,39 @@ The script will:
 
 ---
 
+## � Repository Structure
+
+### 📁 Folders
+
+| Folder | Description |
+|--------|-------------|
+| **assets/** | Design assets including invoice templates for UmarSons and Makkah Packages with logos, watermarks, and print layouts |
+| **backend/** | Python Flask REST API with SQLAlchemy ORM, authentication, blueprints for orders, payments, items, buyers, and reports |
+| **frontend/** | React.js SPA with Tailwind CSS, Chart.js dashboards, responsive UI components, and service layer for API calls |
+| **imgs/** | Static image resources for branding and UI elements |
+| **instance/** | SQLite database files (umarsons.db, makkah_packages.db) - company-specific data storage |
+| **node_modules/** | NPM dependencies for the root workspace (auto-generated, not manually edited) |
+
+### 📄 Root Files
+
+| File | Purpose |
+|------|---------|
+| **.gitignore** | Git ignore rules for Python, Node.js, databases, and build artifacts |
+| **DEVELOPMENT.md** | Developer guide with architecture, API documentation, and contribution guidelines |
+| **INSTALLER.bat** | Windows batch installer (legacy alternative to PowerShell) |
+| **INSTALLER.ps1** | PowerShell installer script - checks dependencies, creates venv, installs packages, initializes databases |
+| **INSTALLER.sh** | Bash installer script for Linux/Mac - mirrors INSTALLER.ps1 functionality |
+| **package.json** | Root Node.js workspace configuration for managing frontend dependencies |
+| **PROJECT_SUMMARY.md** | Comprehensive project documentation with features, tech stack, and implementation details |
+| **PROJECT_SUMMARY_BRIEF.md** | Quick overview and executive summary of the project |
+| **README.md** | This file - main documentation with quick start, features, and usage instructions |
+| **start-venv.ps1** | Virtual environment launcher script for backend Python environment |
+| **start.ps1** | Daily startup script - activates venv, starts Flask backend and React frontend, opens browser |
+| **start.sh** | Bash version of start.ps1 for Linux/Mac systems |
+| **stop.ps1** | Cleanup script to stop all running Flask and React processes |
+
+---
+
 ## 🛠️ Available Scripts
 
 - **INSTALLER.ps1** / **INSTALLER.sh** - Complete first-time setup (Windows/Linux/Mac)
@@ -76,10 +109,10 @@ The script will:
 
 ---
 
-## 📁 Project Structure
+## 📁 Detailed Project Structure
 
-**Project Date**: February 4, 2026  
-**Last Updated**: February 4, 2026
+**Project Date**: February 2026  
+**Last Updated**: February 17, 2026
 
 ```
 Project-CS-L/
@@ -179,22 +212,26 @@ Project-CS-L/
 4. **Item Management**
    - Product catalog management with auto-generated codes (HS-XXXX from 1000)
    - Unique item codes and names (prevents duplicates)
-   - Pricing and stock tracking
+   - Pricing management
    - Unit configuration (PCS, KG, MTR, BOX)
-   - Inventory management
-   - Stock quantity display with dark green indicators
+   - Item details and description management
 
 5. **Order Management**
-   - Create dynamic orders with multiple items
+   - Create dynamic orders with up to 12 items per order (hard limit enforced)
+   - Live cart indicator showing "Cart: X/12 items | Qty: Y" in order modal
    - Automatic tax calculation (18% GST)
-   - Order status tracking
+   - Order status tracking (pending/partial/paid) with consistent rounding
    - Delivery date management
    - Real-time total updates
    - Item quantity and rate management
+   - Frontend and backend validation for 12-item maximum
 
-6. **Invoice Management**
+6. **Invoice & Print Management**
    - Professional HTML invoice templates (indigo theme)
-   - Regular invoice and Sales Tax Invoice templates
+   - Fixed 12-row print tables for Bills and Sales Tax Invoices
+   - Serial-numbered rows (1-12) with blank cells for unused slots
+   - Single-page print layout (no pagination)
+   - Regular Bill and Sales Tax Invoice templates
    - Company logo and watermark support
    - Auto-generate invoices from orders
    - Tax calculation and formatting
@@ -203,10 +240,13 @@ Project-CS-L/
    - Filename format: `invoice-YYYY-MM-DD-BuyerName.pdf`
 
 7. **Payment Management**
-   - Record partial/full payments
+   - Record partial/full payments with auto-detection
+   - Smart payment type selection based on remaining balance
+   - Whole-rupee rounding (ROUND_HALF_UP) for consistent calculations
    - Multiple payment methods (bank, cash, check)
-   - Auto-calculate balances
+   - Auto-calculate balances with rounded amounts
    - Payment tracking with status indicators
+   - Partial orders unlocked for payment (only paid orders locked)
 
 8. **Ledger System**
    - Party ledger with running balance
@@ -530,6 +570,11 @@ All components resize dynamically based on screen size.
 ✅ Dark green stock indicators for better contrast  
 ✅ Invoice templates with Montserrat font and company branding  
 ✅ Glassmorphism login page with gradient backgrounds  
+✅ 12-item order limit with frontend UI blocking and backend validation  
+✅ Fixed 12-row print tables (Bill/STI) with serial numbers and blanks  
+✅ Live cart counter in order modal ("Cart: X/12 items | Qty: Y")  
+✅ Smart payment type auto-selection (full/partial detection)  
+✅ Consistent whole-rupee rounding across all financial calculations  
 
 ## Future Enhancements
 
@@ -577,8 +622,9 @@ This project is proprietary and confidential.
 
 ---
 
-**Project Date**: January 2026  
-**Version**: 1.0.0  
+**Project Date**: February 2026  
+**Last Updated**: February 17, 2026  
+**Version**: 1.1.0  
 **Status**: Production Ready
 
 ```

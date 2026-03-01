@@ -6,14 +6,20 @@ from datetime import datetime
 from sqlalchemy import func
 import random
 import string
+from decimal import Decimal, ROUND_HALF_UP
 
 bp = Blueprint('orders', __name__, url_prefix='/api/orders')
+MAX_ORDER_ITEMS = 12
+
+
+def round_off_amount(value):
+    return float(Decimal(str(value or 0)).quantize(Decimal('1'), rounding=ROUND_HALF_UP))
 
 def get_session():
     """Get the session bound to current company's database"""
     company_code = getattr(g, 'company_code', 'company')
     # Use db.get_engine with the correct bind
-    engine = db.get_engine(bind=company_code)
+    engine = db.engines[company_code]
     # Create a new session with this engine
     from sqlalchemy.orm import sessionmaker
     Session = sessionmaker(bind=engine)
@@ -53,8 +59,10 @@ def generate_order_number(buyer_id, buyer_name, order_date):
     return order_number
 
 def calculate_order_status(session, order):
-    total_paid = session.query(func.coalesce(func.sum(Payment.amount), 0)).filter_by(order_id=order.id).scalar() or 0
-    remaining = round(order.total_amount - total_paid, 2)
+    total_paid_raw = session.query(func.coalesce(func.sum(Payment.amount), 0)).filter_by(order_id=order.id).scalar() or 0
+    total_paid = round_off_amount(total_paid_raw)
+    order_total = round_off_amount(order.total_amount)
+    remaining = round_off_amount(order_total - total_paid)
     if total_paid <= 0:
         return 'pending'
     if remaining <= 0:
@@ -191,6 +199,9 @@ def create_order():
     
     if not data.get('buyer_id') or not data.get('items'):
         return jsonify({'error': 'Missing required fields'}), 400
+
+    if len(data['items']) > MAX_ORDER_ITEMS:
+        return jsonify({'error': f'Order cannot contain more than {MAX_ORDER_ITEMS} items'}), 400
     
     buyer = session.query(Buyer).filter_by(id=data['buyer_id']).first()
     if not buyer:
@@ -210,13 +221,6 @@ def create_order():
             return jsonify({'error': f'Item {item_data["item_id"]} not found'}), 404
         
         quantity = float(item_data['quantity'])
-        
-        # Validate stock availability
-        if quantity > item.quantity_in_stock:
-            return jsonify({'error': f'Insufficient stock for {item.name}. Requested: {quantity}, Available: {item.quantity_in_stock}'}), 400
-        
-        # Deduct stock immediately when creating order
-        item.quantity_in_stock -= quantity
         
         unit_price = item.unit_price
         line_total = quantity * unit_price
@@ -288,11 +292,9 @@ def update_order(order_id):
     
     # If items are being updated, handle inventory adjustments
     if 'items' in data and data['items']:
-        # Store old items BEFORE deleting them - get the items list separately
-        old_items_list = list(order.items)
-        old_items = {oi.item_id: oi.quantity for oi in old_items_list}
-        print(f"DEBUG: Old items dict: {old_items}")  # Debug
-        
+        if len(data['items']) > MAX_ORDER_ITEMS:
+            return jsonify({'error': f'Order cannot contain more than {MAX_ORDER_ITEMS} items'}), 400
+
         # Delete old order items
         session.query(OrderItem).filter_by(order_id=order_id).delete()
         session.flush()  # Ensure deletion is processed
@@ -308,21 +310,6 @@ def update_order(order_id):
                 return jsonify({'error': f'Item {item_data["item_id"]} not found'}), 404
             
             quantity = float(item_data['quantity'])
-            old_qty = old_items.get(item.id, 0)
-            qty_difference = quantity - old_qty  # Positive = add to order, Negative = reduce from order
-            
-            print(f"DEBUG: Item {item.name}: old_qty={old_qty}, new_qty={quantity}, difference={qty_difference}, current_stock={item.quantity_in_stock}")  # Debug
-            
-            # Check if we have enough stock for the additional quantity
-            if qty_difference > 0:  # Increasing quantity
-                if qty_difference > item.quantity_in_stock:
-                    session.rollback()
-                    return jsonify({'error': f'Insufficient stock for {item.name}. Need additional: {qty_difference}, Available: {item.quantity_in_stock}'}), 400
-                item.quantity_in_stock -= qty_difference
-                print(f"DEBUG: Deducted {qty_difference}, new stock: {item.quantity_in_stock}")  # Debug
-            elif qty_difference < 0:  # Decreasing quantity
-                item.quantity_in_stock += abs(qty_difference)  # Return to stock
-                print(f"DEBUG: Returned {abs(qty_difference)}, new stock: {item.quantity_in_stock}")  # Debug
             
             unit_price = item.unit_price
             line_total = quantity * unit_price
@@ -334,20 +321,6 @@ def update_order(order_id):
                 'unit_price': unit_price,
                 'line_total': line_total
             })
-        
-        # Handle items that were removed from order (restore their stock)
-        for old_item_id, old_qty in old_items.items():
-            if not any(int(item_data['item_id']) == old_item_id for item_data in data['items']):
-                item = session.query(Item).filter_by(id=old_item_id).first()
-                if item:
-                    item.quantity_in_stock += old_qty
-        
-        # Restore inventory for items that were removed from order
-        for old_item_id, old_qty in old_items.items():
-            if not any(int(item_data['item_id']) == old_item_id for item_data in data['items']):
-                item = session.query(Item).filter_by(id=old_item_id).first()
-                if item:
-                    item.quantity_in_stock += old_qty
         
         # Update order totals
         tax_rate = float(data.get('tax_rate', order.tax_rate))
@@ -428,16 +401,10 @@ def delete_order(order_id):
     if computed_status in ('paid', 'partial'):
         return jsonify({'error': 'Paid or partially paid orders cannot be deleted'}), 400
     
-    # Restore stock for all items in the order
-    for order_item in order.items:
-        item = session.query(Item).filter_by(id=order_item.item_id).first()
-        if item:
-            item.quantity_in_stock += order_item.quantity
-
     # Delete all payments linked to this order
     session.query(Payment).filter_by(order_id=order.id).delete()
     
     session.delete(order)
     session.commit()
     
-    return jsonify({'message': 'Order deleted successfully, payments removed, and stock restored'}), 200
+    return jsonify({'message': 'Order deleted successfully and payments removed'}), 200
