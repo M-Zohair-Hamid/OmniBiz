@@ -1,6 +1,6 @@
-# Multi-Company Business Management System
+# Business Management System
 
-A modern, fully responsive web application for managing multi-company business operations. The system handles orders, invoices, payments, and analytics with company-specific dashboards and a sophisticated indigo/cyan color theme.
+A modern, fully responsive web application for managing business operations. The system handles orders, invoices, payments, and analytics with a sophisticated indigo/cyan color theme and comprehensive business settings management.
 
 ## 🎨 Design System
 
@@ -77,7 +77,7 @@ The script will:
 | **backend/** | Python Flask REST API with SQLAlchemy ORM, authentication, blueprints for orders, payments, items, buyers, and reports |
 | **frontend/** | React.js SPA with Tailwind CSS, Chart.js dashboards, responsive UI components, and service layer for API calls |
 | **imgs/** | Static image resources for branding and UI elements |
-| **instance/** | SQLite database files (umarsons.db, makkah_packages.db) - company-specific data storage |
+| **instance/** | SQLite database file (company.db) - business data storage |
 | **node_modules/** | NPM dependencies for the root workspace (auto-generated, not manually edited) |
 
 ### 📄 Root Files
@@ -158,6 +158,8 @@ Project-CS-L/
 │   │   ├── payment_bp.py    # Payment tracking
 │   │   ├── ledger_bp.py     # Party ledger
 │   │   ├── report_bp.py     # Reports & analytics
+│   │   ├── settings_bp.py   # Business settings & logo management
+│   │   └── dashboard_bp.py  # Dashboard data
 │   │   └── dashboard_bp.py  # Dashboard data
 │   └── instance/            # SQLite database
 │       └── company.db       # Company database
@@ -186,11 +188,14 @@ Project-CS-L/
 
 ### Business Features
 
-1. **Multi-Company System**
-   - Company data isolation
-   - Unified database per company
-   - Mock token-based authentication
-   - Direct dashboard access (no password required)
+1. **Business Settings Management**
+   - Comprehensive business information editor
+   - Logo upload with automatic resizing and PNG conversion
+   - Logo placement options (header/watermark)
+   - Business information fields (name, address, contact, GST/NTN, bank details)
+   - Remove logo functionality
+   - Clear all business information with one click
+   - Real-time preview of business information
 
 2. **Dashboard & Analytics**
    - Real-time Chart.js visualizations with black text indicators
@@ -393,23 +398,19 @@ chartOptions = {
 
 ## Company Access
 
-```
-Company: Business Company
-- Type: Universal Organization
-- Mock Token: Bearer mock-token-ORG
-- Access: Click "Business Company" button on login page
+Direct dashboard access - no authentication required! Simply open the application and start managing your business.
 
-No password required - instant dashboard access!
+```
+Access: Open application at http://localhost:3000
+Instant access to all features!
 ```
 
 ## API Endpoints
 
-All endpoints accept optional JWT tokens (`@jwt_required(optional=True)`).
-Mock token: `Bearer mock-token-ORG`
+All endpoints are publicly accessible (no authentication required).
 
-### Authentication
-- `POST /api/auth/login` - Login user (optional - direct access available)
-- `GET /api/auth/companies` - Get available companies
+### Authentication (Legacy - not currently used)
+- `POST /api/auth/login` - Login user (optional)
 - `GET /api/auth/verify-token` - Verify JWT token
 
 ### Buyers
@@ -459,12 +460,18 @@ Mock token: `Bearer mock-token-ORG`
 ### Dashboard
 - `GET /api/dashboard` - Dashboard data with charts
 
+### Business Settings
+- `GET /api/settings` - Get business settings
+- `POST /api/settings` - Update business settings
+- `POST /api/settings/upload-logo` - Upload business logo
+- `POST /api/settings/remove-logo` - Remove business logo
+- `GET /api/settings/logo/<filename>` - Get logo file
+
 ## Database Schema
 
 ### Tables
 
-- **companies** - Company information (with GST/NTN numbers, Faisalabad addresses)
-- **users** - User accounts with company isolation
+- **business_settings** - Business information and configuration (name, address, GST/NTN, logo, bank details)
 - **buyers** - Client/mill information (with GST/NTN support)
 - **items** - Product catalog
 - **orders** - Customer orders with automatic totals
@@ -473,8 +480,8 @@ Mock token: `Bearer mock-token-ORG`
 - **payments** - Payment records with multiple methods
 
 ### Key Features
-- Complete company data isolation (all queries filtered by company_id)
-- GST/NTN number support for companies and buyers
+- Business logo management with placement options (header/watermark)
+- GST/NTN number support for business and buyers
 - Running balance calculation in ledgers
 - Automatic tax and total calculations
 
@@ -498,11 +505,10 @@ The frontend automatically connects to `http://localhost:5000/api`. To change th
 
 ## Usage Guide
 
-### Login Process
-1. Run `start.bat` or `start.ps1` (opens browser once automatically)
+### Starting the Application
+1. Run `start.bat` or `start.ps1` (opens browser automatically)
 2. Browser navigates to `http://localhost:3000`
-3. Click "Business Company" button
-4. Dashboard loads instantly - no password needed!
+3. Dashboard loads instantly - no login required!
 
 ### Navigation
 - Use sidebar to navigate between modules (indigo theme with cyan highlights)
@@ -544,11 +550,12 @@ All components resize dynamically based on screen size.
 
 ## Features Implemented
 
-✅ Mock token-based multi-company system  
-✅ Direct dashboard access (no password)
-✅ Company data isolation
-✅ Unified database system
-✅ GST/NTN number support for companies and buyers
+✅ Direct dashboard access (no authentication required)  
+✅ **Business Settings Management** with logo upload/remove/clear functionality  
+✅ **Logo placement options** (header/watermark) with automatic resizing  
+✅ Comprehensive business information editor (GST/NTN, bank details)  
+✅ Single database system (company.db)  
+✅ GST/NTN number support for business and buyers  
 ✅ Responsive sidebar navigation  
 ✅ Real-time dashboard with Chart.js analytics  
 ✅ Buyer management with CRUD operations  
@@ -633,11 +640,8 @@ Project-CS-L
 │  ├─ .env
 │  ├─ .env.example
 │  ├─ app.py
-│  ├─ init_databases.py
 │  ├─ instance
-│  │  ├─ makkah_packages.db
 │  │  └─ company.db
-│  ├─ migrate_add_gst_ntn.py
 │  ├─ models.py
 │  ├─ requirements.txt
 │  ├─ routes
@@ -650,6 +654,7 @@ Project-CS-L
 │  │  ├─ order_bp.py
 │  │  ├─ payment_bp.py
 │  │  ├─ report_bp.py
+│  │  ├─ settings_bp.py
 │  │  ├─ __init__.py
 │  │  └─ __pycache__
 │  │     ├─ auth_bp.cpython-311.pyc
@@ -661,14 +666,10 @@ Project-CS-L
 │  │     ├─ order_bp.cpython-311.pyc
 │  │     ├─ payment_bp.cpython-311.pyc
 │  │     ├─ report_bp.cpython-311.pyc
+│  │     ├─ settings_bp.cpython-311.pyc
 │  │     └─ __init__.cpython-311.pyc
-│  ├─ setup_databases.py
-│  └─ start.sh
-│  ├─ test_isolation.py
-│  ├─ test_switching.py
-│  ├─ update_company_info.py
+│  ├─ uploads/
 │  ├─ utils.py
-│  ├─ verify_databases.py
 │  └─ __pycache__
 │     ├─ app.cpython-311.pyc
 │     ├─ models.cpython-311.pyc
@@ -682,18 +683,23 @@ Project-CS-L
 │  ├─ src
 │  │  ├─ App.js
 │  │  ├─ components
+│  │  │  ├─ BackupModal.js
+│  │  │  ├─ BusinessSettingsModal.js
 │  │  │  ├─ ProtectedRoute.js
 │  │  │  ├─ Sidebar.js
 │  │  │  └─ Toast.js
 │  │  ├─ context
 │  │  │  ├─ AuthContext.js
 │  │  │  └─ ToastContext.js
+│  │  ├─ hooks
+│  │  │  └─ useModalAnimation.js
 │  │  ├─ index.css
 │  │  ├─ index.js
 │  │  ├─ pages
+│  │  │  ├─ BillPage.js
 │  │  │  ├─ BuyersPage.js
 │  │  │  ├─ DashboardPage.js
-│  │  │  ├─ InvoicesPage.js
+│  │  │  ├─ InvoicePage.js
 │  │  │  ├─ ItemsPage.js
 │  │  │  ├─ LedgerPage.js
 │  │  │  ├─ LoginPage.js
@@ -704,7 +710,8 @@ Project-CS-L
 │  │  │  └─ api.js
 │  │  └─ utils
 │  │     ├─ dateUtils.js
-│  │     └─ exportUtils.js
+│  │     ├─ exportUtils.js
+│  │     └─ numberToWords.js
 │  └─ tailwind.config.js
 ├─ imgs
 │  └─ 1.jpg

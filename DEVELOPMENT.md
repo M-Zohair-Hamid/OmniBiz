@@ -3,7 +3,7 @@
 > Scope: This guide documents **only what is present in this repo** right now. It lists every module declared in dependency files and every major subsystem exposed by the codebase.
 
 ## 1) Project Overview
-A multi-company inventory & sales management system with a React + Tailwind frontend and a Flask + SQLAlchemy backend. Each company has an isolated SQLite database.
+A single-company inventory & sales management system with a React + Tailwind frontend and a Flask + SQLAlchemy backend. The application uses a single SQLite database (company.db) with business settings management including logo upload/placement options.
 
 ## 2) Runtime Requirements
 - **Python**: 3.11+ (used by startup scripts)
@@ -23,15 +23,15 @@ stop.ps1                Windows stop script
 INSTALLER.*             Installer scripts
 ```
 
-## 4) Databases (Per Company)
-- **Business Company** → backend/instance/company.db
-
-Company context is selected through headers/JWT. The backend routes all requests to the company database.
+## 4) Database
+- **Single database** → backend/instance/company.db
+- Contains business_settings table for logo and business information management
+- No authentication required - direct access to all features
 
 ## 5) Backend Dependencies (Python)
 Declared in: backend/requirements.txt
 
-**Total modules: 7**
+**Total modules: 8+**
 1. Flask==3.0.0
 2. Flask-CORS==4.0.0
 3. Flask-JWT-Extended==4.5.3
@@ -39,24 +39,29 @@ Declared in: backend/requirements.txt
 5. SQLAlchemy==2.0.23
 6. python-dotenv==1.0.0
 7. WeasyPrint==60.2
-
-> Also present: reportlab==4.0.7 in requirements (used for PDF/report generation). This makes **8 total**. If you remove it, update the count.
+8. Pillow (for image processing - logo upload/resize)
+9. reportlab==4.0.7 (for PDF/report generation)
 
 ### Backend Responsibilities
-- REST APIs for orders, buyers, items, payments, reports
-- Multi-company DB routing
+- REST APIs for orders, buyers, items, payments, reports, settings
+- Business settings and logo management
 - Backup/restore
 - PDF generation for invoices/bills
+- Image processing for logo uploads
 
 ### Key Backend Files
-- backend/app.py — app bootstrap, CORS, DB switching, auto-backup
-- backend/models.py — SQLAlchemy models
+- backend/app.py — app bootstrap, CORS, auto-backup
+- backend/models.py — SQLAlchemy models (including BusinessSettings)
+- backend/routes/settings_bp.py — Business settings and logo management API
 - backend/routes/order_bp.py — Order API with 12-item validation and round_off_amount()
 - backend/routes/payment_bp.py — Payment API with ROUND_HALF_UP rounding
 - backend/routes/*.py — Other API routes
 - backend/utils.py — shared helpers
 
 ### Core API Endpoints (High-Level)
+- /api/settings — Business settings management (GET/POST)
+- /api/settings/upload-logo — Logo upload with automatic PNG conversion and resizing
+- /api/settings/remove-logo — Remove business logo
 - /api/orders (12-item limit validation, rounded status calculation)
 - /api/buyers
 - /api/items
@@ -76,6 +81,14 @@ Declared in: backend/requirements.txt
 - **Auto-detection**: Payment type (full/partial) auto-selected based on amount
 - **Status alignment**: Order status calculation matches payment rounding
 - **Partial unlock**: Orders with partial payments remain editable (only paid locked)
+
+### Business Settings Management Features
+- **Logo upload**: Automatic PNG conversion and image resizing (max 800x800)
+- **Logo placement**: Options for header or watermark placement in invoices/bills
+- **Business information**: Name, address, contact, GST/NTN, bank account details
+- **Remove logo**: One-click logo removal functionality
+- **Clear all**: Reset all business information to defaults
+- **Real-time updates**: Changes reflected immediately in invoice/bill templates
 
 ## 6) Frontend Dependencies (React)
 Declared in: frontend/package.json
@@ -99,18 +112,21 @@ Declared in: frontend/package.json
 
 ### Frontend Responsibilities
 - UI for orders, buyers, items, payments, ledgers, reports
+- Business settings modal with logo upload and management
 - 12-item order validation with real-time cart counter
-- Fixed 12-row print tables (Bill/STI) with serial numbers
+- Fixed 12-row print tables (Bill/STI) with serial numbers and centered single-page layout
 - Payment type auto-selection based on remaining balance
 - Modals, filters, and printable views
 - Report generation view in a separate tab
 
 ### Key Frontend Files
 - frontend/src/App.js — routing
-- frontend/src/services/api.js — API client and headers
+- frontend/src/services/api.js — API client
+- frontend/src/components/BusinessSettingsModal.js — Business settings and logo management UI
+- frontend/src/components/BackupModal.js — Backup and restore UI
 - frontend/src/pages/OrdersPage.js — Order management with 12-item validation and cart display
-- frontend/src/pages/BillPage.js — Fixed 12-row Bill print table
-- frontend/src/pages/InvoicePage.js — Fixed 12-row Sales Tax Invoice print table
+- frontend/src/pages/BillPage.js — Fixed 12-row Bill print table with centered layout
+- frontend/src/pages/InvoicePage.js — Fixed 12-row Sales Tax Invoice print table with centered layout
 - frontend/src/pages/*.js — other pages (Payments, Reports, BuyerReport, etc.)
 - frontend/src/components/*.js — shared UI components
 

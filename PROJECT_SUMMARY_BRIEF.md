@@ -1,3 +1,3 @@
 # Project Summary (Brief)
 
-Business app with isolated SQLite DB, orders, payments, ledgers, reports, invoices, and backups. React frontend + Flask backend. Backups use per-company folders with overwrite and restore support.
+Single-company business management system with SQLite database (company.db). Features include business settings with logo management, orders, payments, ledgers, reports, invoices/bills with print optimization, and backup/restore. React frontend + Flask backend. No authentication required - direct dashboard access.
