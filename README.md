@@ -1,4 +1,4 @@
-# Business Management System
+# OmniBiz
 
 A modern, fully responsive web application for managing business operations. The system handles orders, invoices, payments, and analytics with a sophisticated indigo/cyan color theme and comprehensive business settings management.
 
@@ -728,5 +728,6 @@ Project-CS-L
 ├─ start.sh
 ├─ stop.ps1
 └─ test-date-format.js
+
 
 ```
