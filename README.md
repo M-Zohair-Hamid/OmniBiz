@@ -116,7 +116,7 @@ The script will:
 ## 📁 Detailed Project Structure
 
 **Project Date**: February 2026  
-**Last Updated**: February 17, 2026
+**Last Updated**: March 2, 2026
 
 ```
 Project-CS-L/
@@ -223,6 +223,9 @@ Project-CS-L/
 
 4. **Item Management**
    - Product catalog management with auto-generated codes (HS-XXXX from 1000)
+   - **Stock tracking with automatic deduction/restoration**
+   - **Stock column in items table** showing current quantity in stock
+   - **Add Stock field** for incrementing stock without overwriting existing quantity
    - Unique item codes and names (prevents duplicates)
    - Pricing management
    - Unit configuration (PCS, KG, MTR, BOX)
@@ -230,6 +233,8 @@ Project-CS-L/
 
 5. **Order Management**
    - Create dynamic orders with up to 12 items per order (hard limit enforced)
+   - **Automatic stock deduction** when items are added to orders
+   - **Stock restoration** when orders are deleted or items are updated
    - Live cart indicator showing "Cart: X/12 items | Qty: Y" in order modal
    - Automatic tax calculation (18% GST)
    - Order status tracking (pending/partial/paid) with consistent rounding
@@ -240,6 +245,9 @@ Project-CS-L/
 
 6. **Invoice & Print Management**
    - Professional HTML invoice templates (indigo theme)
+   - **Enhanced invoice headers** with logo on left and centered company name
+   - **Bold Montserrat font** for business name and address
+   - **Fixed print view** with proper content display and page breaks
    - Fixed 12-row print tables for Bills and Sales Tax Invoices
    - Serial-numbered rows (1-12) with blank cells for unused slots
    - Single-page print layout (no pagination)
@@ -260,14 +268,24 @@ Project-CS-L/
    - Payment tracking with status indicators
    - Partial orders unlocked for payment (only paid orders locked)
 
-8. **Ledger System**
+8. **Data Backup & Restore**
+   - **Simplified backup interface** - Automatically backs up current company only
+   - Manual backup to custom folder location
+   - Periodic automated backups as ZIP files with timestamps
+   - Restore from folder or ZIP backup with confirmation
+   - Backup location configuration and tracking
+   - Auto-backup on startup toggle for continuous protection
+   - Last backup timestamp display
+   - Overwrite protection for existing backups
+
+9. **Ledger System**
    - Party ledger with running balance
    - Date range filtering
    - PDF export with company branding
    - Transaction history
    - Credit/debit color coding
 
-9. **Reports & Analytics**
+10. **Reports & Analytics**
    - Buyer-wise sales reports with bar charts
    - Item-wise sales analysis with horizontal bars
    - Filterable date ranges
@@ -572,13 +590,23 @@ All components resize dynamically based on screen size.
 ✅ Responsive sidebar navigation  
 ✅ Real-time dashboard with Chart.js analytics  
 ✅ Buyer management with CRUD operations  
-✅ Item/Product management  
+✅ **Item/Product management with stock tracking**  
+✅ **Stock column in items table** displaying current quantity  
+✅ **"Add Stock" field** for incrementing stock without overwriting  
+✅ **Automatic stock deduction** when items are added to orders  
+✅ **Stock restoration** when orders are deleted  
 ✅ Dynamic order creation with automatic totals  
 ✅ Professional invoice PDF generation (Rs. format)  
 ✅ Invoice filename: `invoice-YYYY-MM-DD-BuyerName.pdf`
+✅ **Enhanced invoice headers** with logo on left and centered company name
+✅ **Bold Montserrat font** for business name and address in invoices
+✅ **Fixed print view** with proper content display and no blank pages
 ✅ Party ledger with running balance
 ✅ Ledger PDF export with date filtering
 ✅ Payment tracking with multiple methods  
+✅ **Simplified backup flow** - Single company backup without scope selection  
+✅ **Manual and periodic backups** with folder or ZIP options  
+✅ **Automatic backup restoration** with overwrite confirmation  
 ✅ Advanced reporting & analytics  
 ✅ Excel/CSV export functionality  
 ✅ Pagination and search  
