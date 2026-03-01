@@ -60,8 +60,17 @@ def get_settings():
                 'email': 'support@company.local',
                 'phone': '+1-800-0000000',
                 'whatsapp': '+1-800-0000000',
-                'logo_url': None
+                'logo_url': None,
+                'needs_setup': True
             }), 200
+
+        default_name_values = {'BUSINESS COMPANY', 'Business Company', ''}
+        default_address_values = {'Business District, City, Country', ''}
+        needs_setup = (
+            (settings.business_name or '').strip() in default_name_values
+            and (settings.address or '').strip() in default_address_values
+            and not settings.logo_filename
+        )
         
         return jsonify({
             'id': settings.id,
@@ -72,7 +81,8 @@ def get_settings():
             'whatsapp': settings.whatsapp,
             'logo_url': f'/api/settings/logo/{settings.logo_filename}' if settings.logo_filename else None,
             'logo_placement': settings.logo_placement or 'both',
-            'logo_as_watermark': settings.logo_as_watermark if settings.logo_as_watermark is not None else True
+            'logo_as_watermark': settings.logo_as_watermark if settings.logo_as_watermark is not None else True,
+            'needs_setup': needs_setup
         }), 200
         
     except Exception as e:
