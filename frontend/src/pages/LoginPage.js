@@ -239,11 +239,23 @@ const LoginPage = () => {
               <div>
                 <label className="block text-white text-sm mb-2">Business Logo</label>
                 <input
+                  id="setup-logo-input"
                   type="file"
                   accept="image/png,image/jpeg,image/jpg"
                   onChange={handleSetupLogoChange}
-                  className="w-full text-sm text-white"
+                  className="hidden"
                 />
+                <div className="flex flex-col items-center gap-2">
+                  <label
+                    htmlFor="setup-logo-input"
+                    className="inline-flex items-center px-5 py-2.5 rounded-lg bg-blue-500 text-white font-semibold text-sm cursor-pointer hover:bg-blue-600 transition-all shadow-md"
+                  >
+                    Choose Logo
+                  </label>
+                  <span className="text-xs text-[#EBEEF5] text-center break-all">
+                    {setupLogoFile ? setupLogoFile.name : 'No file selected'}
+                  </span>
+                </div>
                 {setupLogoPreview && (
                   <div className="mt-3 p-3 rounded-xl bg-white bg-opacity-10 border border-white border-opacity-20">
                     <img src={setupLogoPreview} alt="Logo preview" className="h-24 w-auto object-contain mx-auto" />

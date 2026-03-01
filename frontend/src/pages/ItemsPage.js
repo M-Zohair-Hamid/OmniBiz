@@ -12,8 +12,9 @@ const ItemsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   
   const [formData, setFormData] = useState({
-    code: '', name: '', description: '', unit: 'PCS', unit_price: 0
+    code: '', name: '', description: '', unit: 'PCS', unit_price: 0, quantity_in_stock: 0
   });
+  const [addStockAmount, setAddStockAmount] = useState(0);
 
   const { showToast } = useContext(ToastContext);
   const { user } = useContext(AuthContext);
@@ -63,13 +64,15 @@ const ItemsPage = () => {
 
   const handleAddItem = () => {
     setEditingId(null);
-    setFormData({ code: '', name: '', description: '', unit: 'PCS', unit_price: 0 });
+    setFormData({ code: '', name: '', description: '', unit: 'PCS', unit_price: 0, quantity_in_stock: 0 });
+    setAddStockAmount(0);
     setShowForm(true);
   };
 
   const handleEditItem = (item) => {
     setFormData(item);
     setEditingId(item.id);
+    setAddStockAmount(0);
     setShowForm(true);
   };
 
@@ -84,6 +87,11 @@ const ItemsPage = () => {
     try {
       const submitData = { ...formData };
       
+      // If editing and user entered an "Add Stock" amount, increment the stock
+      if (editingId && addStockAmount > 0) {
+        submitData.quantity_in_stock = (formData.quantity_in_stock || 0) + addStockAmount;
+      }
+      
       if (editingId) {
         await updateItem(editingId, submitData);
         showToast('Item updated successfully', 'success');
@@ -95,6 +103,7 @@ const ItemsPage = () => {
         showToast('Item created successfully', 'success');
       }
       setShowForm(false);
+      setAddStockAmount(0);
       fetchItems(searchTerm);
     } catch (error) {
       showToast('Failed to save item', 'error');
@@ -157,6 +166,7 @@ const ItemsPage = () => {
                         <th className="px-6 py-3 text-center font-bold text-[#17144B]">Name</th>
                         <th className="px-6 py-3 text-center font-bold text-[#17144B]">Unit</th>
                         <th className="px-6 py-3 text-center font-bold text-[#17144B]">Price (₨)</th>
+                        <th className="px-6 py-3 text-center font-bold text-[#17144B]">Stock</th>
                         <th className="px-6 py-3 text-center font-bold text-[#17144B]">Actions</th>
                       </tr>
                     </thead>
@@ -167,6 +177,7 @@ const ItemsPage = () => {
                           <td className="px-6 py-3 text-black text-center">{highlightText(item.name)}</td>
                           <td className="px-6 py-3 text-black text-center">{highlightText(item.unit)}</td>
                           <td className="px-6 py-3 font-semibold text-black text-center">{highlightText(`₨${item.unit_price.toLocaleString('en-PK', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`)}</td>
+                          <td className="px-6 py-3 font-semibold text-black text-center">{highlightText(item.quantity_in_stock || 0)}</td>
                           <td className="px-6 py-3 text-center">
                             <button
                               onClick={() => handleEditItem(item)}
@@ -233,6 +244,29 @@ const ItemsPage = () => {
                       <label className="block text-[#17144B] font-bold mb-2">Unit Price (₨) *</label>
                       <input type="number" step="0.01" value={formData.unit_price} onChange={(e) => setFormData({...formData, unit_price: parseFloat(e.target.value)})} className="w-full px-3 py-2 backdrop-blur-sm bg-white bg-opacity-40 border border-[#3A3F8C] rounded-lg focus:border-[#00D4FF]" />
                     </div>
+                    <div>
+                      <label className="block text-[#17144B] font-bold mb-2">Current Stock</label>
+                      <input type="number" step="1" value={formData.quantity_in_stock} onChange={(e) => setFormData({...formData, quantity_in_stock: parseInt(e.target.value) || 0})} className="w-full px-3 py-2 backdrop-blur-sm bg-white bg-opacity-40 border border-[#3A3F8C] rounded-lg focus:border-[#00D4FF]" />
+                    </div>
+                    {editingId && (
+                      <div>
+                        <label className="block text-[#17144B] font-bold mb-2">Add Stock</label>
+                        <input 
+                          type="number" 
+                          step="1" 
+                          min="0"
+                          value={addStockAmount} 
+                          onChange={(e) => setAddStockAmount(parseInt(e.target.value) || 0)} 
+                          placeholder="Enter amount to add"
+                          className="w-full px-3 py-2 backdrop-blur-sm bg-white bg-opacity-40 border border-[#3A3F8C] rounded-lg focus:border-[#00D4FF]" 
+                        />
+                        {addStockAmount > 0 && (
+                          <p className="text-sm text-green-700 font-semibold mt-1">
+                            New stock will be: {(formData.quantity_in_stock || 0) + addStockAmount}
+                          </p>
+                        )}
+                      </div>
+                    )}
                     <div className="md:col-span-2">
                       <label className="block text-[#17144B] font-bold mb-2">Description</label>
                       <textarea value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} className="w-full px-3 py-2 backdrop-blur-sm bg-white bg-opacity-40 border border-[#3A3F8C] rounded-lg focus:border-[#00D4FF]" />

@@ -61,9 +61,13 @@ The script will:
 - ✅ Start React frontend (Port 3000)
 - ✅ Open browser automatically
 
-**Login:**
-- Click **Business Company** button (Universal Organization)
-- No password required - instant dashboard access!
+**First Launch Onboarding:**
+- If business profile is not configured, the app opens a **First-Time Setup** screen.
+- Required fields: **Business Name**, **Address**, and **Logo Image**.
+- Logo picker uses a centered custom **Choose Logo** button.
+
+**After Setup:**
+- Click **Enter System** for instant dashboard access (no password required).
 
 ---
 
@@ -190,7 +194,10 @@ Project-CS-L/
 
 1. **Business Settings Management**
    - Comprehensive business information editor
+   - First-time onboarding flow for name, address, and logo
+   - Setup gating using `needs_setup` state from settings API
    - Logo upload with automatic resizing and PNG conversion
+   - Centered custom blue "Choose Logo" button in first-time setup
    - Logo placement options (header/watermark)
    - Business information fields (name, address, contact, GST/NTN, bank details)
    - Remove logo functionality
@@ -398,7 +405,10 @@ chartOptions = {
 
 ## Company Access
 
-Direct dashboard access - no authentication required! Simply open the application and start managing your business.
+Direct dashboard access with onboarding-aware flow:
+
+- First run: complete setup (name, address, logo)
+- Later runs: use **Enter System** directly (no password required)
 
 ```
 Access: Open application at http://localhost:3000
@@ -461,7 +471,7 @@ All endpoints are publicly accessible (no authentication required).
 - `GET /api/dashboard` - Dashboard data with charts
 
 ### Business Settings
-- `GET /api/settings` - Get business settings
+- `GET /api/settings` - Get business settings (includes `needs_setup` flag)
 - `POST /api/settings` - Update business settings
 - `POST /api/settings/upload-logo` - Upload business logo
 - `POST /api/settings/remove-logo` - Remove business logo
@@ -508,7 +518,8 @@ The frontend automatically connects to `http://localhost:5000/api`. To change th
 ### Starting the Application
 1. Run `start.bat` or `start.ps1` (opens browser automatically)
 2. Browser navigates to `http://localhost:3000`
-3. Dashboard loads instantly - no login required!
+3. On first run, complete setup (name + address + logo)
+4. After setup, click **Enter System** to open dashboard
 
 ### Navigation
 - Use sidebar to navigate between modules (indigo theme with cyan highlights)
@@ -551,7 +562,9 @@ All components resize dynamically based on screen size.
 ## Features Implemented
 
 ✅ Direct dashboard access (no authentication required)  
+✅ **First-Time Setup Flow** requiring business name, address, and logo  
 ✅ **Business Settings Management** with logo upload/remove/clear functionality  
+✅ **Centered custom blue "Choose Logo" button** for onboarding image selection  
 ✅ **Logo placement options** (header/watermark) with automatic resizing  
 ✅ Comprehensive business information editor (GST/NTN, bank details)  
 ✅ Single database system (company.db)  
@@ -630,7 +643,7 @@ This project is proprietary and confidential.
 ---
 
 **Project Date**: February 2026  
-**Last Updated**: February 17, 2026  
+**Last Updated**: March 2, 2026  
 **Version**: 1.1.0  
 **Status**: Production Ready
 

@@ -3,7 +3,7 @@
 > Scope: This guide documents **only what is present in this repo** right now. It lists every module declared in dependency files and every major subsystem exposed by the codebase.
 
 ## 1) Project Overview
-A single-company inventory & sales management system with a React + Tailwind frontend and a Flask + SQLAlchemy backend. The application uses a single SQLite database (company.db) with business settings management including logo upload/placement options.
+A single-company inventory & sales management system with a React + Tailwind frontend and a Flask + SQLAlchemy backend. The application uses a single SQLite database (company.db) with business settings management including logo upload/placement options and a first-time onboarding step.
 
 ## 2) Runtime Requirements
 - **Python**: 3.11+ (used by startup scripts)
@@ -59,7 +59,7 @@ Declared in: backend/requirements.txt
 - backend/utils.py — shared helpers
 
 ### Core API Endpoints (High-Level)
-- /api/settings — Business settings management (GET/POST)
+- /api/settings — Business settings management (GET/POST, includes needs_setup flag)
 - /api/settings/upload-logo — Logo upload with automatic PNG conversion and resizing
 - /api/settings/remove-logo — Remove business logo
 - /api/orders (12-item limit validation, rounded status calculation)
@@ -112,6 +112,7 @@ Declared in: frontend/package.json
 
 ### Frontend Responsibilities
 - UI for orders, buyers, items, payments, ledgers, reports
+- First-time setup screen that requires business name, address, and logo image
 - Business settings modal with logo upload and management
 - 12-item order validation with real-time cart counter
 - Fixed 12-row print tables (Bill/STI) with serial numbers and centered single-page layout
@@ -122,6 +123,7 @@ Declared in: frontend/package.json
 ### Key Frontend Files
 - frontend/src/App.js — routing
 - frontend/src/services/api.js — API client
+- frontend/src/pages/LoginPage.js — login + first-time onboarding gate and setup submission
 - frontend/src/components/BusinessSettingsModal.js — Business settings and logo management UI
 - frontend/src/components/BackupModal.js — Backup and restore UI
 - frontend/src/pages/OrdersPage.js — Order management with 12-item validation and cart display

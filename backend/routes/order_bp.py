@@ -262,6 +262,9 @@ def create_order():
             line_total=item_data['line_total']
         )
         session.add(order_item)
+        
+        # Deduct quantity from stock
+        item_data['item'].quantity_in_stock -= item_data['quantity']
     
     session.commit()
     
@@ -295,6 +298,11 @@ def update_order(order_id):
         if len(data['items']) > MAX_ORDER_ITEMS:
             return jsonify({'error': f'Order cannot contain more than {MAX_ORDER_ITEMS} items'}), 400
 
+        # First, restore stock from old order items
+        old_order_items = session.query(OrderItem).filter_by(order_id=order_id).all()
+        for old_item in old_order_items:
+            old_item.item.quantity_in_stock += old_item.quantity
+        
         # Delete old order items
         session.query(OrderItem).filter_by(order_id=order_id).delete()
         session.flush()  # Ensure deletion is processed
@@ -332,7 +340,7 @@ def update_order(order_id):
         order.tax_amount = tax_amount
         order.total_amount = total_amount
         
-        # Add new order items
+        # Add new order items and deduct from stock
         for item_data in items_list:
             order_item = OrderItem(
                 order_id=order.id,
@@ -342,6 +350,9 @@ def update_order(order_id):
                 line_total=item_data['line_total']
             )
             session.add(order_item)
+            
+            # Deduct quantity from stock
+            item_data['item'].quantity_in_stock -= item_data['quantity']
     
     # Update other fields
     if 'buyer_id' in data:
@@ -401,10 +412,15 @@ def delete_order(order_id):
     if computed_status in ('paid', 'partial'):
         return jsonify({'error': 'Paid or partially paid orders cannot be deleted'}), 400
     
+    # Restore stock for all items in this order
+    order_items = session.query(OrderItem).filter_by(order_id=order.id).all()
+    for order_item in order_items:
+        order_item.item.quantity_in_stock += order_item.quantity
+    
     # Delete all payments linked to this order
     session.query(Payment).filter_by(order_id=order.id).delete()
     
     session.delete(order)
     session.commit()
     
-    return jsonify({'message': 'Order deleted successfully and payments removed'}), 200
+    return jsonify({'message': 'Order deleted successfully and stock restored'}), 200

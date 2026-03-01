@@ -10,6 +10,7 @@ Business management system for single-company operations. The application uses a
 
 ## Architecture
 - Single-company architecture with no authentication required
+- First-time setup gate before entry when business profile is not configured
 - Direct dashboard access on application startup
 - All business data stored in company.db
 - Business settings include logo management with automatic resizing and placement options
@@ -17,7 +18,9 @@ Business management system for single-company operations. The application uses a
 ## Core Functional Areas
 ### Business Settings
 - Comprehensive business information management
+- First-time setup flow requires business name, address, and logo image
 - Business logo upload with automatic PNG conversion and resizing
+- `needs_setup` flag from settings API controls onboarding gate in login page
 - Logo placement options (header or watermark)
 - Business details: name, address, contact, GST/NTN, bank account
 - Remove logo functionality
@@ -66,7 +69,7 @@ Business management system for single-company operations. The application uses a
 - Restore functionality available from UI with overwrite confirmation
 
 ## Key API Endpoints
-- Settings: /api/settings, /api/settings/upload-logo, /api/settings/remove-logo
+- Settings: /api/settings (includes needs_setup), /api/settings/upload-logo, /api/settings/remove-logo
 - Orders: /api/orders
 - Payments: /api/payments, /api/payments/order/<id>
 - Reports: /api/reports/*
@@ -75,6 +78,8 @@ Business management system for single-company operations. The application uses a
 ## Frontend Highlights
 - Modern indigo/cyan theme with responsive design
 - Business settings modal with logo upload and management
+- First-time setup screen with required name/address/logo fields
+- Centered custom blue button for logo file selection in onboarding
 - Modal animations with smooth open/close transitions (fade/scale/slide)
 - Order and payment workflows include validation feedback and disabled actions when locked
 - Print layout optimization for invoices/bills with single-page centered output
