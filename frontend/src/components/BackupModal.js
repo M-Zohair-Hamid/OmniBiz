@@ -241,7 +241,7 @@ const BackupModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className={`fixed left-0 top-0 right-0 bottom-0 w-screen h-screen bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4 ${getBackdropAnimationClass(backupModalAnim.isClosing)}`}>
+    <div className={`fixed left-0 top-0 right-0 bottom-0 w-screen h-screen bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-[100] p-4 ${getBackdropAnimationClass(backupModalAnim.isClosing)}`}>
       <div className={`backdrop-blur-xl bg-white bg-opacity-40 border border-white border-opacity-30 rounded-2xl shadow-glass-lg p-8 w-full max-w-md ${getModalAnimationClass(backupModalAnim.isClosing, 'scale')}`}>
         {/* Header */}
         <h2 className="text-xl font-bold text-black mb-6">💾 Database Backup</h2>
@@ -386,7 +386,7 @@ const BackupModal = ({ isOpen, onClose }) => {
       </div>
 
       {scopeDialog.isOpen && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm z-50">
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm z-[110]">
           <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm border border-gray-200">
             <h3 className="text-lg font-bold text-[#17144B] mb-2">{scopeDialog.title}</h3>
             <p className="text-sm text-[#17144B] opacity-80 mb-5">{scopeDialog.message}</p>

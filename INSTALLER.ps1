@@ -188,7 +188,7 @@ Write-Header "INSTALLATION COMPLETE!"
 Write-Host "Next steps:`n" -ForegroundColor Green
 Write-Host "1. Run 'start.ps1' to start the application"
 Write-Host "2. Or double-click the 'PaperCone' shortcut on your desktop"
-Write-Host "3. Login with UmarSons or Makkah Packages`n"
+Write-Host "3. Login with Business Company`n"
 Write-Host "Happy coding! 🚀`n" -ForegroundColor Green
 
 Read-Host "Press Enter to exit"

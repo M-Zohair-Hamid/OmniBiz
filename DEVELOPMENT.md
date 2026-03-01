@@ -24,10 +24,9 @@ INSTALLER.*             Installer scripts
 ```
 
 ## 4) Databases (Per Company)
-- **UmarSons** → backend/instance/umarsons.db
-- **Makkah Packages** → backend/instance/makkah_packages.db
+- **Business Company** → backend/instance/company.db
 
-Company context is selected through headers/JWT. The backend switches binds accordingly.
+Company context is selected through headers/JWT. The backend routes all requests to the company database.
 
 ## 5) Backend Dependencies (Python)
 Declared in: backend/requirements.txt

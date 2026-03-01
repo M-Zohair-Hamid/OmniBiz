@@ -84,7 +84,6 @@
   z-index: 1;
   display: flex;
   flex-direction: column;
-  page-break-after: always;
   page-break-inside: avoid;
   box-sizing: border-box;
   --footer-height: 70px;
@@ -123,11 +122,12 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 600px;
-  height: 600px;
+  width: 800px;
+  height: 800px;
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
+  opacity: 0.08;
   z-index: -1;
   pointer-events: none;
 }
@@ -442,8 +442,8 @@ PRINT LAYOUT RULES (DO NOT BREAK):
 /* PRINT STYLES */
 @media print {
   @page {
-    size: A4;
-    margin: 0;
+    size: A4 portrait;
+    margin: 0mm;
   }
 
   .print-hidden {
@@ -459,6 +459,13 @@ PRINT LAYOUT RULES (DO NOT BREAK):
     print-color-adjust: exact;
   }
 
+  html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
   body {
     margin: 0;
     padding: 0;
@@ -466,21 +473,23 @@ PRINT LAYOUT RULES (DO NOT BREAK):
 
   .invoice-page {
     background: white;
+    width: 100%;
+    display: flex;
+    justify-content: center;
   }
 
   .invoice-container {
-    width: 210mm;
-    min-height: 297mm;
-    max-height: 297mm;
-    margin: 0;
+    width: 210mm !important;
+    min-height: 297mm !important;
+    max-height: 297mm !important;
+    margin: 0 !important;
     background: #ffffff;
-    padding: 12px;
+    padding: 12px !important;
     box-shadow: none;
     position: relative;
     z-index: 1;
     display: flex;
     flex-direction: column;
-    page-break-after: always;
     page-break-inside: avoid;
     box-sizing: border-box;
     --footer-height: 70px;

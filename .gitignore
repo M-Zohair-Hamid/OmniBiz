@@ -1,12 +1,27 @@
 # Node.js / frontend
 frontend/node_modules/
+node_modules/
 package-lock.json
 
 # Python
 **/__pycache__/
 **/*.pyc
+venv/
+.venv/
 backend/.env
 backend/instance/
+instance/*.db
+
+# Uploads and user data
+backend/uploads/
+uploads/
+
+# Backup paths (Windows)
+backend/C:\\*
+**/C:\\*
+
+# Sync conflict files
+*.sync-conflict-*
 
 # Builds / output
 dist/
@@ -15,3 +30,6 @@ build/
 # Editor / OS
 .vscode/
 .DS_Store
+*.swp
+*.swo
+*~

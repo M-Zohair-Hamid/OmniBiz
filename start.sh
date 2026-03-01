@@ -19,9 +19,19 @@ if [[ ! -d "$DB_DIR" ]]; then
 fi
 
 echo "=== Environment Check ==="
+
+# Auto-activate venv if it exists
+if [[ -d "$ROOT/venv" ]]; then
+  echo "Activating virtual environment..."
+  source "$ROOT/venv/bin/activate"
+  echo "[OK] Virtual environment activated"
+fi
+
 PYTHON="${PYTHON:-}"
 if [[ -z "$PYTHON" ]]; then
-  if [[ -x "$ROOT/.venv/bin/python" ]]; then
+  if [[ -x "$ROOT/venv/bin/python" ]]; then
+    PYTHON="$ROOT/venv/bin/python"
+  elif [[ -x "$ROOT/.venv/bin/python" ]]; then
     PYTHON="$ROOT/.venv/bin/python"
   elif command -v python3 >/dev/null 2>&1; then
     PYTHON="python3"
@@ -36,23 +46,14 @@ echo "[OK] Python: $PYTHON"
 
 echo ""
 echo "=== Database Setup ==="
-UMAR_DB="$DB_DIR/umarsons.db"
-MAKKAH_DB="$DB_DIR/makkah_packages.db"
+COMPANY_DB="$DB_DIR/company.db"
 
-if [[ ! -f "$UMAR_DB" ]]; then
-  echo "Initializing UmarSons database..."
-  (cd "$BACKEND" && "$PYTHON" setup_umarsons.py) || { echo "[ERROR] Failed to create UmarSons database"; exit 1; }
-  echo "[OK] UmarSons database created"
+if [[ ! -f "$COMPANY_DB" ]]; then
+  echo "Initializing company database..."
+  (cd "$BACKEND" && "$PYTHON" -c "from models import db, init_db; from app import app; app.app_context().push(); init_db('company')") || { echo "[ERROR] Failed to create company database"; exit 1; }
+  echo "[OK] Company database created"
 else
-  echo "[OK] UmarSons database exists"
-fi
-
-if [[ ! -f "$MAKKAH_DB" ]]; then
-  echo "Initializing Makkah Packages database..."
-  (cd "$BACKEND" && "$PYTHON" setup_databases.py) || { echo "[ERROR] Failed to create Makkah Packages database"; exit 1; }
-  echo "[OK] Makkah Packages database created"
-else
-  echo "[OK] Makkah Packages database exists"
+  echo "[OK] Company database exists"
 fi
 
 echo ""
@@ -95,8 +96,7 @@ echo "  System Status"
 echo "============================================="
 echo ""
 echo "Companies Configured:"
-echo "  • UmarSons (PC)       -> $UMAR_DB"
-echo "  • Makkah Packages (MP) -> $MAKKAH_DB"
+echo "  • Business Company (ORG) -> $COMPANY_DB"
 echo ""
 echo "Active Services:"
 echo "  • Backend API  -> http://localhost:5000"

@@ -10,7 +10,7 @@ bp = Blueprint('payments', __name__, url_prefix='/api/payments')
 def get_session():
     """Get the session bound to current company's database"""
     from flask import g
-    company_code = getattr(g, 'company_code', 'umarsons')
+    company_code = getattr(g, 'company_code', 'company')
     # Use db.get_engine with the correct bind
     engine = db.get_engine(bind=company_code)
     # Create a new session with this engine

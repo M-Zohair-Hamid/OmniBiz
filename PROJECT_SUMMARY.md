@@ -1,14 +1,13 @@
 # Project Summary
 
 ## Overview
-Multi-company business management system for UmarSons and MakkahPackages. Each company operates on its own isolated SQLite database, while the app provides a unified UI to switch between companies. The system focuses on orders, payments, buyers, items, reporting, and printable invoices/bills, with robust backup and restore support.
+Business management system for universal company operations. The company operates on its own isolated SQLite database, while the app provides a unified interface for managing all business operations. The system focuses on orders, payments, buyers, items, reporting, and printable invoices/bills, with robust backup and restore support.
 
 ## Technology Stack
 - Frontend: React with Tailwind CSS
 - Backend: Flask + SQLAlchemy
 - Databases: SQLite per company
-  - instance/umarsons.db
-  - instance/makkah_packages.db
+  - instance/company.db
 
 ## Architecture & Company Isolation
 - Company context is selected per request.
@@ -51,8 +50,7 @@ Multi-company business management system for UmarSons and MakkahPackages. Each c
 ### Backup & Restore
 - Backups are stored in per-company folders, not zip files.
 - Folder structure:
-  - <backup path>/umarsons/umarsons.db
-  - <backup path>/makkahpackages/makkah_packages.db
+  - <backup root>/company/company.db
 - Manual backup supports overwrite confirmation.
 - Auto-backup runs on startup if more than 24 hours since last backup (overwrite enabled).
 - Restore functionality is available from the UI with overwrite confirmation.

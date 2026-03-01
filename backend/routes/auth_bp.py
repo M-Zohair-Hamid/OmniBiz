@@ -45,15 +45,9 @@ def get_companies():
     companies = [
         {
             'id': 1,
-            'name': 'UmarSons',
-            'code': 'PC',
+            'name': 'Business Company',
+            'code': 'ORG',
             'background_image': 'imgs/1.jpg'
-        },
-        {
-            'id': 2,
-            'name': 'Makkah Packages',
-            'code': 'QP',
-            'background_image': 'imgs/2.jpg'
         }
     ]
     return jsonify(companies), 200

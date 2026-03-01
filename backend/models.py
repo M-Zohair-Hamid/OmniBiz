@@ -5,24 +5,19 @@ import json
 db = SQLAlchemy()
 
 # Global variable to track current database
-_current_db = 'umarsons'
+_current_db = 'company'
 
 def switch_database(app, company_code):
-    """Switch to use specific company database via SQLAlchemy binds"""
+    """Switch to use company database via SQLAlchemy binds"""
     global _current_db
     
-    if company_code == 'umarsons':
-        bind_key = 'umarsons'
-    elif company_code == 'makkah_packages':
-        bind_key = 'makkah_packages'
-    else:
-        bind_key = 'umarsons'
+    bind_key = 'company'  # Always use the company database
     
     _current_db = bind_key
 
     # Point the active session to the selected bind so model queries use correct DB
     try:
-        db.session.bind = db.get_engine(bind=bind_key)
+        db.session.bind = db.engines[bind_key]
     except Exception:
         pass
     
@@ -52,15 +47,12 @@ def get_current_bind():
     return _current_db
 
 def get_db_for_company(company_code):
-    """Get database engine for a specific company"""
-    if company_code == 'makkah_packages':
-        return db.get_engine(bind='makkah_packages')
-    else:
-        return db.get_engine(bind='umarsons')
+    """Get database engine for the company"""
+    return db.engines['company']
 
 def get_current_db():
     """Get current database engine based on _current_db"""
-    return db.get_engine(bind=_current_db)
+    return db.engines[_current_db]
 
 # ========== COMPANY MODEL ==========
 class Company(db.Model):
@@ -81,6 +73,24 @@ class Company(db.Model):
     buyers = db.relationship('Buyer', backref='company', lazy=True, cascade='all, delete-orphan')
     items = db.relationship('Item', backref='company', lazy=True, cascade='all, delete-orphan')
     orders = db.relationship('Order', backref='company', lazy=True, cascade='all, delete-orphan')
+
+# ========== BUSINESS SETTINGS MODEL ==========
+class BusinessSettings(db.Model):
+    __tablename__ = 'business_settings'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False, unique=True)
+    business_name = db.Column(db.String(200), nullable=False)
+    address = db.Column(db.Text, nullable=False)
+    email = db.Column(db.String(100))
+    phone = db.Column(db.String(50))
+    whatsapp = db.Column(db.String(50))
+    logo_filename = db.Column(db.String(255))  # Stores the filename of uploaded logo
+    logo_placement = db.Column(db.String(20), default='both')  # 'watermark', 'side', 'both'
+    logo_as_watermark = db.Column(db.Boolean, default=True)  # Whether to show logo as watermark
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    company = db.relationship('Company', backref=db.backref('settings', uselist=False))
 
 # ========== USER MODEL ==========
 class User(db.Model):
@@ -187,7 +197,7 @@ class Payment(db.Model):
     
     order = db.relationship('Order', backref='payments', lazy=True)
 
-def init_db(company_code='umarsons'):
+def init_db(company_code='company'):
     """Initialize database with sample data for specific company"""
     # Check if data already exists
     try:
@@ -199,31 +209,18 @@ def init_db(company_code='umarsons'):
         # Table doesn't exist yet, proceed with initialization
         pass
     
-    # Create company based on company_code
-    if company_code == 'umarsons':
-        company = Company(
-            id=1,
-            name='UmarSons',
-            code='PC',
-            background_image='imgs/1.jpg',
-            address='Industrial Area, Faisalabad, Pakistan',
-            phone='+92-321-1234567',
-            email='info@umarsons.com',
-            gst_number='GST-PC-2024-001',
-            ntn_number='NTN-PC-2024-001'
-        )
-    else:  # makkah_packages
-        company = Company(
-            id=2,
-            name='Makkah Packages',
-            code='QP',
-            background_image='imgs/2.jpg',
-            address='Textile City, Faisalabad, Pakistan',
-            phone='+92-333-7654321',
-            email='contact@makkahpackages.com',
-            gst_number='GST-QP-2024-002',
-            ntn_number='NTN-QP-2024-002'
-        )
+    # Create company
+    company = Company(
+        id=1,
+        name='Business Company',
+        code='ORG',
+        background_image='imgs/1.jpg',
+        address='Business District, City, Country',
+        phone='+1-800-0000000',
+        email='support@company.local',
+        gst_number='GST-ORG-2024-001',
+        ntn_number='TAX-ORG-2024-001'
+    )
     
     db.session.add(company)
     db.session.commit()
@@ -245,114 +242,59 @@ def init_db(company_code='umarsons'):
     db.session.commit()
     
     # Create sample buyers
-    if company_code == 'umarsons':
-        buyers = [
-            Buyer(
-                company_name='Al-Abbas Textile Mills',
-                contact_person='Ahmed Khan',
-                email='ahmed@alabbas.com',
-                phone='042-1234567',
-                address='123 Textile Lane, Lahore',
-                city='Lahore',
-                gst_number='GST-BUYER-001',
-                ntn_number='NTN-BUYER-001',
-                company_id=company.id
-            ),
-            Buyer(
-                company_name='Crescent Textiles Ltd',
-                contact_person='Hassan Ali',
-                email='hassan@crescent.com',
-                phone='042-7654321',
-                address='456 Mill Road, Lahore',
-                city='Lahore',
-                gst_number='GST-BUYER-002',
-                ntn_number='NTN-BUYER-002',
-                company_id=company.id
-            )
-        ]
-        items = [
-            Item(
-                code='PC-1000',
-                name='Cardboard Cone - Small',
-                description='Premium quality cardboard cones for small yarn spools',
-                unit='PCS',
-                unit_price=15.50,
-                quantity_in_stock=5000,
-                company_id=company.id
-            ),
-            Item(
-                code='PC-1001',
-                name='Cardboard Cone - Medium',
-                description='Premium quality cardboard cones for medium yarn spools',
-                unit='PCS',
-                unit_price=22.00,
-                quantity_in_stock=3000,
-                company_id=company.id
-            ),
-            Item(
-                code='PC-1002',
-                name='Cardboard Cone - Large',
-                description='Premium quality cardboard cones for large yarn spools',
-                unit='PCS',
-                unit_price=28.00,
-                quantity_in_stock=2000,
-                company_id=company.id
-            )
-        ]
-    else:  # makkah_packages
-        buyers = [
-            Buyer(
-                company_name='Royal Textile Industries',
-                contact_person='Zain Malik',
-                email='zain@royal.com',
-                phone='042-9876543',
-                address='789 Industrial Area, Karachi',
-                city='Karachi',
-                gst_number='GST-BUYER-003',
-                ntn_number='NTN-BUYER-003',
-                company_id=company.id
-            ),
-            Buyer(
-                company_name='Elite Fabric Solutions',
-                contact_person='Sara Ahmed',
-                email='sara@elite.com',
-                phone='042-1112223',
-                address='321 Export Zone, Karachi',
-                city='Karachi',
-                gst_number='GST-BUYER-004',
-                ntn_number='NTN-BUYER-004',
-                company_id=company.id
-            )
-        ]
-        items = [
-            Item(
-                code='QP-1000',
-                name='Paper Cone - Large',
-                description='High-quality paper cones for large yarn spools',
-                unit='PCS',
-                unit_price=28.00,
-                quantity_in_stock=4000,
-                company_id=company.id
-            ),
-            Item(
-                code='QP-1001',
-                name='Paper Cone - Extra Large',
-                description='Industrial grade paper cones for extra large spools',
-                unit='PCS',
-                unit_price=35.00,
-                quantity_in_stock=2500,
-                company_id=company.id
-            ),
-            Item(
-                code='QP-1002',
-                name='Paper Cone - Jumbo',
-                description='Heavy duty paper cones for jumbo spools',
-                unit='PCS',
-                unit_price=42.00,
-                quantity_in_stock=1500,
-                company_id=company.id
-            )
-        ]
+    buyers = [
+        Buyer(
+            company_name='Sample Client A',
+            contact_person='John Smith',
+            email='contact@clienta.local',
+            phone='+1-800-1111111',
+            address='123 Business Avenue, City',
+            city='City',
+            gst_number='GST-BUYER-001',
+            ntn_number='TAX-BUYER-001',
+            company_id=company.id
+        ),
+        Buyer(
+            company_name='Sample Client B',
+            contact_person='Jane Doe',
+            email='contact@clientb.local',
+            phone='+1-800-2222222',
+            address='456 Commerce Street, City',
+            city='City',
+            gst_number='GST-BUYER-002',
+            ntn_number='TAX-BUYER-002',
+            company_id=company.id
+        )
+    ]
+    items = [
+        Item(
+            code='ITEM-001',
+            name='Product - Standard',
+            description='Standard quality product',
+            unit='PCS',
+            unit_price=15.50,
+            quantity_in_stock=5000,
+            company_id=company.id
+        ),
+        Item(
+            code='ITEM-002',
+            name='Product - Premium',
+            description='Premium quality product',
+            unit='PCS',
+            unit_price=22.00,
+            quantity_in_stock=3000,
+            company_id=company.id
+        ),
+        Item(
+            code='ITEM-003',
+            name='Product - Deluxe',
+            description='Deluxe quality product',
+            unit='PCS',
+            unit_price=28.00,
+            quantity_in_stock=2000,
+            company_id=company.id
+        )
+    ]
     
     for buyer in buyers:
         db.session.add(buyer)

@@ -14,7 +14,7 @@ bp = Blueprint('reports', __name__, url_prefix='/api/reports')
 
 def get_session():
     """Get the session bound to current company's database"""
-    company_code = getattr(g, 'company_code', 'umarsons')
+    company_code = getattr(g, 'company_code', 'company')
     engine = db.get_engine(bind=company_code)
     from sqlalchemy.orm import sessionmaker
     Session = sessionmaker(bind=engine)
@@ -504,7 +504,7 @@ def generate_sti_pdf(order_id):
     order_items = OrderItem.query.options(joinedload(OrderItem.item)).filter_by(order_id=order_id).all()
     
     # Get company name
-    company_name = order.company.name if order.company else 'UMARSONS'
+    company_name = order.company.name if order.company else 'Company'
     
     # Calculate due date (30 days from order date)
     due_date = (order.order_date + timedelta(days=30)).strftime('%B %d, %Y')
@@ -923,7 +923,7 @@ def generate_sti_pdf(order_id):
             <div class="invoice-footer">
                 <p><strong>Thank you for your business!</strong></p>
                 <p><strong>Payment Terms:</strong> Net 30 Days</p>
-                <p>For queries: umarsons08@gmail.com | Cell: 0301-7194270 | WhatsApp: 0313-7050844</p>
+                <p>For queries: support@company.local | Phone: +1-800-0000000</p>
                 <p>This is a computer-generated invoice and does not require a signature.</p>
             </div>
         </div>

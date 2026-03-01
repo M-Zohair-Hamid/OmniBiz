@@ -241,32 +241,11 @@ echo Checking databases...
 REM Create instance directory if it doesn't exist
 if not exist "instance" mkdir instance
 
-REM Check UmarSons database
-if exist "instance\umarsons.db" (
-    echo UmarSons database: EXISTS
+REM Check Company database
+if exist "instance\company.db" (
+    echo Company database: EXISTS
 ) else (
-    echo Creating UmarSons database...
-    python setup_umarsons.py
-    if errorlevel 1 (
-        echo WARNING: Could not create UmarSons database
-        echo It will be created automatically when app starts
-    )
-)
-
-REM Check Makkah Packages database
-if exist "instance\makkah_packages.db" (
-    echo Makkah Packages database: EXISTS
-    echo UmarSons database exists
-) else (
-    echo Creating UmarSons database...
-    python setup_umarsons.py
-)
-
-if exist "instance\makkah_packages.db" (
-    echo Makkah Packages database exists
-) else (
-    echo Creating Makkah Packages database...
-    python setup_databases.py
+    echo Company database will be created automatically when application starts
 )
 echo Databases: READY
 echo.
@@ -306,8 +285,7 @@ echo   - Python: %PYTHON_VERSION%
 echo   - Node.js: Installed
 echo   - Backend: Ready (Flask, SQLAlchemy, ReportLab, etc.)
 echo   - Frontend: Ready (React, Tailwind, Chart.js, etc.)
-echo   - UmarSons Database: Ready
-echo   - Makkah Packages Database: Ready
+echo   - Company Database: Ready
 echo   - Desktop Shortcut: Created at %DESKTOP%
 echo.
 echo ========================================
@@ -326,8 +304,7 @@ echo  COMPANIES AVAILABLE FOR LOGIN
 echo ========================================
 echo.
 echo Click company button to access (no password required):
-echo   - UmarSons (Industrial Area, Faisalabad)
-echo   - Makkah Packages (Textile City, Faisalabad)
+echo   - Business Company (Organization)
 echo.
 echo ========================================
 echo.

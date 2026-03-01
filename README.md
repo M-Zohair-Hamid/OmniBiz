@@ -62,8 +62,7 @@ The script will:
 - ✅ Open browser automatically
 
 **Login:**
-- Click **UmarSons** button (Company in Faisalabad)
-- Click **Makkah Packages** button (Company in Faisalabad)
+- Click **Business Company** button (Universal Organization)
 - No password required - instant dashboard access!
 
 ---
@@ -127,15 +126,14 @@ Project-CS-L/
 │   │   ├── ledger_bp.py     # Party ledger
 │   │   ├── report_bp.py     # Reports & analytics
 │   │   └── dashboard_bp.py  # Dashboard data
-│   └── instance/            # SQLite databases
-│       ├── umarsons.db      # Company 1 database
-│       └── makkah_packages.db # Company 2 database
+│   └── instance/            # SQLite database
+│       └── company.db       # Company database
 │
 └── assets/                   # Design assets
     └── templates/            # Invoice templates
         ├── invoice.html      # Regular invoice (indigo theme)
         ├── sales-tax-invoice.html  # Sales tax invoice (indigo theme)
-        └── umarsons/         # Company branding
+        └── umarsons/         # Invoice templates
             ├── logo.png      # Company logo
             └── watermark.png # Invoice watermark
 ```
@@ -156,8 +154,8 @@ Project-CS-L/
 ### Business Features
 
 1. **Multi-Company System**
-   - Company-specific data isolation (UmarSons, Makkah Packages)
-   - Separate databases per company
+   - Company data isolation
+   - Unified database per company
    - Mock token-based authentication
    - Direct dashboard access (no password required)
 
@@ -356,17 +354,10 @@ chartOptions = {
 ## Company Access
 
 ```
-Company 1: UmarSons
-- Location: Industrial Area, Faisalabad, Pakistan
-- GST: GST-PC-2024-001
-- Mock Token: Bearer mock-token-PC
-- Access: Click "UmarSons" button on login page
-
-Company 2: Makkah Packages
-- Location: Textile City, Faisalabad, Pakistan
-- GST: GST-MP-2024-002
-- Mock Token: Bearer mock-token-MP
-- Access: Click "Makkah Packages" button on login page
+Company: Business Company
+- Type: Universal Organization
+- Mock Token: Bearer mock-token-ORG
+- Access: Click "Business Company" button on login page
 
 No password required - instant dashboard access!
 ```
@@ -374,7 +365,7 @@ No password required - instant dashboard access!
 ## API Endpoints
 
 All endpoints accept optional JWT tokens (`@jwt_required(optional=True)`).
-Mock tokens: `Bearer mock-token-PC` or `Bearer mock-token-MP`
+Mock token: `Bearer mock-token-ORG`
 
 ### Authentication
 - `POST /api/auth/login` - Login user (optional - direct access available)
@@ -470,7 +461,7 @@ The frontend automatically connects to `http://localhost:5000/api`. To change th
 ### Login Process
 1. Run `start.bat` or `start.ps1` (opens browser once automatically)
 2. Browser navigates to `http://localhost:3000`
-3. Click company button (UmarSons or Makkah Packages)
+3. Click "Business Company" button
 4. Dashboard loads instantly - no password needed!
 
 ### Navigation
@@ -515,7 +506,8 @@ All components resize dynamically based on screen size.
 
 ✅ Mock token-based multi-company system  
 ✅ Direct dashboard access (no password)
-✅ Company-specific data isolation (UmarSons, Makkah Packages)
+✅ Company data isolation
+✅ Unified database system
 ✅ GST/NTN number support for companies and buyers
 ✅ Responsive sidebar navigation  
 ✅ Real-time dashboard with Chart.js analytics  
@@ -598,7 +590,7 @@ Project-CS-L
 │  ├─ init_databases.py
 │  ├─ instance
 │  │  ├─ makkah_packages.db
-│  │  └─ umarsons.db
+│  │  └─ company.db
 │  ├─ migrate_add_gst_ntn.py
 │  ├─ models.py
 │  ├─ requirements.txt
@@ -625,7 +617,7 @@ Project-CS-L
 │  │     ├─ report_bp.cpython-311.pyc
 │  │     └─ __init__.cpython-311.pyc
 │  ├─ setup_databases.py
-│  ├─ setup_umarsons.py
+│  └─ start.sh
 │  ├─ test_isolation.py
 │  ├─ test_switching.py
 │  ├─ update_company_info.py

@@ -11,7 +11,7 @@ bp = Blueprint('orders', __name__, url_prefix='/api/orders')
 
 def get_session():
     """Get the session bound to current company's database"""
-    company_code = getattr(g, 'company_code', 'umarsons')
+    company_code = getattr(g, 'company_code', 'company')
     # Use db.get_engine with the correct bind
     engine = db.get_engine(bind=company_code)
     # Create a new session with this engine

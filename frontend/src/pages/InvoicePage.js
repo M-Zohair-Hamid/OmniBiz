@@ -5,48 +5,47 @@ import { ToastContext } from '../context/ToastContext';
 import { amountToWords } from '../utils/numberToWords';
 import './InvoicePage.css';
 
-// Company configuration
-const companyConfig = {
-  umarsons: {
-    name: 'UMARSONS',
-    address: 'P-5284, ST#09 REHMATABAD, SHEIKUPURA ROAD FAISALABAD.',
-    logo: '/logo.png',
-    watermark: '/watermark.png',
-    email: 'umarsons08@gmail.com',
-    phone: '0301-7194270',
-    whatsapp: '0313-7050844'
-  },
-  makkah_packages: {
-    name: 'MAKKAH PACKAGES',
-    address: 'P-5284, ST#09 REHMATABAD, SHEIKUPURA ROAD FAISALABAD.',
-    logo: '/assets/templates/makkahpackages/logo.png',
-    watermark: '/assets/templates/makkahpackages/watermark.png',
-    email: 'makkahpackages08@gmail.com',
-    phone: '0301-7194270',
-    whatsapp: '0313-7050844'
-  }
-};
-
 const InvoicePage = () => {
   const { orderId } = useParams();
   const navigate = useNavigate();
   const { showToast } = useContext(ToastContext);
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  const [companyData, setCompanyData] = useState(companyConfig.umarsons);
+  const [companyData, setCompanyData] = useState({
+    name: 'BUSINESS COMPANY',
+    address: 'Business District, City, Country',
+    logo: null,
+    email: 'support@company.local',
+    phone: '+1-800-0000000',
+    whatsapp: '+1-800-0000000'
+  });
 
   useEffect(() => {
-    const fetchOrder = async () => {
+    const fetchData = async () => {
       try {
+        // Fetch business settings
+        const token = localStorage.getItem('token');
+        const settingsResponse = await fetch('http://localhost:5000/api/settings', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (settingsResponse.ok) {
+          const settings = await settingsResponse.json();
+          setCompanyData({
+            name: settings.business_name || 'BUSINESS COMPANY',
+            address: settings.address || 'Business District, City, Country',
+            logo: settings.logo_url ? `http://localhost:5000${settings.logo_url}` : null,
+            email: settings.email || 'support@company.local',
+            phone: settings.phone || '+1-800-0000000',
+            whatsapp: settings.whatsapp || '+1-800-0000000'
+          });
+        }
+
+        // Fetch order
         const response = await getOrder(orderId);
         setOrder(response.data);
-        
-        // Set company configuration based on order's company
-        const companyCode = response.data.company_name?.toLowerCase().replace(/\s+/g, '_') || 'umarsons';
-        if (companyConfig[companyCode]) {
-          setCompanyData(companyConfig[companyCode]);
-        }
         
         // Set document title to order number (ID) with STI suffix
         document.title = `${response.data.order_number}-STI`;
@@ -58,7 +57,7 @@ const InvoicePage = () => {
       }
     };
 
-    fetchOrder();
+    fetchData();
   }, [orderId, showToast]);
 
   const handlePrint = () => {
@@ -112,9 +111,11 @@ const InvoicePage = () => {
   // Render header component
   const renderHeader = () => (
     <div className="invoice-header">
-      <div className="logo-container">
-        <img src={companyData.logo} alt="Company Logo" className="company-logo" />
-      </div>
+      {companyData.logo && (
+        <div className="logo-container">
+          <img src={companyData.logo} alt="Company Logo" className="company-logo" />
+        </div>
+      )}
       <div className="company-info">
         <h1 className="company-name">{companyData.name}</h1>
         <p className="company-address"><strong>{companyData.address}</strong></p>
@@ -148,8 +149,10 @@ const InvoicePage = () => {
       <div className="invoice-document">
         {itemPages.map((pageItems, pageIndex) => (
           <div key={pageIndex} className="invoice-container">
-          {/* Watermark */}
-          <div className="watermark" style={{backgroundImage: `url('${companyData.watermark}')`}}></div>
+          {/* Watermark - Same logo with opacity */}
+          {companyData.logo && (
+            <div className="watermark" style={{backgroundImage: `url('${companyData.logo}')`}}></div>
+          )}
 
           <div className="invoice-content">
             {/* Header on every page */}

@@ -3,6 +3,7 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager, get_jwt
 from datetime import timedelta, datetime
 import os
+import sys
 import sqlite3
 from dotenv import load_dotenv
 from sqlalchemy import text
@@ -21,10 +22,9 @@ app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=30)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Use simple relative paths - Flask will resolve them to instance folder
 app.config['SQLALCHEMY_BINDS'] = {
-    'umarsons': 'sqlite:///umarsons.db',
-    'makkah_packages': 'sqlite:///makkah_packages.db'
+    'company': 'sqlite:///company.db'
 }
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///umarsons.db'  # Default database
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///company.db'  # Default database
 
 # Initialize extensions
 CORS(app, 
@@ -80,7 +80,7 @@ def ensure_database(company_code: str):
             print(f"[DB] Failed to remove {db_path}: {exc}")
 
     switch_database(app, company_code)
-    db.metadata.create_all(bind=db.get_engine(bind=company_code))
+    db.metadata.create_all(bind=db.engines[company_code])
     init_db(company_code)
     ensure_payment_balance_column(company_code)
     ensure_order_income_tax_columns(company_code)
@@ -88,13 +88,13 @@ def ensure_database(company_code: str):
     print(f"[DB] {company_code} ready at {db_path}")
 
 def ensure_company_id_consistency(company_code: str):
-    """Normalize company_id values inside a per-company database."""
-    expected_id = 1 if company_code == 'umarsons' else 2
-    expected_code = 'PC' if company_code == 'umarsons' else 'QP'
-    expected_name = 'UmarSons' if company_code == 'umarsons' else 'Makkah Packages'
+    """Normalize company_id values inside the company database."""
+    expected_id = 1
+    expected_code = 'ORG'
+    expected_name = 'Business Company'
 
     try:
-        engine = db.get_engine(bind=company_code)
+        engine = db.engines[company_code]
         with engine.connect() as connection:
             connection.execute(text("UPDATE buyers SET company_id = :cid"), {'cid': expected_id})
             connection.execute(text("UPDATE items SET company_id = :cid"), {'cid': expected_id})
@@ -112,13 +112,13 @@ def ensure_company_id_consistency(company_code: str):
 def ensure_payment_balance_column(company_code: str):
     """Ensure payments columns exist for legacy databases."""
     try:
-        engine = db.get_engine(bind=company_code)
+        engine = db.engines[company_code]
         with engine.connect() as connection:
             table_exists = connection.execute(
                 text("SELECT name FROM sqlite_master WHERE type='table' AND name='payments'")
             ).fetchone()
             if not table_exists:
-                db.metadata.create_all(bind=db.get_engine(bind=company_code))
+                db.metadata.create_all(bind=db.engines[company_code])
                 return
 
             result = connection.execute(text("PRAGMA table_info(payments)"))
@@ -144,7 +144,7 @@ def ensure_payment_balance_column(company_code: str):
 def ensure_order_income_tax_columns(company_code: str):
     """Ensure orders.income_tax_rate and income_tax_amount columns exist."""
     try:
-        engine = db.get_engine(bind=company_code)
+        engine = db.engines[company_code]
         with engine.connect() as connection:
             result = connection.execute(text("PRAGMA table_info(orders)"))
             columns = [row[1] for row in result.fetchall()]
@@ -165,40 +165,16 @@ def before_request():
     if request.path == '/api/health' or request.path.startswith('/static'):
         return
     
-    # Determine company from token or default
-    company_code = None
-    
-    # Try to get from JWT token
-    try:
-        claims = get_jwt()
-        company_id = claims.get('company_id')
-        if company_id == 1:
-            company_code = 'umarsons'
-        elif company_id == 2:
-            company_code = 'makkah_packages'
-    except:
-        pass
-    # Try to get from mock token
-    if not company_code:
-        auth_header = request.headers.get('Authorization', '')
-        if 'mock-token-PC' in auth_header:
-            company_code = 'umarsons'
-        elif 'mock-token-MP' in auth_header or 'mock-token-QP' in auth_header:
-            company_code = 'makkah_packages'
-
-    # Allow explicit company override header from frontend
-    if not company_code:
-        header_code = request.headers.get('X-Company-Code', '').upper()
-        if header_code in ['PC', 'UMARSONS']:
-            company_code = 'umarsons'
-        elif header_code in ['QP', 'MP', 'MAKKAH_PACKAGES', 'MAKKAH']:
-            company_code = 'makkah_packages'
-    
-    # Default to umarsons if no company specified
-    if not company_code:
-        company_code = 'umarsons'
+    # Always use company database
+    company_code = 'company'
     
     # Switch database
+    model_module = sys.modules.get('models')
+    if model_module and hasattr(model_module, '_current_db'):
+        model_module._current_db = company_code
+    
+    g.company_code = company_code
+    g.company_id = 1
     print(f"[BEFORE_REQUEST] Path: {request.path}, Company: {company_code}")
     switch_database(app, company_code)
     g.company_code = company_code
@@ -216,7 +192,7 @@ def after_request(response):
     return response
 
 # Register blueprints
-from routes import auth_bp, buyer_bp, item_bp, order_bp, report_bp, dashboard_bp, ledger_bp, payment_bp, backup_bp
+from routes import auth_bp, buyer_bp, item_bp, order_bp, report_bp, dashboard_bp, ledger_bp, payment_bp, backup_bp, settings_bp
 
 app.register_blueprint(auth_bp.bp)
 app.register_blueprint(buyer_bp.bp)
@@ -227,6 +203,7 @@ app.register_blueprint(dashboard_bp.bp)
 app.register_blueprint(ledger_bp.bp)
 app.register_blueprint(payment_bp.bp)
 app.register_blueprint(backup_bp.bp)
+app.register_blueprint(settings_bp.settings_bp)
 
 # JWT error handlers
 @jwt.invalid_token_loader
@@ -247,8 +224,7 @@ def missing_token_callback(error):
 
 # Create tables for both databases on startup
 with app.app_context():
-    ensure_database('umarsons')
-    ensure_database('makkah_packages')
+    ensure_database('company')
     print("Both company databases initialized successfully")
     
     # Auto-backup check on startup

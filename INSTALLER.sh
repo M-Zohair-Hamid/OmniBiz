@@ -158,37 +158,21 @@ echo ""
 # ========================================
 # STEP 6: Initialize Multi-Company Databases
 # ========================================
-echo -e "${BLUE}[STEP 6/6] Initializing Multi-Company Databases${NC}"
+echo -e "${BLUE}[STEP 6/6] Preparing Database${NC}"
 echo "========================================"
 cd "$SCRIPT_DIR/backend"
-echo "Checking databases..."
+echo "Checking database..."
 source "$SCRIPT_DIR/.venv/bin/activate"
 
 mkdir -p instance
 
-if [ -f "instance/umarsons.db" ]; then
-    echo "UmarSons database: EXISTS"
+if [ -f "instance/company.db" ]; then
+    echo "Company database: EXISTS"
 else
-    echo "Creating UmarSons database..."
-    python3 setup_umarsons.py
-    if [ $? -ne 0 ]; then
-        echo -e "${YELLOW}WARNING: Could not create UmarSons database${NC}"
-        echo "It will be created automatically when app starts"
-    fi
+    echo "Company database will be created automatically when application starts"
 fi
 
-if [ -f "instance/makkah_packages.db" ]; then
-    echo "Makkah Packages database: EXISTS"
-else
-    echo "Creating Makkah Packages database..."
-    python3 setup_databases.py
-    if [ $? -ne 0 ]; then
-        echo -e "${YELLOW}WARNING: Could not create Makkah Packages database${NC}"
-        echo "It will be created automatically when app starts"
-    fi
-fi
-
-echo -e "${GREEN}Databases: READY${NC}"
+echo -e "${GREEN}Database: READY${NC}"
 echo ""
 
 # ========================================
@@ -207,8 +191,7 @@ echo "  - Python: $(python3 --version | cut -d' ' -f2)"
 echo "  - Node.js: $(node --version)"
 echo "  - Backend: Ready (Flask, SQLAlchemy, ReportLab, etc.)"
 echo "  - Frontend: Ready (React, Tailwind, Chart.js, etc.)"
-echo "  - UmarSons Database: Ready"
-echo "  - Makkah Packages Database: Ready"
+echo "  - Company Database: Ready"
 echo "  - Virtual Environment: Created at ./.venv"
 echo ""
 echo -e "${BLUE}========================================"
@@ -223,8 +206,7 @@ echo "  chmod +x start.sh"
 echo "  ./start.sh"
 echo ""
 echo "COMPANIES AVAILABLE FOR LOGIN:"
-echo "  - UmarSons (Industrial Area, Faisalabad)"
-echo "  - Makkah Packages (Textile City, Faisalabad)"
+echo "  - Business Company (Organization)"
 echo ""
 echo "The app will open automatically in your browser at:"
 echo "  http://localhost:3000"

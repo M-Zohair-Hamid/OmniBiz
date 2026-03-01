@@ -12,13 +12,9 @@ BACKUP_CONFIG_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'b
 INSTANCE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'instance')
 
 COMPANY_FILES = {
-    'umarsons': {
-        'folder': 'umarsons',
-        'db': 'umarsons.db'
-    },
-    'makkah_packages': {
-        'folder': 'makkahpackages',
-        'db': 'makkah_packages.db'
+    'company': {
+        'folder': 'company',
+        'db': 'company.db'
     }
 }
 

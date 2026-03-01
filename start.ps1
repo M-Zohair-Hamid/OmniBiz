@@ -1,5 +1,6 @@
-$ErrorActionPreference = 'Stop'
 
+
+$ErrorActionPreference = 'Stop'
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $Backend = Join-Path $Root 'backend'
 $Frontend = Join-Path $Root 'frontend'
@@ -13,86 +14,81 @@ Write-Host "=============================================" -ForegroundColor Cyan
 Write-Host ""
 
 # Ensure instance directory exists
-if (-not (Test-Path $DbDir)) { 
+if (-not (Test-Path $DbDir)) {
     Write-Host "Creating instance directory..." -ForegroundColor Yellow
-    
     New-Item -ItemType Directory -Path $DbDir | Out-Null
 }
 
-# Python check
 Write-Host "=== Environment Check ===" -ForegroundColor Cyan
-$py = $null
-if (Get-Command python -ErrorAction SilentlyContinue) { $py = 'python' }
-elseif (Get-Command py -ErrorAction SilentlyContinue) { $py = 'py' }
-else {
+# Virtual environment activation (if exists)
+$VenvPath = Join-Path $Root 'venv'
+if (Test-Path $VenvPath) {
+    $ActivateScript = Join-Path $VenvPath 'Scripts/Activate.ps1'
+    if (Test-Path $ActivateScript) {
+        Write-Host "Activating virtual environment..." -ForegroundColor Yellow
+        . $ActivateScript
+        Write-Host "[OK] Virtual environment activated" -ForegroundColor Green
+    }
+}
+
+# Python detection logic
+$PYTHON = $null
+if ($env:PYTHON) {
+    $PYTHON = $env:PYTHON
+} elseif (Test-Path (Join-Path $VenvPath 'Scripts/python.exe')) {
+    $PYTHON = (Join-Path $VenvPath 'Scripts/python.exe')
+} elseif (Test-Path (Join-Path $Root '.venv/Scripts/python.exe')) {
+    $PYTHON = (Join-Path $Root '.venv/Scripts/python.exe')
+} elseif (Get-Command python -ErrorAction SilentlyContinue) {
+    $PYTHON = 'python'
+} elseif (Get-Command python3 -ErrorAction SilentlyContinue) {
+    $PYTHON = 'python3'
+} else {
     Write-Host "[ERROR] Python not found. Please install Python 3.11+ and add to PATH." -ForegroundColor Red
     exit 1
 }
-Write-Host "[OK] Python: $py" -ForegroundColor Green
+Write-Host "[OK] Python: $PYTHON" -ForegroundColor Green
 
-# Database initialization
 Write-Host "`n=== Database Setup ===" -ForegroundColor Cyan
-$umarDb = Join-Path $DbDir 'umarsons.db'
-$makkahDb = Join-Path $DbDir 'makkah_packages.db'
-
-if (-not (Test-Path $umarDb)) {
-    Write-Host "Initializing UmarSons database..." -ForegroundColor Yellow
+$CompanyDb = Join-Path $DbDir 'company.db'
+if (-not (Test-Path $CompanyDb)) {
+    Write-Host "Initializing company database..." -ForegroundColor Yellow
     Push-Location $Backend
-    & $py setup_umarsons.py
-    if ($LASTEXITCODE -eq 0) { 
-        Write-Host "[OK] UmarSons database created" -ForegroundColor Green 
+    & $PYTHON -c "from models import db, init_db; from app import app; app.app_context().push(); init_db('company')"
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "[OK] Company database created" -ForegroundColor Green
     } else {
-        Write-Host "[ERROR] Failed to create UmarSons database" -ForegroundColor Red
+        Write-Host "[ERROR] Failed to create company database" -ForegroundColor Red
         Pop-Location
         exit 1
     }
     Pop-Location
 } else {
-    Write-Host "[OK] UmarSons database exists" -ForegroundColor Green
+    Write-Host "[OK] Company database exists" -ForegroundColor Green
 }
 
-if (-not (Test-Path $makkahDb)) {
-    Write-Host "Initializing Makkah Packages database..." -ForegroundColor Yellow
-    Push-Location $Backend
-    & $py setup_databases.py
-    if ($LASTEXITCODE -eq 0) { 
-        Write-Host "[OK] Makkah Packages database created" -ForegroundColor Green 
-    } else {
-        Write-Host "[ERROR] Failed to create Makkah Packages database" -ForegroundColor Red
-        Pop-Location
-        exit 1
-    }
-    Pop-Location
-} else {
-    Write-Host "[OK] Makkah Packages database exists" -ForegroundColor Green
-}
-
-# Clean Python cache
 Write-Host "`n=== Cleaning Cache ===" -ForegroundColor Cyan
 Get-ChildItem -Path $Backend -Filter "__pycache__" -Recurse -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
 Write-Host "[OK] Python cache cleared" -ForegroundColor Green
 
-# Start backend
 Write-Host "`n=== Starting Backend (Flask @5000) ===" -ForegroundColor Cyan
-Start-Process -NoNewWindow -WorkingDirectory $Backend -FilePath cmd.exe -ArgumentList "/c", "$py app.py"
+$BackendProc = Start-Process -PassThru -NoNewWindow -WorkingDirectory $Backend -FilePath $PYTHON -ArgumentList "app.py"
 Write-Host "[OK] Backend server starting..." -ForegroundColor Green
 Start-Sleep -Seconds 4
 
-# Start frontend
 Write-Host "`n=== Starting Frontend (React @3000) ===" -ForegroundColor Cyan
 if (-not (Test-Path (Join-Path $Frontend 'node_modules'))) {
     Write-Host "Installing frontend dependencies (first time)..." -ForegroundColor Yellow
-    $env:BROWSER='none'
-    Start-Process -NoNewWindow -WorkingDirectory $Frontend -FilePath cmd.exe -ArgumentList "/c", "npm install && npm start"
+    $env:BROWSER = 'none'
+    $FrontendProc = Start-Process -PassThru -NoNewWindow -WorkingDirectory $Frontend -FilePath cmd.exe -ArgumentList "/c", "npm install && npm start"
 } else {
-    $env:BROWSER='none'
-    Start-Process -NoNewWindow -WorkingDirectory $Frontend -FilePath cmd.exe -ArgumentList "/c", "npm start"
+    $env:BROWSER = 'none'
+    $FrontendProc = Start-Process -PassThru -NoNewWindow -WorkingDirectory $Frontend -FilePath cmd.exe -ArgumentList "/c", "npm start"
 }
 Write-Host "[OK] Frontend server starting..." -ForegroundColor Green
 Write-Host "Waiting for React server to initialize..." -ForegroundColor Yellow
 Start-Sleep -Seconds 8
 
-# Open browser with clear parameter to reset session
 Write-Host "Opening browser with fresh session..." -ForegroundColor Yellow
 Start-Sleep -Seconds 2
 try {
@@ -101,15 +97,13 @@ try {
     Write-Host "Could not auto-open browser. Please navigate to http://localhost:3000/?clear=true manually" -ForegroundColor Yellow
 }
 
-# Summary
 Write-Host ""
 Write-Host "=============================================" -ForegroundColor Cyan
 Write-Host "  System Status" -ForegroundColor Cyan
 Write-Host "=============================================" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "Companies Configured:" -ForegroundColor White
-Write-Host "  • UmarSons (PC)       -> $umarDb" -ForegroundColor Green
-Write-Host "  • Makkah Packages (MP) -> $makkahDb" -ForegroundColor Green
+Write-Host "  • Business Company (ORG) -> $CompanyDb" -ForegroundColor Green
 Write-Host ""
 Write-Host "Active Services:" -ForegroundColor White
 Write-Host "  • Backend API  -> http://localhost:5000" -ForegroundColor Green
@@ -123,11 +117,14 @@ Write-Host "  ✓ Orders (with auto inventory deduction)" -ForegroundColor Green
 Write-Host "  ✓ Ledger" -ForegroundColor Green
 Write-Host "  ✓ Reports" -ForegroundColor Green
 Write-Host ""
-Write-Host "Press any key to stop all services and exit..." -ForegroundColor Yellow
-$null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+Write-Host "Press Enter to stop all services and exit..." -ForegroundColor Yellow
+[void][System.Console]::ReadLine()
 
 # Cleanup on exit
 Write-Host "`nStopping services..." -ForegroundColor Yellow
-Get-Process | Where-Object {$_.ProcessName -like "*python*"} | Stop-Process -Force -ErrorAction SilentlyContinue
-Get-Process | Where-Object {$_.ProcessName -like "*node*"} | Stop-Process -Force -ErrorAction SilentlyContinue
+if ($BackendProc -and !$BackendProc.HasExited) { $BackendProc | Stop-Process -Force -ErrorAction SilentlyContinue }
+if ($FrontendProc -and !$FrontendProc.HasExited) { $FrontendProc | Stop-Process -Force -ErrorAction SilentlyContinue }
+Get-Process | Where-Object { $_.ProcessName -like '*python*' } | Stop-Process -Force -ErrorAction SilentlyContinue
+Get-Process | Where-Object { $_.ProcessName -like '*node*' } | Stop-Process -Force -ErrorAction SilentlyContinue
 Write-Host "All services stopped." -ForegroundColor Green
+Write-Host "`nStopping services..." -ForegroundColor Yellow
