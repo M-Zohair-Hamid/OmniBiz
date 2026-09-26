@@ -6,17 +6,10 @@ const Toast = ({ message, type = 'info', onClose }) => {
     return () => clearTimeout(timer);
   }, [onClose]);
 
-  const bgColor = {
-    success: 'bg-green-500',
-    error: 'bg-red-500',
-    warning: 'bg-yellow-500',
-    info: 'bg-blue-500'
-  }[type] || 'bg-blue-500';
-
   return (
-    <div className={`${bgColor} text-white px-6 py-3 rounded-lg shadow-lg mb-2 flex items-center justify-between`}>
-      <span>{message}</span>
-      <button onClick={onClose} className="ml-4 font-bold">×</button>
+    <div className={`toast ${type}`}>
+      <span className="flex-1">{message}</span>
+      <button onClick={onClose} className="ml-2 font-bold text-white/80 hover:text-white text-lg leading-none">x</button>
     </div>
   );
 };

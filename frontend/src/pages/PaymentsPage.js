@@ -95,7 +95,7 @@ const PaymentsPage = () => {
       
       // Check if order status changed to pending
       if (response.data.order && response.data.order.status === 'pending') {
-        showToast(`✅ Payment deleted! Order ${response.data.order.order_number} reverted to PENDING`, 'success');
+        showToast(`Payment deleted! Order ${response.data.order.order_number} reverted to PENDING`, 'success');
       } else {
         showToast('Payment deleted successfully', 'success');
       }
@@ -108,16 +108,16 @@ const PaymentsPage = () => {
 
   const getPaymentMethodDisplay = (method) => {
     const methods = {
-      cash: '💵 Cash',
-      card: '💳 Card',
-      bank_transfer: '🏦 Bank Transfer',
-      cheque: '📄 Cheque'
+      cash: 'Cash',
+      card: 'Card',
+      bank_transfer: 'Bank Transfer',
+      cheque: 'Cheque'
     };
     return methods[method] || method;
   };
 
   const getPaymentTypeDisplay = (type) => {
-    return type === 'full' ? '✅ Full' : '⚠️ Partial';
+    return type === 'full' ? 'Full' : 'Partial';
   };
 
   const totalAmount = payments.reduce((sum, p) => sum + p.amount, 0);
@@ -185,7 +185,7 @@ const PaymentsPage = () => {
       
       // Check if payment was auto-upgraded to full
       if (response.data.auto_upgraded) {
-        showToast('✅ Payment recorded! Auto-upgraded from Partial to FULL (amount equals remaining balance)', 'success');
+        showToast('Payment recorded! Auto-upgraded from Partial to FULL (amount equals remaining balance)', 'success');
       } else {
         showToast('Payment recorded successfully!', 'success');
       }
@@ -199,64 +199,52 @@ const PaymentsPage = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-[#17144B] via-[#3A3F8C] to-[#17144B] relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-[#17144B] via-[#3A3F8C] to-[#17144B] opacity-80"></div>
+    <div className="flex min-h-screen bg-slate-50">
+      <div className="absolute inset-0 bg-slate-50 opacity-80"></div>
       <Sidebar companyName={user?.company_name || 'Business'} />
       
       <div className="flex-1 ml-64 relative z-10">
         <div className="p-8">
           <div className="mb-8">
-            <h1 className="text-5xl font-bold text-white">💰 Payments</h1>
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Payments</h1>
           </div>
 
           {/* Payment Summary Section */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-xl shadow-glass-lg border border-white border-opacity-30 p-4">
+            <div className=" bg-white rounded-xl shadow-sm border border-slate-200/80 p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 font-semibold">Total Payments</p>
-                  <p className="text-2xl font-bold text-[#00D4FF]">{payments.length}</p>
+                  <p className="text-2xl font-bold text-[#0d9488]">{payments.length}</p>
                 </div>
-                <div className="bg-blue-500 bg-opacity-20 p-3 rounded-lg">
-                  <span className="text-2xl">💰</span>
                 </div>
-              </div>
             </div>
 
-            <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-xl shadow-glass-lg border border-white border-opacity-30 p-4">
+            <div className=" bg-white rounded-xl shadow-sm border border-slate-200/80 p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 font-semibold">Total Amount</p>
                   <p className="text-2xl font-bold text-emerald-700">₨ {formatRoundedAmount(totalAmount)}</p>
                 </div>
-                <div className="bg-emerald-700 bg-opacity-20 p-3 rounded-lg">
-                  <span className="text-2xl">💵</span>
                 </div>
-              </div>
             </div>
 
-            <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-xl shadow-glass-lg border border-white border-opacity-30 p-4">
+            <div className=" bg-white rounded-xl shadow-sm border border-slate-200/80 p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 font-semibold">Cash/Card</p>
-                  <p className="text-2xl font-bold text-[#00D4FF]">{cashPayments} / {cardPayments}</p>
+                  <p className="text-2xl font-bold text-[#0d9488]">{cashPayments} / {cardPayments}</p>
                 </div>
-                <div className="bg-purple-500 bg-opacity-20 p-3 rounded-lg">
-                  <span className="text-2xl">💳</span>
                 </div>
-              </div>
             </div>
 
-            <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-xl shadow-glass-lg border border-white border-opacity-30 p-4">
+            <div className=" bg-white rounded-xl shadow-sm border border-slate-200/80 p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 font-semibold">Full Payments</p>
-                  <p className="text-2xl font-bold text-[#17144B]">{fullPayments}</p>
+                  <p className="text-2xl font-bold text-[#0f172a]">{fullPayments}</p>
                 </div>
-                <div className="bg-green-500 bg-opacity-20 p-3 rounded-lg">
-                  <span className="text-2xl">✅</span>
                 </div>
-              </div>
             </div>
           </div>
 
@@ -264,15 +252,15 @@ const PaymentsPage = () => {
           <div className="mb-6">
             <input
               type="text"
-              placeholder="🔍 Search by order number, buyer, or payment method..."
+              placeholder="Search by order number, buyer, or payment method..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 backdrop-blur-sm bg-white bg-opacity-40 border-2 border-white border-opacity-30 rounded-xl focus:outline-none focus:border-[#00D4FF] focus:bg-opacity-60 transition-all"
+              className="w-full px-4 py-2  bg-white border-2 border-slate-200/80 rounded-xl focus:outline-none focus:border-[#0d9488] focus:bg-opacity-60 transition-all"
             />
           </div>
 
           {/* Payments Table */}
-          <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-2xl shadow-glass-lg border border-white border-opacity-30 overflow-hidden">
+          <div className=" bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
             {loading ? (
               <div className="p-8 text-center text-white">Loading payments...</div>
             ) : filteredPayments.length === 0 ? (
@@ -282,7 +270,7 @@ const PaymentsPage = () => {
             ) : (
               <div className="overflow-x-auto max-h-[60vh] overflow-y-auto">
                 <table id="payments-table" className="w-full">
-                  <thead className="bg-white bg-opacity-20 backdrop-blur-sm">
+                  <thead className="bg-slate-50 ">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-bold text-black uppercase tracking-wider">Order #</th>
                       <th className="px-6 py-3 text-left text-xs font-bold text-black uppercase tracking-wider">Buyer</th>
@@ -295,7 +283,7 @@ const PaymentsPage = () => {
                       <th className="px-6 py-3 text-right text-xs font-bold text-black uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white bg-opacity-10 backdrop-blur-sm divide-y divide-white divide-opacity-10">
+                  <tbody className="bg-white  divide-y divide-white divide-opacity-10">
                     {filteredPayments.map((payment) => (
                       <tr key={payment.id} className="hover:bg-white hover:bg-opacity-20 transition-all duration-200">
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-black">
@@ -310,7 +298,7 @@ const PaymentsPage = () => {
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-emerald-600">
                           ₨ {formatRoundedAmount(payment.amount)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-blue-600">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-teal-700">
                           ₨ {formatRoundedAmount(payment.balance || 0)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-black">
@@ -325,15 +313,15 @@ const PaymentsPage = () => {
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex gap-2 justify-end">
                           <button
                             onClick={() => handleViewPayment(payment)}
-                            className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-3 py-1 rounded-lg text-xs font-bold transition-all duration-200 shadow-lg hover:shadow-purple-500/50"
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded-lg text-xs font-bold transition-all duration-200 shadow-lg hover:shadow-md"
                           >
-                            👁️ View
+                            View
                           </button>
                           <button
                             onClick={() => handleDelete(payment.id)}
-                            className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-3 py-1 rounded-lg text-xs font-bold transition-all duration-200 shadow-lg hover:shadow-red-500/50"
+                            className="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1 rounded-lg text-xs font-bold transition-all duration-200 shadow-sm hover:shadow-md"
                           >
-                            🗑️ Delete
+                            Delete
                           </button>
                         </td>
                       </tr>
@@ -350,17 +338,17 @@ const PaymentsPage = () => {
               <button
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="px-4 py-2 backdrop-blur-xl bg-white bg-opacity-40 border border-white border-opacity-30 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-opacity-60 transition-all text-white font-semibold"
+                className="px-4 py-2  bg-white border border-slate-200/80 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed  transition-all text-slate-700 font-semibold"
               >
                 Previous
               </button>
-              <span className="px-4 py-2 backdrop-blur-xl bg-white bg-opacity-40 border border-white border-opacity-30 rounded-lg text-white font-semibold">
+              <span className="px-4 py-2  bg-white border border-slate-200/80 rounded-lg text-slate-700 font-semibold">
                 Page {currentPage} of {totalPages}
               </span>
               <button
                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
-                className="px-4 py-2 backdrop-blur-xl bg-white bg-opacity-40 border border-white border-opacity-30 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-opacity-60 transition-all text-white font-semibold"
+                className="px-4 py-2  bg-white border border-slate-200/80 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed  transition-all text-slate-700 font-semibold"
               >
                 Next
               </button>
@@ -370,24 +358,24 @@ const PaymentsPage = () => {
 
         {/* View Payment Details Modal */}
         {showViewModal && viewingPayment && (
-          <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
-            <div className="backdrop-blur-xl bg-white bg-opacity-40 border border-white border-opacity-30 rounded-2xl shadow-glass-lg p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-scaleIn">
-              <h2 className="text-2xl font-bold mb-6 text-[#17144B]">💳 Payment Details</h2>
+          <div className="fixed inset-0 bg-black bg-opacity-40  flex items-center justify-center z-50 p-4 animate-fadeIn">
+            <div className=" bg-white border border-slate-200/80 rounded-2xl shadow-sm p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-scaleIn">
+              <h2 className="text-2xl font-bold mb-6 text-[#0f172a]">Payment Details</h2>
               
               <div className="space-y-4">
                 {/* Payment Info */}
-                <div className="grid grid-cols-2 gap-4 p-4 backdrop-blur-sm bg-white bg-opacity-50 rounded-lg border border-white border-opacity-30">
+                <div className="grid grid-cols-2 gap-4 p-4  bg-white bg-opacity-50 rounded-lg border border-slate-200/80">
                   <div>
                     <p className="text-xs text-gray-600 font-semibold">Payment ID</p>
-                    <p className="text-lg font-bold text-[#17144B]">#{viewingPayment.id}</p>
+                    <p className="text-lg font-bold text-[#0f172a]">#{viewingPayment.id}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-600 font-semibold">Order #</p>
-                    <p className="text-lg font-bold text-[#17144B]">{viewingPayment.order_number}</p>
+                    <p className="text-lg font-bold text-[#0f172a]">{viewingPayment.order_number}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-600 font-semibold">Date</p>
-                    <p className="text-lg font-bold text-[#17144B]">{viewingPayment.payment_date}</p>
+                    <p className="text-lg font-bold text-[#0f172a]">{viewingPayment.payment_date}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-600 font-semibold">Amount</p>
@@ -396,21 +384,21 @@ const PaymentsPage = () => {
                 </div>
 
                 {/* Payment Method & Type */}
-                <div className="grid grid-cols-2 gap-4 p-4 backdrop-blur-sm bg-white bg-opacity-50 rounded-lg border border-white border-opacity-30">
+                <div className="grid grid-cols-2 gap-4 p-4  bg-white bg-opacity-50 rounded-lg border border-slate-200/80">
                   <div>
                     <p className="text-xs text-gray-600 font-semibold">Payment Method</p>
-                    <p className="text-lg font-bold text-[#17144B]">{getPaymentMethodDisplay(viewingPayment.payment_method)}</p>
+                    <p className="text-lg font-bold text-[#0f172a]">{getPaymentMethodDisplay(viewingPayment.payment_method)}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-600 font-semibold">Payment Type</p>
-                    <p className="text-lg font-bold text-[#17144B]">{getPaymentTypeDisplay(viewingPayment.payment_type)}</p>
+                    <p className="text-lg font-bold text-[#0f172a]">{getPaymentTypeDisplay(viewingPayment.payment_type)}</p>
                   </div>
                 </div>
 
                 {/* Order Details */}
                 {viewingPayment.orderDetails && (
-                  <div className="p-4 backdrop-blur-sm bg-white bg-opacity-50 rounded-lg border border-white border-opacity-30">
-                    <h3 className="font-bold text-[#17144B] mb-3">📋 Order Information</h3>
+                  <div className="p-4  bg-white bg-opacity-50 rounded-lg border border-slate-200/80">
+                    <h3 className="font-bold text-[#0f172a] mb-3">Order Information</h3>
                     <div className="space-y-2">
                       <p className="text-sm text-gray-700"><strong>Buyer:</strong> {viewingPayment.buyer_name}</p>
                       <p className="text-sm text-gray-700"><strong>Order Date:</strong> {formatDate(viewingPayment.orderDetails.order_date)}</p>
@@ -422,21 +410,21 @@ const PaymentsPage = () => {
 
                 {/* Notes */}
                 {viewingPayment.notes && (
-                  <div className="p-4 backdrop-blur-sm bg-white bg-opacity-50 rounded-lg border border-white border-opacity-30">
-                    <h3 className="font-bold text-[#17144B] mb-2">📝 Notes</h3>
+                  <div className="p-4  bg-white bg-opacity-50 rounded-lg border border-slate-200/80">
+                    <h3 className="font-bold text-[#0f172a] mb-2">Notes</h3>
                     <p className="text-sm text-gray-700">{viewingPayment.notes}</p>
                   </div>
                 )}
 
                 {/* Complete Payment Button for Partial Payments */}
                 {viewingPayment.payment_type === 'partial' && (typeof viewingPayment.order_remaining !== 'number' || viewingPayment.order_remaining > 0) && (
-                  <div className="p-4 backdrop-blur-sm bg-blue-50 bg-opacity-50 rounded-lg border border-blue-300 border-opacity-30">
-                    <p className="text-sm text-blue-800 mb-3">⚠️ This payment is partial. You can complete the remaining amount.</p>
+                  <div className="p-4  bg-amber-50 rounded-lg border border-amber-200">
+                    <p className="text-sm text-amber-800 mb-3">This payment is partial. You can complete the remaining amount.</p>
                     <button
                       onClick={() => handleCompletePayment(viewingPayment)}
-                      className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-blue-500/50 transform hover:scale-105 active:scale-95"
+                      className="w-full bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-sm hover:shadow-md transform  active:scale-95"
                     >
-                      💰 Record Additional Payment
+                      Record Additional Payment
                     </button>
                   </div>
                 )}
@@ -446,7 +434,7 @@ const PaymentsPage = () => {
               <div className="mt-6">
                 <button 
                   onClick={() => setShowViewModal(false)}
-                  className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-red-500/50 transform hover:scale-105 active:scale-95"
+                  className="w-full bg-rose-600 hover:bg-rose-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-sm hover:shadow-md transform  active:scale-95"
                 >
                   Close
                 </button>
@@ -457,9 +445,9 @@ const PaymentsPage = () => {
 
         {/* Complete Payment Modal */}
         {showCompletePaymentModal && viewingPayment && (
-          <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
-            <div className="backdrop-blur-xl bg-white bg-opacity-40 border border-white border-opacity-30 rounded-2xl shadow-glass-lg p-8 max-w-md w-full animate-scaleIn">
-              <h2 className="text-2xl font-bold mb-6 text-[#17144B] text-center">💳 Record Additional Payment</h2>
+          <div className="fixed inset-0 bg-black bg-opacity-40  flex items-center justify-center z-50 p-4 animate-fadeIn">
+            <div className=" bg-white border border-slate-200/80 rounded-2xl shadow-sm p-8 max-w-md w-full animate-scaleIn">
+              <h2 className="text-2xl font-bold mb-6 text-[#0f172a] text-center">Record Additional Payment</h2>
               
               <div className="mb-4 p-4 bg-white bg-opacity-50 rounded-lg">
                 <p className="text-sm text-gray-700"><strong>Order:</strong> {viewingPayment.order_number}</p>
@@ -475,7 +463,7 @@ const PaymentsPage = () => {
                     type="number"
                     value={completePaymentForm.amount}
                     onChange={(e) => setCompletePaymentForm({...completePaymentForm, amount: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                     placeholder="0.00"
                     step="0.01"
                   />
@@ -487,10 +475,10 @@ const PaymentsPage = () => {
                   <select
                     value={completePaymentForm.payment_type}
                     onChange={(e) => setCompletePaymentForm({...completePaymentForm, payment_type: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                   >
-                    <option value="partial">⚠️ Partial Payment</option>
-                    <option value="full">✅ Full/Complete Payment</option>
+                    <option value="partial">Partial Payment</option>
+                    <option value="full">Full/Complete Payment</option>
                   </select>
                 </div>
 
@@ -500,12 +488,12 @@ const PaymentsPage = () => {
                   <select
                     value={completePaymentForm.payment_method}
                     onChange={(e) => setCompletePaymentForm({...completePaymentForm, payment_method: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                   >
-                    <option value="cash">💵 Cash</option>
-                    <option value="card">💳 Card</option>
-                    <option value="bank_transfer">🏦 Bank Transfer</option>
-                    <option value="cheque">📄 Cheque</option>
+                    <option value="cash">Cash</option>
+                    <option value="card">Card</option>
+                    <option value="bank_transfer">Bank Transfer</option>
+                    <option value="cheque">Cheque</option>
                   </select>
                 </div>
 
@@ -516,7 +504,7 @@ const PaymentsPage = () => {
                     type="date"
                     value={completePaymentForm.payment_date}
                     onChange={(e) => setCompletePaymentForm({...completePaymentForm, payment_date: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                   />
                 </div>
 
@@ -524,11 +512,14 @@ const PaymentsPage = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Income Tax Rate (%) - Optional</label>
                   <input
-                    type="number"
-                    step="0.01"
+                    type="text"
+                    inputMode="decimal"
                     value={completePaymentForm.income_tax_rate}
-                    onChange={(e) => setCompletePaymentForm({...completePaymentForm, income_tax_rate: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    onChange={(e) => {
+                      const raw = e.target.value.replace(/[^0-9.]/g, '').replace(/^0+(?=\d)/, '');
+                      setCompletePaymentForm({...completePaymentForm, income_tax_rate: raw});
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                     placeholder="e.g., 1.5 for 1.5%"
                   />
                   <p className="text-xs text-gray-500 mt-1">Income tax will be calculated as: Payment Amount × Rate / 100</p>
@@ -540,7 +531,7 @@ const PaymentsPage = () => {
                   <textarea
                     value={completePaymentForm.notes}
                     onChange={(e) => setCompletePaymentForm({...completePaymentForm, notes: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                     rows="2"
                     placeholder="Additional notes..."
                   />
@@ -550,13 +541,13 @@ const PaymentsPage = () => {
                 <div className="flex gap-3 mt-6">
                   <button 
                     onClick={handleCompletePaymentSubmit}
-                    className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-blue-500/50 transform hover:scale-105 active:scale-95"
+                    className="flex-1 bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-sm hover:shadow-md transform  active:scale-95"
                   >
-                    💳 Record Payment
+                    Record Payment
                   </button>
                   <button 
                     onClick={() => setShowCompletePaymentModal(false)}
-                    className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-red-500/50 transform hover:scale-105 active:scale-95"
+                    className="flex-1 bg-rose-600 hover:bg-rose-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-sm hover:shadow-md transform  active:scale-95"
                   >
                     Cancel
                   </button>

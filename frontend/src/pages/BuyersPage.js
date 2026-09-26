@@ -4,6 +4,18 @@ import { getBuyers, createBuyer, updateBuyer, deleteBuyer } from '../services/ap
 import { ToastContext } from '../context/ToastContext';
 import { AuthContext } from '../context/AuthContext';
 
+const freshForm = () => ({
+  company_name: '',
+  gst_number: 'GST-',
+  ntn_number: 'NTN-',
+  address: '',
+  contact_person: '',
+  email: '',
+  phone: '',
+  city: '',
+  is_filer: true,
+});
+
 const BuyersPage = () => {
   const [buyers, setBuyers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -12,18 +24,8 @@ const BuyersPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  
-  const [formData, setFormData] = useState({
-    company_name: '',
-    gst_number: 'GST-',
-    ntn_number: 'NTN-',
-    address: '',
-    contact_person: '',
-    email: '',
-    phone: '',
-    city: '',
-    is_filer: true
-  });
+  const [formData, setFormData] = useState(freshForm());
+  const [lastFilerValues, setLastFilerValues] = useState({ gst_number: 'GST-', ntn_number: 'NTN-' });
 
   const { showToast } = useContext(ToastContext);
   const { user } = useContext(AuthContext);
@@ -34,12 +36,12 @@ const BuyersPage = () => {
     const value = String(text ?? '');
     const term = searchTerm.trim();
     if (!term) return value;
-
     const pattern = new RegExp(`(${escapeRegExp(term)})`, 'gi');
-    return value.split(pattern).map((part, idx) => {
-      const match = part.toLowerCase() === term.toLowerCase();
-      return match ? <mark key={idx} className="bg-yellow-300 text-gray-900 px-0.5 rounded">{part}</mark> : part;
-    });
+    return value.split(pattern).map((part, idx) =>
+      part.toLowerCase() === term.toLowerCase()
+        ? <mark key={idx} className="bg-yellow-200 text-slate-900 px-0.5 rounded">{part}</mark>
+        : part
+    );
   };
 
   const fetchBuyers = async (page = 1, search = '') => {
@@ -49,23 +51,16 @@ const BuyersPage = () => {
       setBuyers(response.data.data);
       setTotalPages(response.data.pages);
       setCurrentPage(page);
-    } catch (error) {
+    } catch {
       showToast('Failed to load buyers', 'error');
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => { fetchBuyers(); }, []); // eslint-disable-line
   useEffect(() => {
-    fetchBuyers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Set page title based on company name
-  useEffect(() => {
-    if (user?.company_name) {
-      document.title = `${user.company_name} - Buyers`;
-    }
+    if (user?.company_name) document.title = `${user.company_name} - Buyers`;
   }, [user?.company_name]);
 
   const handleSearch = (e) => {
@@ -74,283 +69,287 @@ const BuyersPage = () => {
     fetchBuyers(1, e.target.value);
   };
 
-  const ensurePrefix = (val, prefix) => {
-    const v = (val || '').replace(/^\s+/, '');
-    return v.startsWith(prefix) ? v : prefix + v.replace(new RegExp('^' + prefix), '');
+  // Safe prefix: strips any existing prefix or N/A before applying
+  const withPrefix = (val, prefix) => {
+    const stripped = (val || '').replace(/^(GST-|NTN-)/i, '').replace(/^N\/A$/i, '').trim();
+    return prefix + stripped;
   };
 
   const handleAddBuyer = () => {
-    setFormData({ company_name: '', gst_number: 'GST-', ntn_number: 'NTN-', address: '', contact_person: '', email: '', phone: '', city: '', is_filer: true });
+    setFormData(freshForm()); // always a new object
+    setLastFilerValues({ gst_number: 'GST-', ntn_number: 'NTN-' });
     setEditingId(null);
     setShowForm(true);
   };
 
   const handleEditBuyer = (buyer) => {
-    const isNonFiler = (buyer.gst_number || '').trim().toUpperCase() === 'N/A'
-      && (buyer.ntn_number || '').trim().toUpperCase() === 'N/A';
+    const gst = (buyer.gst_number || '').trim().toUpperCase();
+    const ntn = (buyer.ntn_number || '').trim().toUpperCase();
+    const isNonFiler = gst === 'N/A' && ntn === 'N/A';
+    const filerGst = isNonFiler ? 'GST-' : (buyer.gst_number || 'GST-');
+    const filerNtn = isNonFiler ? 'NTN-' : (buyer.ntn_number || 'NTN-');
     setFormData({
       ...buyer,
-      gst_number: isNonFiler ? 'N/A' : ensurePrefix(buyer.gst_number || 'GST-', 'GST-'),
-      ntn_number: isNonFiler ? 'N/A' : ensurePrefix(buyer.ntn_number || 'NTN-', 'NTN-'),
-      is_filer: !isNonFiler
+      gst_number: isNonFiler ? 'N/A' : filerGst,
+      ntn_number: isNonFiler ? 'N/A' : filerNtn,
+      is_filer: !isNonFiler,
     });
+    setLastFilerValues({ gst_number: filerGst, ntn_number: filerNtn });
     setEditingId(buyer.id);
     setShowForm(true);
   };
 
+  const handleFilerToggle = (isFilerNow) => {
+    if (isFilerNow) {
+      setFormData(prev => ({ ...prev, is_filer: true, gst_number: lastFilerValues.gst_number, ntn_number: lastFilerValues.ntn_number }));
+    } else {
+      // cache current filer values before wiping, so switching back restores them
+      setLastFilerValues({ gst_number: formData.gst_number, ntn_number: formData.ntn_number });
+      setFormData(prev => ({ ...prev, is_filer: false, gst_number: 'N/A', ntn_number: 'N/A' }));
+    }
+  };
+
+  const handleGstChange = (e) => {
+    if (!formData.is_filer) return;
+    const raw = e.target.value;
+    // Always keep GST- prefix, don't let user delete it
+    const stripped = raw.replace(/^GST-/i, '');
+    const next = 'GST-' + stripped;
+    setFormData(prev => ({ ...prev, gst_number: next }));
+    setLastFilerValues(prev => ({ ...prev, gst_number: next }));
+  };
+
+  const handleNtnChange = (e) => {
+    if (!formData.is_filer) return;
+    const raw = e.target.value;
+    const stripped = raw.replace(/^NTN-/i, '');
+    const next = 'NTN-' + stripped;
+    setFormData(prev => ({ ...prev, ntn_number: next }));
+    setLastFilerValues(prev => ({ ...prev, ntn_number: next }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     const isFiler = formData.is_filer;
-    const gst = isFiler ? ensurePrefix(formData.gst_number, 'GST-') : 'N/A';
-    const ntn = isFiler ? ensurePrefix(formData.ntn_number, 'NTN-') : 'N/A';
+    const gst = isFiler ? formData.gst_number : 'N/A';
+    const ntn = isFiler ? formData.ntn_number : 'N/A';
 
-    const hasGstDigits = isFiler ? (gst.replace(/^GST-/, '').trim().length > 0) : true;
-    const hasNtnDigits = isFiler ? (ntn.replace(/^NTN-/, '').trim().length > 0) : true;
+    const hasGstDigits = isFiler ? gst.replace(/^GST-/i, '').trim().length > 0 : true;
+    const hasNtnDigits = isFiler ? ntn.replace(/^NTN-/i, '').trim().length > 0 : true;
 
     if (!formData.company_name || !formData.address || !hasGstDigits || !hasNtnDigits) {
-      showToast(isFiler ? 'Please fill required fields: Company Name, GST, NTN, Address' : 'Please fill required fields: Company Name, Address', 'warning');
+      showToast(isFiler ? 'Fill required: Company Name, GST, NTN, Address' : 'Fill required: Company Name, Address', 'warning');
       return;
     }
 
     const payload = { ...formData, gst_number: gst, ntn_number: ntn };
-
     try {
-      console.log('Submitting buyer payload:', payload);
       if (editingId) {
         await updateBuyer(editingId, payload);
-        showToast('Buyer updated successfully', 'success');
+        showToast('Buyer updated', 'success');
       } else {
         await createBuyer(payload);
-        showToast('Buyer created successfully', 'success');
+        showToast('Buyer created', 'success');
       }
       setShowForm(false);
       fetchBuyers(currentPage);
     } catch (error) {
-      const errMsg = error?.response?.data?.error || error?.message || 'Failed to save buyer';
-      console.error('Buyer save error:', error?.response?.data);
-      showToast(errMsg, 'error');
+      showToast(error?.response?.data?.error || 'Failed to save buyer', 'error');
     }
   };
 
-  const handleDeleteBuyer = async (id) => {
-    if (window.confirm('Are you sure you want to delete this buyer?')) {
-      try {
-        await deleteBuyer(id);
-        showToast('Buyer deleted successfully', 'success');
-        fetchBuyers(currentPage);
-      } catch (error) {
-        showToast('Failed to delete buyer', 'error');
-      }
+  const handleDelete = async (id) => {
+    if (!window.confirm('Delete this buyer?')) return;
+    try {
+      await deleteBuyer(id);
+      showToast('Buyer deleted', 'success');
+      fetchBuyers(currentPage);
+    } catch {
+      showToast('Failed to delete buyer', 'error');
     }
   };
+
+  const inputCls = 'w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors';
+  const labelCls = 'block text-sm font-medium text-slate-700 mb-1.5';
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-[#17144B] via-[#3A3F8C] to-[#17144B] relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-[#17144B] via-[#3A3F8C] to-[#17144B] opacity-80"></div>
+    <div className="flex min-h-screen bg-slate-50">
       <Sidebar companyName={user?.company_name || 'Business'} />
-      
-      <div className="flex-1 ml-64 relative z-10">
+
+      <div className="flex-1 ml-64">
         <div className="p-8">
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-5xl font-bold text-white">Buyers Management</h1>
+          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Buyers</h1>
+              <p className="mt-2 text-sm text-slate-500">Manage your buyer directory.</p>
+            </div>
             <button
               onClick={handleAddBuyer}
-              className="bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] text-[#17144B] px-6 py-3 rounded-xl font-bold transition-all duration-200 shadow-lg hover:shadow-[#00D4FF]/50 transform hover:scale-105 active:scale-95 border border-[#00D4FF] border-opacity-30"
+              className="inline-flex items-center rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all duration-150 hover:bg-indigo-700"
             >
               + Add Buyer
             </button>
           </div>
 
-          {/* Search */}
-          <div className="mb-6">
-            <label htmlFor="searchBuyers" className="block text-white font-semibold mb-2">Search</label>
+          <div className="mb-5">
             <input
-              id="searchBuyers"
-              name="searchBuyers"
               type="text"
               placeholder="Search buyers..."
               value={searchTerm}
               onChange={handleSearch}
-              className="w-full px-4 py-3 backdrop-blur-sm bg-white bg-opacity-40 border-2 border-white border-opacity-30 rounded-xl focus:outline-none focus:border-[#00D4FF] focus:bg-opacity-60 transition-all duration-200 text-gray-800 placeholder-gray-500"
+              className="w-full max-w-sm px-4 py-2.5 border border-slate-300 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             />
           </div>
 
-          {/* Buyers Table */}
-          <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-2xl shadow-glass-lg overflow-hidden border border-white border-opacity-30">
+          <div className="rounded-2xl border border-slate-200/80 bg-white shadow-sm overflow-hidden">
             {loading ? (
-              <div className="p-8 text-center">Loading...</div>
+              <div className="p-8 text-center text-sm text-slate-500">Loading...</div>
             ) : buyers.length === 0 ? (
-              <div className="p-8 text-center text-gray-600">No buyers found</div>
+              <div className="p-8 text-center text-sm text-slate-500">No buyers found.</div>
             ) : (
               <>
                 <div className="overflow-x-auto">
-                  <table id="buyersTable" className="w-full">
-                    <thead className="border-b border-[#17144B]">
-                      <tr>
-                        <th className="px-6 py-3 text-center font-bold text-[#17144B]">Company Name</th>
-                        <th className="px-6 py-3 text-center font-bold text-[#17144B]">Filer Status</th>
-                        <th className="px-6 py-3 text-center font-bold text-[#17144B]">Contact Person</th>
-                        <th className="px-6 py-3 text-center font-bold text-[#17144B]">Email</th>
-                        <th className="px-6 py-3 text-center font-bold text-[#17144B]">Phone</th>
-                        <th className="px-6 py-3 text-center font-bold text-[#17144B]">City</th>
-                        <th className="px-6 py-3 text-center font-bold text-[#17144B]">Actions</th>
+                  <table className="min-w-full text-left text-sm">
+                    <thead>
+                      <tr className="border-b border-slate-200">
+                        <th className="whitespace-nowrap px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Company</th>
+                        <th className="whitespace-nowrap px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
+                        <th className="whitespace-nowrap px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Contact</th>
+                        <th className="whitespace-nowrap px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Email</th>
+                        <th className="whitespace-nowrap px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Phone</th>
+                        <th className="whitespace-nowrap px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">City</th>
+                        <th className="whitespace-nowrap px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {buyers.map(buyer => (
-                        (() => {
-                          const gst = String(buyer.gst_number || '').trim().toUpperCase();
-                          const ntn = String(buyer.ntn_number || '').trim().toUpperCase();
-                          const isNonFiler = gst === 'N/A' || ntn === 'N/A' || (!gst && !ntn);
-                          return (
-                        <tr key={buyer.id} className="border-b border-[#3A3F8C] hover:bg-[#3A3F8C] hover:bg-opacity-50 transition-all duration-200 hover:scale-100 hover:shadow-md cursor-pointer">
-                          <td className="px-6 py-3 font-semibold text-black text-center">{highlightText(buyer.company_name)}</td>
-                          <td className="px-6 py-3 text-black text-center font-semibold">
-                            <span className={`px-2 py-1 rounded text-xs font-bold ${isNonFiler ? 'bg-red-200 text-red-800' : 'bg-emerald-200 text-emerald-800'}`}>
-                              {isNonFiler ? 'Non-Filer' : 'Filer'}
-                            </span>
-                          </td>
-                          <td className="px-6 py-3 text-black text-center">{highlightText(buyer.contact_person || '-')}</td>
-                          <td className="px-6 py-3 text-black text-center">{highlightText(buyer.email || '-')}</td>
-                          <td className="px-6 py-3 text-black text-center">{highlightText(buyer.phone || '-')}</td>
-                          <td className="px-6 py-3 text-black text-center">{highlightText(buyer.city || '-')}</td>
-                          <td className="px-6 py-3 text-center">
-                            <div className="flex gap-2 justify-center">
-                              <button
-                                onClick={() => handleEditBuyer(buyer)}
-                                className="bg-[#00D4FF] hover:bg-[#00B8E0] text-[#17144B] px-3 py-1 rounded text-sm transition-all duration-200 hover:scale-105 active:scale-95"
-                              >
-                                Edit
-                              </button>
-                              <button
-                                onClick={() => handleDeleteBuyer(buyer.id)}
-                                className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-3 py-1 rounded text-sm transition-all duration-200 hover:scale-105 active:scale-95"
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                          );
-                        })()
-                      ))}
+                      {buyers.map(buyer => {
+                        const gst = String(buyer.gst_number || '').trim().toUpperCase();
+                        const ntn = String(buyer.ntn_number || '').trim().toUpperCase();
+                        const isNonFiler = gst === 'N/A' && ntn === 'N/A';
+                        return (
+                          <tr key={buyer.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50">
+                            <td className="px-4 py-3 align-middle font-medium text-slate-900">{highlightText(buyer.company_name)}</td>
+                            <td className="px-4 py-3 align-middle">
+                              <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${isNonFiler ? 'bg-rose-50 text-rose-700' : 'bg-emerald-50 text-emerald-700'}`}>
+                                {isNonFiler ? 'Non-Filer' : 'Filer'}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 align-middle text-slate-700">{highlightText(buyer.contact_person || '-')}</td>
+                            <td className="px-4 py-3 align-middle text-slate-700">{highlightText(buyer.email || '-')}</td>
+                            <td className="px-4 py-3 align-middle text-slate-700">{highlightText(buyer.phone || '-')}</td>
+                            <td className="px-4 py-3 align-middle text-slate-700">{highlightText(buyer.city || '-')}</td>
+                            <td className="px-4 py-3 align-middle">
+                              <div className="flex gap-2">
+                                <button onClick={() => handleEditBuyer(buyer)} className="rounded-lg bg-indigo-600 hover:bg-indigo-700 px-3 py-1 text-xs font-medium text-white transition-colors">Edit</button>
+                                <button onClick={() => handleDelete(buyer.id)} className="rounded-lg bg-rose-600 hover:bg-rose-700 px-3 py-1 text-xs font-medium text-white transition-colors">Delete</button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
-
-                {/* Pagination */}
-                  <div className="flex justify-between items-center p-6">
-                  <span className="text-black font-semibold">Page {currentPage} of {totalPages}</span>
+                <div className="flex items-center justify-between border-t border-slate-100 px-5 py-4">
+                  <span className="text-sm text-slate-600">Page {currentPage} of {totalPages}</span>
                   <div className="flex gap-2">
-                    <button
-                      onClick={() => fetchBuyers(currentPage - 1, searchTerm)}
-                      disabled={currentPage === 1}
-                      className="px-4 py-2 bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] disabled:opacity-50 disabled:cursor-not-allowed text-[#17144B] rounded-lg font-semibold transition-all duration-200 hover:shadow-lg transform hover:scale-105 active:scale-95"
-                    >
-                      Previous
-                    </button>
-                    <button
-                      onClick={() => fetchBuyers(currentPage + 1, searchTerm)}
-                      disabled={currentPage === totalPages}
-                      className="px-4 py-2 bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] disabled:opacity-50 disabled:cursor-not-allowed text-[#17144B] rounded-lg font-semibold transition-all duration-200 hover:shadow-lg transform hover:scale-105 active:scale-95"
-                    >
-                      Next
-                    </button>
+                    <button onClick={() => fetchBuyers(currentPage - 1, searchTerm)} disabled={currentPage === 1} className="rounded-lg border border-slate-200 px-4 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">Previous</button>
+                    <button onClick={() => fetchBuyers(currentPage + 1, searchTerm)} disabled={currentPage === totalPages} className="rounded-lg border border-slate-200 px-4 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">Next</button>
                   </div>
                 </div>
               </>
             )}
           </div>
-
-          {/* Form Modal */}
-          {showForm && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fadeIn">
-              <div className="bg-white rounded-lg p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto animate-scaleIn">
-                <h2 className="text-2xl font-bold mb-6">{editingId ? 'Edit Buyer' : 'Add Buyer'}</h2>
-                <form onSubmit={handleSubmit}>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="md:col-span-3">
-                      <label htmlFor="filerStatus" className="block font-bold text-[#17144B] mb-2">Filer Status *</label>
-                      <div className="flex gap-3">
-                        <button
-                          type="button"
-                          id="filerStatus"
-                          onClick={() => setFormData({ ...formData, is_filer: true, gst_number: ensurePrefix(formData.gst_number || 'GST-', 'GST-'), ntn_number: ensurePrefix(formData.ntn_number || 'NTN-', 'NTN-') })}
-                          className={`px-4 py-2 rounded-lg font-semibold border ${formData.is_filer ? 'bg-[#00D4FF] text-[#17144B] border-[#00D4FF]' : 'bg-white text-[#17144B] border-[#3A3F8C]'}`}
-                        >
-                          Filer
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setFormData({ ...formData, is_filer: false, gst_number: 'N/A', ntn_number: 'N/A' })}
-                          className={`px-4 py-2 rounded-lg font-semibold border ${!formData.is_filer ? 'bg-[#00D4FF] text-[#17144B] border-[#00D4FF]' : 'bg-white text-[#17144B] border-[#3A3F8C]'}`}
-                        >
-                          Non-Filer
-                        </button>
-                      </div>
-                    </div>
-                    <div>
-                      <label htmlFor="companyName" className="block font-bold text-[#17144B] mb-2">Company Name *</label>
-                      <input id="companyName" name="company_name" type="text" value={formData.company_name} onChange={(e) => setFormData({...formData, company_name: e.target.value})} className="w-full px-4 py-3 border border-[#3A3F8C] rounded-lg text-base" />
-                    </div>
-                    <div>
-                      <label htmlFor="gstNumber" className="block font-bold text-[#17144B] mb-2">GST Number *</label>
-                      <input
-                        id="gstNumber"
-                        name="gst_number"
-                        type="text"
-                        value={formData.gst_number}
-                        onChange={(e) => formData.is_filer && setFormData({ ...formData, gst_number: ensurePrefix(e.target.value, 'GST-') })}
-                        className="w-full px-4 py-3 border border-[#3A3F8C] rounded-lg text-base"
-                        placeholder="GST-XXXX-XXXX"
-                        disabled={!formData.is_filer}
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="ntnNumber" className="block font-bold text-[#17144B] mb-2">NTN Number *</label>
-                      <input
-                        id="ntnNumber"
-                        name="ntn_number"
-                        type="text"
-                        value={formData.ntn_number}
-                        onChange={(e) => formData.is_filer && setFormData({ ...formData, ntn_number: ensurePrefix(e.target.value, 'NTN-') })}
-                        className="w-full px-4 py-3 border border-[#3A3F8C] rounded-lg text-base"
-                        placeholder="NTN-XXXXXXX"
-                        disabled={!formData.is_filer}
-                      />
-                    </div>
-                    <div className="md:col-span-3">
-                      <label htmlFor="address" className="block font-bold text-[#17144B] mb-2">Address *</label>
-                      <textarea id="address" name="address" value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} className="w-full px-4 py-3 border border-[#3A3F8C] rounded-lg text-base" rows="2" />
-                    </div>
-                    <div>
-                      <label htmlFor="contactPerson" className="block text-gray-700 font-semibold mb-2">Contact Person</label>
-                      <input id="contactPerson" name="contact_person" type="text" value={formData.contact_person} onChange={(e) => setFormData({...formData, contact_person: e.target.value})} className="w-full px-4 py-3 border rounded-lg text-base" />
-                    </div>
-                    <div>
-                      <label htmlFor="email" className="block text-gray-700 font-semibold mb-2">Email</label>
-                      <input id="email" name="email" type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full px-4 py-3 border rounded-lg text-base" />
-                    </div>
-                    <div>
-                      <label htmlFor="phone" className="block text-gray-700 font-semibold mb-2">Phone</label>
-                      <input id="phone" name="phone" type="tel" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full px-4 py-3 border rounded-lg text-base" />
-                    </div>
-                    <div>
-                      <label htmlFor="city" className="block text-gray-700 font-semibold mb-2">City</label>
-                      <input id="city" name="city" type="text" value={formData.city} onChange={(e) => setFormData({...formData, city: e.target.value})} className="w-full px-4 py-3 border rounded-lg text-base" />
-                    </div>
-                  </div>
-                  <div className="flex gap-4 mt-8">
-                    <button type="submit" className="flex-1 bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] text-[#17144B] px-4 py-3 rounded-lg font-semibold text-lg">Save</button>
-                    <button type="button" onClick={() => setShowForm(false)} className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-3 rounded-lg font-semibold text-lg transition-all duration-200">Cancel</button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          )}
         </div>
       </div>
+
+      {showForm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-fadeIn">
+          <div className="bg-white rounded-2xl p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-xl animate-scaleIn">
+            <h2 className="text-xl font-semibold text-slate-900 mb-6">{editingId ? 'Edit Buyer' : 'Add Buyer'}</h2>
+            <form onSubmit={handleSubmit}>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+
+                <div className="md:col-span-3">
+                  <label className={labelCls}>Filer Status *</label>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleFilerToggle(true)}
+                      className={`px-4 py-2 rounded-lg text-sm font-semibold border transition-colors ${formData.is_filer ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'}`}
+                    >
+                      Filer
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleFilerToggle(false)}
+                      className={`px-4 py-2 rounded-lg text-sm font-semibold border transition-colors ${!formData.is_filer ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'}`}
+                    >
+                      Non-Filer
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className={labelCls}>Company Name *</label>
+                  <input type="text" value={formData.company_name} onChange={e => setFormData(p => ({ ...p, company_name: e.target.value }))} className={inputCls} placeholder="Company name" />
+                </div>
+
+                <div>
+                  <label className={labelCls}>GST Number {formData.is_filer ? '*' : ''}</label>
+                  <input
+                    type="text"
+                    value={formData.gst_number}
+                    onChange={handleGstChange}
+                    disabled={!formData.is_filer}
+                    className={`${inputCls} ${!formData.is_filer ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : ''}`}
+                    placeholder="GST-XXXX"
+                  />
+                </div>
+
+                <div>
+                  <label className={labelCls}>NTN Number {formData.is_filer ? '*' : ''}</label>
+                  <input
+                    type="text"
+                    value={formData.ntn_number}
+                    onChange={handleNtnChange}
+                    disabled={!formData.is_filer}
+                    className={`${inputCls} ${!formData.is_filer ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : ''}`}
+                    placeholder="NTN-XXXXXXX"
+                  />
+                </div>
+
+                <div className="md:col-span-3">
+                  <label className={labelCls}>Address *</label>
+                  <textarea value={formData.address} onChange={e => setFormData(p => ({ ...p, address: e.target.value }))} className={inputCls} rows={2} placeholder="Full address" />
+                </div>
+
+                <div>
+                  <label className={labelCls}>Contact Person</label>
+                  <input type="text" value={formData.contact_person} onChange={e => setFormData(p => ({ ...p, contact_person: e.target.value }))} className={inputCls} />
+                </div>
+                <div>
+                  <label className={labelCls}>Email</label>
+                  <input type="email" value={formData.email} onChange={e => setFormData(p => ({ ...p, email: e.target.value }))} className={inputCls} />
+                </div>
+                <div>
+                  <label className={labelCls}>Phone</label>
+                  <input type="tel" value={formData.phone} onChange={e => setFormData(p => ({ ...p, phone: e.target.value }))} className={inputCls} />
+                </div>
+                <div>
+                  <label className={labelCls}>City</label>
+                  <input type="text" value={formData.city} onChange={e => setFormData(p => ({ ...p, city: e.target.value }))} className={inputCls} />
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button type="submit" className="flex-1 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors">Save</button>
+                <button type="button" onClick={() => setShowForm(false)} className="flex-1 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -192,11 +192,10 @@ const LoginPage = () => {
 
   if (pageLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#17144B] via-[#3A3F8C] to-[#17144B]">
-        <div className="absolute inset-0 bg-black bg-opacity-40"></div>
-        <div className="text-center relative z-10">
-          <div className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-white border-t-[#00D4FF]"></div>
-          <p className="mt-6 text-white text-lg font-semibold">Loading...</p>
+      <div className="flex items-center justify-center min-h-screen bg-slate-50">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-slate-200 border-t-teal-600"></div>
+          <p className="mt-4 text-slate-500 font-medium">Loading...</p>
         </div>
       </div>
     );
@@ -204,40 +203,39 @@ const LoginPage = () => {
 
   if (needsSetup) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#17144B] via-[#3A3F8C] to-[#17144B] relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#17144B] via-[#3A3F8C] to-[#17144B] opacity-80"></div>
-        <div className="w-full max-w-xl relative z-10 px-4">
-          <div className="backdrop-blur-xl bg-white bg-opacity-10 border border-white border-opacity-20 rounded-3xl shadow-glass-lg p-8">
-            <h1 className="text-3xl font-bold text-white mb-2 text-center">First-Time Setup</h1>
-            <p className="text-[#EBEEF5] text-sm text-center mb-6">Add your business name, logo, and address to continue.</p>
+      <div className="flex items-center justify-center min-h-screen bg-slate-50">
+        <div className="w-full max-w-xl px-4">
+          <div className="rounded-2xl border border-slate-200/80 bg-white shadow-sm p-8">
+            <h1 className="text-2xl font-semibold text-slate-900 mb-2 text-center">First-Time Setup</h1>
+            <p className="text-slate-500 text-sm text-center mb-6">Add your business name, logo, and address to continue.</p>
 
             <form onSubmit={handleCompleteSetup} className="space-y-5">
               <div>
-                <label className="block text-white text-sm mb-2">Business Name</label>
+                <label className="block text-slate-700 text-sm font-medium mb-2">Business Name</label>
                 <input
                   type="text"
                   name="business_name"
                   value={setupData.business_name}
                   onChange={handleSetupInputChange}
-                  className="w-full px-4 py-3 rounded-xl bg-white bg-opacity-90 text-[#17144B] focus:outline-none"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500"
                   placeholder="Enter business name"
                 />
               </div>
 
               <div>
-                <label className="block text-white text-sm mb-2">Business Address</label>
+                <label className="block text-slate-700 text-sm font-medium mb-2">Business Address</label>
                 <textarea
                   name="address"
                   value={setupData.address}
                   onChange={handleSetupInputChange}
                   rows={3}
-                  className="w-full px-4 py-3 rounded-xl bg-white bg-opacity-90 text-[#17144B] focus:outline-none"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500"
                   placeholder="Enter business address"
                 />
               </div>
 
               <div>
-                <label className="block text-white text-sm mb-2">Business Logo</label>
+                <label className="block text-slate-700 text-sm font-medium mb-2">Business Logo</label>
                 <input
                   id="setup-logo-input"
                   type="file"
@@ -248,16 +246,16 @@ const LoginPage = () => {
                 <div className="flex flex-col items-center gap-2">
                   <label
                     htmlFor="setup-logo-input"
-                    className="inline-flex items-center px-5 py-2.5 rounded-lg bg-blue-500 text-white font-semibold text-sm cursor-pointer hover:bg-blue-600 transition-all shadow-md"
+                    className="inline-flex items-center px-5 py-2.5 rounded-xl bg-teal-600 text-white font-medium text-sm cursor-pointer hover:bg-teal-700 transition-colors"
                   >
                     Choose Logo
                   </label>
-                  <span className="text-xs text-[#EBEEF5] text-center break-all">
+                  <span className="text-xs text-slate-500 text-center break-all">
                     {setupLogoFile ? setupLogoFile.name : 'No file selected'}
                   </span>
                 </div>
                 {setupLogoPreview && (
-                  <div className="mt-3 p-3 rounded-xl bg-white bg-opacity-10 border border-white border-opacity-20">
+                  <div className="mt-3 p-3 rounded-xl border border-slate-200 bg-slate-50">
                     <img src={setupLogoPreview} alt="Logo preview" className="h-24 w-auto object-contain mx-auto" />
                   </div>
                 )}
@@ -266,7 +264,7 @@ const LoginPage = () => {
               <button
                 type="submit"
                 disabled={setupSubmitting}
-                className="w-full py-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-lg"
+                className="w-full py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-xl transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
               >
                 {setupSubmitting ? 'Saving Setup...' : 'Complete Setup'}
               </button>
@@ -278,23 +276,16 @@ const LoginPage = () => {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#17144B] via-[#3A3F8C] to-[#17144B] relative overflow-hidden">
-      {/* Overlay for readability */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#17144B] via-[#3A3F8C] to-[#17144B] opacity-80"></div>
-      
-      {/* Glassmorphism background elements */}
-      <div className="absolute top-20 left-10 w-72 h-72 bg-white opacity-10 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
-      <div className="absolute bottom-20 right-10 w-72 h-72 bg-[#00D4FF] opacity-10 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
-      
-      <div className="w-full max-w-md relative z-10 px-4">
-        <div className="backdrop-blur-xl bg-white bg-opacity-10 border border-white border-opacity-20 rounded-3xl shadow-glass-lg p-10">
+    <div className="flex items-center justify-center min-h-screen bg-slate-50">
+      <div className="w-full max-w-md px-4">
+        <div className="rounded-2xl border border-slate-200/80 bg-white shadow-sm p-10">
           {/* Logo Section */}
           <div className="flex justify-center mb-6">
             {businessSettings?.logo_url ? (
               <img 
                 src={`http://localhost:5000${businessSettings.logo_url}`} 
                 alt={businessSettings.business_name}
-                className="h-32 w-auto object-contain"
+                className="h-28 w-auto object-contain"
                 onError={(e) => {
                   e.target.style.display = 'none';
                   e.target.nextSibling.style.display = 'flex';
@@ -302,17 +293,17 @@ const LoginPage = () => {
               />
             ) : null}
             <div 
-              className={`${businessSettings?.logo_url ? 'hidden' : 'flex'} items-center justify-center h-32 w-32 bg-white bg-opacity-20 rounded-2xl border-2 border-white border-opacity-30`}
+              className={`${businessSettings?.logo_url ? 'hidden' : 'flex'} items-center justify-center h-28 w-28 bg-slate-950 rounded-2xl`}
             >
-              <span className="text-5xl font-bold text-white">{businessSettings?.business_name?.charAt(0) || 'B'}</span>
+              <span className="text-4xl font-bold text-teal-400">{businessSettings?.business_name?.charAt(0) || 'B'}</span>
             </div>
           </div>
 
           {/* Title Section */}
-          <h1 className="text-4xl font-bold text-center text-white mb-2 tracking-tight">
+          <h1 className="text-2xl font-semibold text-center text-slate-900 mb-2 tracking-tight">
             {businessSettings?.business_name || 'Business Company'}
           </h1>
-          <p className="text-center text-[#EBEEF5] mb-8 text-sm">
+          <p className="text-center text-slate-500 mb-8 text-sm">
             {businessSettings?.address || 'Business District, City, Country'}
           </p>
 
@@ -320,11 +311,11 @@ const LoginPage = () => {
           <button
             onClick={handleLogin}
             disabled={loading}
-            className="w-full py-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 font-bold text-lg"
+            className="w-full py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-xl transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
           >
             {loading ? (
               <span className="flex items-center justify-center gap-2">
-                <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
+                <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
                 Logging in...
               </span>
             ) : (
@@ -333,7 +324,7 @@ const LoginPage = () => {
           </button>
 
           <div className="mt-6 text-center">
-            <p className="text-[#EBEEF5] text-xs">Business Management System v1.0</p>
+            <p className="text-slate-400 text-xs">Business Management System v1.0</p>
           </div>
         </div>
       </div>

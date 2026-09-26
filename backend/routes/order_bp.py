@@ -9,7 +9,6 @@ import string
 from decimal import Decimal, ROUND_HALF_UP
 
 bp = Blueprint('orders', __name__, url_prefix='/api/orders')
-MAX_ORDER_ITEMS = 12
 
 
 def round_off_amount(value):
@@ -200,9 +199,6 @@ def create_order():
     if not data.get('buyer_id') or not data.get('items'):
         return jsonify({'error': 'Missing required fields'}), 400
 
-    if len(data['items']) > MAX_ORDER_ITEMS:
-        return jsonify({'error': f'Order cannot contain more than {MAX_ORDER_ITEMS} items'}), 400
-    
     buyer = session.query(Buyer).filter_by(id=data['buyer_id']).first()
     if not buyer:
         return jsonify({'error': 'Buyer not found'}), 404
@@ -221,6 +217,10 @@ def create_order():
             return jsonify({'error': f'Item {item_data["item_id"]} not found'}), 404
         
         quantity = float(item_data['quantity'])
+        
+        # STOCK CHECK: block if insufficient stock
+        if item.quantity_in_stock < quantity:
+            return jsonify({'error': f'Insufficient stock for "{item.name}". Available: {item.quantity_in_stock}, Requested: {quantity}'}), 400
         
         unit_price = item.unit_price
         line_total = quantity * unit_price
@@ -295,9 +295,6 @@ def update_order(order_id):
     
     # If items are being updated, handle inventory adjustments
     if 'items' in data and data['items']:
-        if len(data['items']) > MAX_ORDER_ITEMS:
-            return jsonify({'error': f'Order cannot contain more than {MAX_ORDER_ITEMS} items'}), 400
-
         # First, restore stock from old order items
         old_order_items = session.query(OrderItem).filter_by(order_id=order_id).all()
         for old_item in old_order_items:
@@ -318,6 +315,11 @@ def update_order(order_id):
                 return jsonify({'error': f'Item {item_data["item_id"]} not found'}), 404
             
             quantity = float(item_data['quantity'])
+            
+            # STOCK CHECK: block if insufficient stock (stock already restored above)
+            if item.quantity_in_stock < quantity:
+                session.rollback()
+                return jsonify({'error': f'Insufficient stock for "{item.name}". Available: {item.quantity_in_stock}, Requested: {quantity}'}), 400
             
             unit_price = item.unit_price
             line_total = quantity * unit_price

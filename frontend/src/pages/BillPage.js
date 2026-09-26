@@ -146,7 +146,7 @@ const BillPage = () => {
     <div className="invoice-page">
       {/* Controls */}
       <div className="invoice-controls print-hidden">
-        <button onClick={handlePrint} className="btn-print">🖨️ Print</button>
+        <button onClick={handlePrint} className="btn-print">Print</button>
         <button onClick={() => navigate(-1)} className="btn-back">← Back</button>
       </div>
 

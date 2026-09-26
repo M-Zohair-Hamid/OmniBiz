@@ -30,8 +30,8 @@
 }
 
 .btn-print {
-  background: linear-gradient(135deg, #00D4FF, #00B8E0);
-  color: #17144B;
+  background: linear-gradient(135deg, #0d9488, #0f766e);
+  color: #0f172a;
   box-shadow: 0 4px 12px rgba(0, 212, 255, 0.4);
 }
 
@@ -41,7 +41,7 @@
 }
 
 .btn-back {
-  background: linear-gradient(135deg, #17144B, #0d0a2e);
+  background: linear-gradient(135deg, #0f172a, #020617);
   color: white;
 }
 
@@ -64,8 +64,8 @@
 .invoice-error button {
   margin-top: 20px;
   padding: 10px 20px;
-  background: linear-gradient(135deg, #00D4FF, #00B8E0);
-  color: #17144B;
+  background: linear-gradient(135deg, #0d9488, #0f766e);
+  color: #0f172a;
   border: none;
   border-radius: 8px;
   font-weight: bold;
@@ -137,7 +137,7 @@
   position: relative;
   margin-bottom: 8px;
   padding: 12px 16px;
-  border-bottom: 3px solid #17144B;
+  border-bottom: 3px solid #0f172a;
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -172,7 +172,7 @@
   font-size: 36px;
   font-weight: 900;
   margin-bottom: 8px;
-  color: #17144B;
+  color: #0f172a;
   letter-spacing: 1px;
   text-align: center;
 }
@@ -193,7 +193,7 @@
   text-align: center;
   font-size: 16px;
   font-weight: 800;
-  color: #17144B;
+  color: #0f172a;
   margin: 6px 0;
   padding: 5px 0;
   text-transform: uppercase;
@@ -225,7 +225,7 @@
 .details-section h3 {
   font-size: 12px;
   font-weight: bold;
-  color: #17144B;
+  color: #0f172a;
   margin-bottom: 4px;
   text-transform: uppercase;
   border-bottom: 1px solid #e5e7eb;
@@ -237,7 +237,7 @@
 .buyer-name {
   font-size: 14px !important;
   font-weight: bold !important;
-  color: #17144B !important;
+  color: #0f172a !important;
   margin-bottom: 4px !important;
 }
 
@@ -268,7 +268,7 @@
 }
 
 .invoice-table thead {
-  background: linear-gradient(135deg, #17144B, #0d0a2e);
+  background: linear-gradient(135deg, #0f172a, #020617);
   color: white;
 }
 
@@ -278,9 +278,9 @@
   font-weight: bold;
   text-transform: uppercase;
   font-size: 9px;
-  border: 1px solid #0d0a2e;
+  border: 1px solid #020617;
   color: white;
-  background: linear-gradient(135deg, #17144B, #0d0a2e) !important;
+  background: linear-gradient(135deg, #0f172a, #020617) !important;
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
   font-family: 'Montserrat', Arial, sans-serif;
@@ -317,7 +317,7 @@
   width: 100%;
   margin: 2px 0;
   padding: 0;
-  border: 2px solid #17144B;
+  border: 2px solid #0f172a;
   border-radius: 4px;
   overflow: hidden;
   page-break-inside: avoid;
@@ -345,7 +345,7 @@
 }
 
 .summary-row.total {
-  background: linear-gradient(135deg, #17144B, #0d0a2e);
+  background: linear-gradient(135deg, #0f172a, #020617);
   color: white;
   font-weight: bold;
   font-size: 14px;
@@ -360,10 +360,10 @@
   margin: 2px 0;
   padding: 8px 12px;
   background: #e8e7f5;
-  border-left: 4px solid #17144B;
+  border-left: 4px solid #0f172a;
   border-radius: 4px;
   font-size: 12px;
-  color: #17144B;
+  color: #0f172a;
   font-weight: 600;
   page-break-inside: avoid;
   flex-shrink: 0;
@@ -379,7 +379,7 @@
   margin: 2px 0;
   padding: 8px 12px;
   background: #e8e7f5;
-  border-left: 4px solid #17144B;
+  border-left: 4px solid #0f172a;
   border-radius: 4px;
   page-break-inside: avoid;
   flex-shrink: 0;
@@ -392,7 +392,7 @@
 .tax-breakdown h4 {
   font-size: 10px;
   font-weight: bold;
-  color: #17144B;
+  color: #0f172a;
   margin-bottom: 4px;
   text-transform: uppercase;
   font-family: 'Montserrat', Arial, sans-serif;
@@ -405,7 +405,7 @@
 
 .tax-breakdown td {
   padding: 4px 0;
-  color: #17144B;
+  color: #0f172a;
 }
 
 .tax-breakdown td:last-child {
@@ -543,7 +543,7 @@ PRINT LAYOUT RULES (DO NOT BREAK):
     box-sizing: border-box;
     font-size: 10px;
     line-height: 1.4;
-    color: #17144B;
+    color: #0f172a;
   }
 
   .invoice-footer p {
@@ -662,7 +662,7 @@ PRINT LAYOUT RULES (DO NOT BREAK):
   }
 
   .details-section h3 {
-    color: #17144B !important;
+    color: #0f172a !important;
     font-size: 12px !important;
     margin: 0 0 4px 0 !important;
   }
@@ -670,12 +670,12 @@ PRINT LAYOUT RULES (DO NOT BREAK):
   .details-section p {
     font-size: 11px !important;
     margin: 2px 0 !important;
-    color: #17144B !important;
+    color: #0f172a !important;
   }
 
   .details-section .label {
     font-weight: bold;
-    color: #17144B !important;
+    color: #0f172a !important;
   }
 
   /* Invoice title styling */
@@ -688,7 +688,7 @@ PRINT LAYOUT RULES (DO NOT BREAK):
     box-sizing: border-box;
     font-size: 14px;
     font-weight: bold;
-    color: #17144B !important;
+    color: #0f172a !important;
     margin: 4px 0;
   }
 
@@ -711,10 +711,10 @@ PRINT LAYOUT RULES (DO NOT BREAK):
   }
 
   .invoice-table th {
-    background: #17144B !important;
+    background: #0f172a !important;
     color: white !important;
     padding: 6px 4px !important;
-    border: 1px solid #0d0a2e !important;
+    border: 1px solid #020617 !important;
     font-size: 10px !important;
     font-weight: bold !important;
     -webkit-print-color-adjust: exact !important;
@@ -734,7 +734,7 @@ PRINT LAYOUT RULES (DO NOT BREAK):
   .amount-in-words,
   .tax-breakdown {
     background: white;
-    color: #17144B !important;
+    color: #0f172a !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     padding: 6px 0;
@@ -746,7 +746,7 @@ PRINT LAYOUT RULES (DO NOT BREAK):
 
   .amount-in-words strong,
   .tax-breakdown h4 {
-    color: #17144B !important;
+    color: #0f172a !important;
     font-weight: bold;
   }
 
@@ -776,7 +776,7 @@ PRINT LAYOUT RULES (DO NOT BREAK):
     justify-content: space-between;
     padding: 4px 6px;
     font-size: 12px;
-    color: #17144B !important;
+    color: #0f172a !important;
   }
 
   .summary-row.subtotal {
@@ -790,7 +790,7 @@ PRINT LAYOUT RULES (DO NOT BREAK):
   }
 
   .summary-row.total {
-    background: #17144B !important;
+    background: #0f172a !important;
     color: white !important;
     font-weight: bold !important;
     -webkit-print-color-adjust: exact !important;
@@ -805,7 +805,7 @@ PRINT LAYOUT RULES (DO NOT BREAK):
     z-index: 1;
     width: 100% !important;
     box-sizing: border-box;
-    border-bottom: 3px solid #17144B !important;
+    border-bottom: 3px solid #0f172a !important;
     display: flex !important;
     flex-direction: row !important;
     align-items: center !important;
@@ -848,7 +848,7 @@ PRINT LAYOUT RULES (DO NOT BREAK):
     font-size: 26px !important;
     font-weight: 900 !important;
     font-family: 'Montserrat', Arial, sans-serif !important;
-    color: #17144B !important;
+    color: #0f172a !important;
     margin: 0 !important;
     padding: 0 !important;
     line-height: 1.1 !important;
@@ -860,7 +860,7 @@ PRINT LAYOUT RULES (DO NOT BREAK):
     font-size: 10px !important;
     font-weight: 600 !important;
     font-family: 'Montserrat', Arial, sans-serif !important;
-    color: #17144B !important;
+    color: #0f172a !important;
     margin: 4px 0 0 0 !important;
     padding: 0 !important;
     line-height: 1.2 !important;

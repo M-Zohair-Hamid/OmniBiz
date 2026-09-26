@@ -203,55 +203,55 @@ const BackupModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className={`fixed left-0 top-0 right-0 bottom-0 w-screen h-screen bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-[100] p-4 ${getBackdropAnimationClass(backupModalAnim.isClosing)}`}>
-      <div className={`backdrop-blur-xl bg-white bg-opacity-40 border border-white border-opacity-30 rounded-2xl shadow-glass-lg p-8 w-full max-w-md ${getModalAnimationClass(backupModalAnim.isClosing, 'scale')}`}>
+    <div className={`fixed left-0 top-0 right-0 bottom-0 w-screen h-screen bg-black bg-opacity-40  flex items-center justify-center z-[100] p-4 ${getBackdropAnimationClass(backupModalAnim.isClosing)}`}>
+      <div className={` bg-white border border-slate-200/80 rounded-2xl shadow-sm p-8 w-full max-w-md ${getModalAnimationClass(backupModalAnim.isClosing, 'scale')}`}>
         {/* Header */}
-        <h2 className="text-xl font-bold text-black mb-6">💾 Database Backup</h2>
+        <h2 className="text-xl font-bold text-black mb-6">Database Backup</h2>
 
         {isLoadingConfig ? (
           <div className="flex justify-center py-8">
-            <div className="animate-spin h-8 w-8 border-4 border-[#3A3F8C] border-opacity-30 border-t-[#3A3F8C] rounded-full"></div>
+            <div className="animate-spin h-8 w-8 border-4 border-[#1e293b] border-opacity-30 border-t-[#1e293b] rounded-full"></div>
           </div>
         ) : (
           <div className="space-y-4">
             {/* Last Backup Info */}
             <div>
-              <label className="block text-[#17144B] font-bold mb-2 text-sm">Last Backup</label>
-              <div className="w-full px-3 py-2 backdrop-blur-sm bg-gray-100 border border-[#3A3F8C] rounded-lg text-[#17144B] font-semibold text-sm">
+              <label className="block text-[#0f172a] font-bold mb-2 text-sm">Last Backup</label>
+              <div className="w-full px-3 py-2  bg-gray-100 border border-[#1e293b] rounded-lg text-[#0f172a] font-semibold text-sm">
                 {formatLastBackupTime()}
               </div>
             </div>
 
             {/* Backup Location */}
             <div>
-              <label className="block text-[#17144B] font-bold mb-2 text-sm">Backup Location</label>
+              <label className="block text-[#0f172a] font-bold mb-2 text-sm">Backup Location</label>
               <input
                 type="text"
                 value={backupPath}
                 onChange={(e) => setBackupPath(e.target.value)}
                 placeholder="Enter full path: C:\Backups"
-                className="w-full px-3 py-2 backdrop-blur-sm bg-white bg-opacity-40 border border-[#3A3F8C] text-[#17144B] placeholder-[#3A3F8C] placeholder-opacity-50 focus:outline-none focus:border-[#00D4FF] focus:ring-2 focus:ring-[#00D4FF] focus:ring-opacity-30 transition-all rounded-lg text-sm mb-2"
+                className="w-full px-3 py-2  bg-white border border-[#1e293b] text-[#0f172a] placeholder-[#1e293b] placeholder-opacity-50 focus:outline-none focus:border-[#0d9488] focus:ring-2 focus:ring-[#0d9488] focus:ring-opacity-30 transition-all rounded-lg text-sm mb-2"
               />
               <button
                 onClick={handleBrowseFolder}
-                className="w-full px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg transition-all border border-blue-400 border-opacity-40 font-semibold text-sm"
+                className="w-full px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg transition-all border border-teal-500/20 font-semibold text-sm"
               >
-                📁 Help me choose
+                Help me choose
               </button>
-              <p className="text-xs text-[#17144B] opacity-60 mt-2">Examples: C:\Users\YourName\Backups or /home/username/backups</p>
+              <p className="text-xs text-[#0f172a] opacity-60 mt-2">Examples: C:\Users\YourName\Backups or /home/username/backups</p>
             </div>
 
             {/* Auto-Backup Toggle */}
             <div className="flex items-center justify-between py-2">
               <div>
-                <label className="text-[#17144B] font-bold text-sm">Auto-Backup</label>
-                <p className="text-[#17144B] text-xs opacity-70">Daily on startup</p>
+                <label className="text-[#0f172a] font-bold text-sm">Auto-Backup</label>
+                <p className="text-[#0f172a] text-xs opacity-70">Daily on startup</p>
               </div>
               <button
                 onClick={handleAutoBackupToggle}
                 disabled={isLoading}
                 className={`relative inline-flex h-8 w-14 items-center rounded-full transition-all ${
-                  autoBackupEnabled ? 'bg-green-500 shadow-lg shadow-green-500/50' : 'bg-gray-400'
+                  autoBackupEnabled ? 'bg-teal-600' : 'bg-slate-300'
                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
               >
                 <span
@@ -267,7 +267,7 @@ const BackupModal = ({ isOpen, onClose }) => {
               <button
                 onClick={handleManualBackup}
                 disabled={isLoading || isRestoring || isPeriodicBackingUp || isZipRestoring}
-                className={`w-full px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg transition-all duration-200 font-bold shadow-lg hover:shadow-blue-500/60 transform hover:scale-105 active:scale-95 border border-blue-400 border-opacity-40 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2 text-sm`}
+                className={`w-full px-4 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-lg transition-all duration-200 font-bold shadow-sm hover:shadow-md transform  active:scale-95 border border-teal-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2 text-sm`}
               >
                 {isLoading ? (
                   <>
@@ -276,7 +276,6 @@ const BackupModal = ({ isOpen, onClose }) => {
                   </>
                 ) : (
                   <>
-                    <span>💾</span>
                     <span>Backup Now (Simple)</span>
                   </>
                 )}
@@ -285,7 +284,7 @@ const BackupModal = ({ isOpen, onClose }) => {
               <button
                 onClick={handlePeriodicBackup}
                 disabled={isLoading || isRestoring || isPeriodicBackingUp || isZipRestoring}
-                className={`w-full px-4 py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white rounded-lg transition-all duration-200 font-bold shadow-lg hover:shadow-indigo-500/60 transform hover:scale-105 active:scale-95 border border-indigo-400 border-opacity-40 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2 text-sm`}
+                className={`w-full px-4 py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg transition-all duration-200 font-bold shadow-lg hover:shadow-indigo-500/60 transform  active:scale-95 border border-indigo-400 border-opacity-40 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2 text-sm`}
               >
                 {isPeriodicBackingUp ? (
                   <>
@@ -294,7 +293,6 @@ const BackupModal = ({ isOpen, onClose }) => {
                   </>
                 ) : (
                   <>
-                    <span>🗂️</span>
                     <span>Periodic Backup (ZIP)</span>
                   </>
                 )}
@@ -303,7 +301,7 @@ const BackupModal = ({ isOpen, onClose }) => {
               <button
                 onClick={handleRestore}
                 disabled={isLoading || isRestoring || isPeriodicBackingUp || isZipRestoring}
-                className={`w-full px-4 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-lg transition-all duration-200 font-bold shadow-lg hover:shadow-emerald-500/60 transform hover:scale-105 active:scale-95 border border-emerald-400 border-opacity-40 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2 text-sm`}
+                className={`w-full px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-all duration-200 font-bold shadow-lg hover:shadow-emerald-500/60 transform  active:scale-95 border border-emerald-400 border-opacity-40 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2 text-sm`}
               >
                 {isRestoring ? (
                   <>
@@ -312,7 +310,6 @@ const BackupModal = ({ isOpen, onClose }) => {
                   </>
                 ) : (
                   <>
-                    <span>♻️</span>
                     <span>Restore (Folder)</span>
                   </>
                 )}
@@ -321,7 +318,7 @@ const BackupModal = ({ isOpen, onClose }) => {
               <button
                 onClick={handleZipRestore}
                 disabled={isLoading || isRestoring || isPeriodicBackingUp || isZipRestoring}
-                className={`w-full px-4 py-3 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white rounded-lg transition-all duration-200 font-bold shadow-lg hover:shadow-teal-500/60 transform hover:scale-105 active:scale-95 border border-teal-400 border-opacity-40 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2 text-sm`}
+                className={`w-full px-4 py-3 bg-teal-500 hover:bg-teal-600 text-white rounded-lg transition-all duration-200 font-bold shadow-lg hover:shadow-teal-500/60 transform  active:scale-95 border border-teal-400 border-opacity-40 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2 text-sm`}
               >
                 {isZipRestoring ? (
                   <>
@@ -330,7 +327,6 @@ const BackupModal = ({ isOpen, onClose }) => {
                   </>
                 ) : (
                   <>
-                    <span>📦</span>
                     <span>Restore (ZIP)</span>
                   </>
                 )}
@@ -338,7 +334,7 @@ const BackupModal = ({ isOpen, onClose }) => {
 
               <button
                 onClick={() => backupModalAnim.handleClose(onClose)}
-                className="w-full px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg transition-all duration-200 font-bold shadow-lg hover:shadow-red-500/60 transform hover:scale-105 active:scale-95 border border-red-400 border-opacity-40 text-sm"
+                className="w-full px-4 py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-lg transition-all duration-200 font-bold shadow-sm hover:shadow-md transform  active:scale-95 border border-red-400 border-opacity-40 text-sm"
               >
                 Cancel
               </button>

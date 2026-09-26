@@ -138,7 +138,7 @@ const InvoicePage = () => {
       {/* Print/Save Controls */}
       <div className="invoice-controls print-hidden">
         <button onClick={handlePrint} className="btn-print">
-          🖨️ Print
+          Print
         </button>
         <button onClick={() => navigate(-1)} className="btn-back">
           ← Back
@@ -259,8 +259,8 @@ const InvoicePage = () => {
                         <td style={{ textAlign: 'right' }}>₨ {totalTax.toFixed(2)}</td>
                       </tr>
                       <tr>
-                        <td style={{ borderTop: '1px solid #17144B', paddingTop: '8px' }}>Total Tax Amount:</td>
-                        <td style={{ borderTop: '1px solid #17144B', paddingTop: '8px', textAlign: 'right' }}>₨ {totalTax.toFixed(2)}</td>
+                        <td style={{ borderTop: '1px solid #0f172a', paddingTop: '8px' }}>Total Tax Amount:</td>
+                        <td style={{ borderTop: '1px solid #0f172a', paddingTop: '8px', textAlign: 'right' }}>₨ {totalTax.toFixed(2)}</td>
                       </tr>
                     </tbody>
                   </table>

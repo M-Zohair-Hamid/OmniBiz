@@ -104,7 +104,7 @@ def create_item():
             description=data.get('description', ''),
             unit=data.get('unit', 'PCS'),
             unit_price=float(data['unit_price']),
-            quantity_in_stock=float(data.get('quantity_in_stock', 0)),
+            quantity_in_stock=max(0.0, float(data.get('quantity_in_stock', 0))),
             company_id=company_id
         )
         
@@ -139,7 +139,7 @@ def update_item(item_id):
         item.description = data.get('description', item.description)
         item.unit = data.get('unit', item.unit)
         item.unit_price = float(data.get('unit_price', item.unit_price))
-        item.quantity_in_stock = float(data.get('quantity_in_stock', item.quantity_in_stock))
+        item.quantity_in_stock = max(0.0, float(data.get('quantity_in_stock', item.quantity_in_stock)))
         item.is_active = data.get('is_active', item.is_active)
         item.updated_at = datetime.utcnow()
         

@@ -8,7 +8,6 @@ import { formatDate, getCurrentDateForInput } from '../utils/dateUtils';
 import { useModalAnimation, getBackdropAnimationClass, getModalAnimationClass } from '../hooks/useModalAnimation';
 
 const OrdersPage = () => {
-  const MAX_ORDER_ITEMS = 12;
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
@@ -283,11 +282,6 @@ const OrdersPage = () => {
       }
     }
 
-    if (itemMap.size > MAX_ORDER_ITEMS) {
-      showToast(`Order cannot contain more than ${MAX_ORDER_ITEMS} items`, 'error');
-      return;
-    }
-
     console.log('Submitting form data:', formData); // Debug log
 
     setSubmitting(true);
@@ -313,7 +307,7 @@ const OrdersPage = () => {
         
         // Check if status was automatically updated to 'paid'
         if (response.data.order && response.data.order.status === 'paid') {
-          showToast('✅ Order updated! Amount now equals paid amount - Order marked as PAID', 'success');
+          showToast('Order updated! Amount now equals paid amount - Order marked as PAID', 'success');
         } else {
           showToast('Order updated successfully', 'success');
         }
@@ -379,9 +373,9 @@ const OrdersPage = () => {
 
   const getPaymentButtonLabel = (order) => {
     const status = String(order?.status || '').toLowerCase();
-    if (status === 'partial') return '💰 Record Remaining';
-    if (status === 'paid') return '🔒 Payment Recorded';
-    return '💰 Record Payment';
+    if (status === 'partial') return 'Record Remaining';
+    if (status === 'paid') return 'Payment Recorded';
+    return 'Record Payment';
   };
 
   const getOrderDateObj = (value) => {
@@ -411,18 +405,18 @@ const OrdersPage = () => {
       return 'bg-red-700 text-white border border-red-800';
     }
     if (status === 'paid') {
-      return 'bg-green-500 bg-opacity-30 text-green-900 border border-green-400';
+      return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
     }
     if (status === 'partial') {
-      return 'bg-yellow-300 bg-opacity-30 text-yellow-800 border border-yellow-300 border-opacity-50';
+      return 'bg-amber-50 text-amber-700';
     }
-    return 'bg-red-200 bg-opacity-50 text-red-900 border border-red-300';
+    return 'bg-rose-50 text-rose-700 border border-rose-200';
   };
 
   const getStatusTextClass = (order) => {
     const status = String(order?.status || '').toLowerCase();
     if (isOrderOverdue(order)) return 'text-red-800';
-    if (status === 'paid') return 'text-green-700';
+    if (status === 'paid') return 'text-emerald-700';
     if (status === 'partial') return 'text-yellow-600';
     return 'text-red-500';
   };
@@ -563,7 +557,7 @@ const OrdersPage = () => {
       
       // Check if payment was auto-upgraded to full
       if (response.data.auto_upgraded) {
-        showToast('✅ Payment recorded! Auto-upgraded from Partial to FULL (amount equals remaining balance)', 'success');
+        showToast('Payment recorded! Auto-upgraded from Partial to FULL (amount equals remaining balance)', 'success');
       } else {
         showToast('Payment recorded successfully', 'success');
       }
@@ -590,10 +584,6 @@ const OrdersPage = () => {
   };
 
   const addItemRow = () => {
-    if (formData.items.length >= MAX_ORDER_ITEMS) {
-      showToast(`You can add maximum ${MAX_ORDER_ITEMS} items in one order`, 'warning');
-      return;
-    }
     setFormData({...formData, items: [...formData.items, { item_id: '', quantity: 1, item_query: '' }]});
   };
 
@@ -684,56 +674,56 @@ const OrdersPage = () => {
   }, 0);
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-[#17144B] via-[#3A3F8C] to-[#17144B] relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-[#17144B] via-[#3A3F8C] to-[#17144B] opacity-80"></div>
+    <div className="flex min-h-screen bg-slate-50">
+      <div className="absolute inset-0 bg-slate-50 opacity-80"></div>
       <Sidebar companyName={user?.company_name || 'Business'} />
       
       <div className="flex-1 ml-64 relative z-10">
         <div className="p-8">
           <div className="flex justify-between items-center mb-8">
-            <h1 className="text-5xl font-bold text-white">Orders Management</h1>
-            <button onClick={handleAddOrder} className="bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] text-[#17144B] px-6 py-3 rounded-xl font-bold transition-all duration-200 shadow-lg hover:shadow-[#00D4FF]/50 transform hover:scale-105 active:scale-95 border border-[#00D4FF] border-opacity-30">+ New Order</button>
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Orders</h1>
+            <button onClick={handleAddOrder} className="bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-xl font-bold transition-all duration-200 shadow-sm hover:shadow-md transform  active:scale-95 border border-[#0d9488] border-opacity-30">+ New Order</button>
           </div>
 
           {/* Search */}
-          <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-2xl shadow-glass-lg border border-white border-opacity-30 p-4 mb-6">
+          <div className=" bg-white rounded-2xl shadow-sm border border-slate-200/80 p-4 mb-6">
             <div className="flex flex-col md:flex-row md:items-end gap-3">
               <div className="flex-1">
-                <label className="block text-[#17144B] font-bold mb-1">Search</label>
+                <label className="block text-slate-900 font-bold mb-1">Search</label>
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Buyer, order #, date (dd-mm-yyyy), month (01), or year (2026)"
-                  className="w-full px-3 py-2 backdrop-blur-sm bg-white bg-opacity-40 border border-[#3A3F8C] rounded-lg focus:border-[#00D4FF]"
+                  className="w-full px-3 py-2  bg-white border border-slate-200 rounded-lg focus:border-[#0d9488]"
                 />
               </div>
               <div className="flex gap-2 md:justify-end">
-                <button onClick={() => applyFilters(orders, searchTerm)} className="flex-1 md:flex-none px-4 py-2 bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] text-[#17144B] rounded-lg font-semibold shadow-md">Apply</button>
+                <button onClick={() => applyFilters(orders, searchTerm)} className="flex-1 md:flex-none px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-semibold shadow-md">Apply</button>
                 <button onClick={() => { setSearchTerm(''); applyFilters(orders, ''); }} className="flex-1 md:flex-none px-4 py-2 bg-gray-400 hover:bg-gray-500 text-white rounded-lg font-semibold">Clear</button>
               </div>
             </div>
           </div>
 
           {/* Orders Table */}
-          <div className="backdrop-blur-xl bg-white bg-opacity-40 rounded-2xl shadow-glass-lg border border-white border-opacity-30">
+          <div className=" bg-white rounded-2xl shadow-sm border border-slate-200/80">
             {loading ? <div className="p-8 text-center text-white">Loading...</div> : filteredOrders.length === 0 ? <div className="p-8 text-center text-gray-200">No orders found</div> : (
               <>
                 <div className="overflow-x-auto">
                   <table id="ordersTable" className="w-full text-sm">
-                    <thead className="border-b border-[#17144B]">
+                    <thead className="border-b border-[#0f172a]">
                       <tr>
-                        <th className="px-4 py-2 text-center font-bold text-[#17144B]">Order #</th>
-                        <th className="px-4 py-2 text-center font-bold text-[#17144B]">Buyer</th>
-                        <th className="px-4 py-2 text-center font-bold text-[#17144B]">Date</th>
-                        <th className="px-4 py-2 text-center font-bold text-[#17144B]">Total</th>
-                        <th className="px-4 py-2 text-center font-bold text-[#17144B]">Status</th>
-                        <th className="px-4 py-2 text-center font-bold text-[#17144B]">Actions</th>
+                        <th className="px-4 py-2 text-center font-bold text-slate-900">Order #</th>
+                        <th className="px-4 py-2 text-center font-bold text-slate-900">Buyer</th>
+                        <th className="px-4 py-2 text-center font-bold text-slate-900">Date</th>
+                        <th className="px-4 py-2 text-center font-bold text-slate-900">Total</th>
+                        <th className="px-4 py-2 text-center font-bold text-slate-900">Status</th>
+                        <th className="px-4 py-2 text-center font-bold text-slate-900">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredOrders.map(order => (
-                        <tr key={order.id} className="border-b border-[#3A3F8C] hover:bg-[#3A3F8C] hover:bg-opacity-50 transition-all duration-200 hover:scale-100 hover:shadow-md cursor-pointer">
+                        <tr key={order.id} className="border-b border-slate-50 hover:bg-slate-50 transition-all duration-200 hover:scale-100 hover:shadow-md cursor-pointer">
                           <td className="px-4 py-2 font-bold text-black text-center">{highlightText(order.order_number)}</td>
                           <td className="px-4 py-2 text-black font-semibold text-center">{highlightText(order.buyer_name)}</td>
                           <td className="px-4 py-2 text-black font-semibold text-center">{highlightText(formatDate(order.order_date))}</td>
@@ -741,7 +731,7 @@ const OrdersPage = () => {
                           <td className="px-4 py-2 text-center"><span className={`${getStatusBadgeClasses(order)} px-2 py-1 rounded text-xs font-bold`}>{highlightText(order.status)}</span></td>
                           <td className="px-4 py-2 text-center">
                             <div className="flex gap-2 items-center justify-center flex-wrap">
-                              <button onClick={() => handleViewOrder(order)} className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 transform hover:scale-105 active:scale-95">👁️ View</button>
+                              <button onClick={() => handleViewOrder(order)} className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 transform  active:scale-95">View</button>
                               <button 
                                 onClick={() => handleEditOrder(order)} 
                                 disabled={['paid', 'partial'].includes(String(order.status).toLowerCase())}
@@ -749,7 +739,7 @@ const OrdersPage = () => {
                                 className={`px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 ${
                                   ['paid', 'partial'].includes(String(order.status).toLowerCase())
                                     ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                                    : 'bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] text-[#17144B] transform hover:scale-105 active:scale-95'
+                                    : 'bg-teal-600 hover:bg-teal-700 text-white transform  active:scale-95'
                                 }`}
                               >
                                 Edit
@@ -761,12 +751,12 @@ const OrdersPage = () => {
                                 className={`px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 ${
                                   order.status === 'partial' || order.status === 'paid'
                                     ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                                    : 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white transform hover:scale-105 active:scale-95'
+                                    : 'bg-rose-600 hover:bg-rose-700 text-white transform  active:scale-95'
                                 }`}
                               >
                                 Delete
                               </button>
-                              <button onClick={() => handleOpenOptions(order)} className="bg-gradient-to-r from-green-400 to-green-500 hover:from-green-500 hover:to-green-600 text-white px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 transform hover:scale-105 active:scale-95">Options</button>
+                              <button onClick={() => handleOpenOptions(order)} className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 transform  active:scale-95">Options</button>
                             </div>
                           </td>
                         </tr>
@@ -778,8 +768,8 @@ const OrdersPage = () => {
                   <div className="flex justify-between items-center p-4">
                     <span className="text-black">Page {currentPage} of {totalPages}</span>
                     <div className="flex gap-2">
-                      <button onClick={() => fetchOrders(currentPage - 1)} disabled={currentPage === 1} className="px-4 py-2 bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] disabled:opacity-50 disabled:from-gray-300 disabled:to-gray-300 text-[#17144B] rounded-lg font-semibold transition-all duration-200">Previous</button>
-                      <button onClick={() => fetchOrders(currentPage + 1)} disabled={currentPage === totalPages} className="px-4 py-2 bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] disabled:opacity-50 disabled:from-gray-300 disabled:to-gray-300 text-[#17144B] rounded-lg font-semibold transition-all duration-200">Next</button>
+                      <button onClick={() => fetchOrders(currentPage - 1)} disabled={currentPage === 1} className="px-4 py-2 bg-teal-600 hover:bg-teal-700 disabled:opacity-50 disabled:from-gray-300 disabled:to-gray-300 text-white rounded-lg font-semibold transition-all duration-200">Previous</button>
+                      <button onClick={() => fetchOrders(currentPage + 1)} disabled={currentPage === totalPages} className="px-4 py-2 bg-teal-600 hover:bg-teal-700 disabled:opacity-50 disabled:from-gray-300 disabled:to-gray-300 text-white rounded-lg font-semibold transition-all duration-200">Next</button>
                     </div>
                   </div>
                 )}
@@ -789,37 +779,48 @@ const OrdersPage = () => {
 
           {/* Form Modal */}
           {showForm && (
-            <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-              <div className="backdrop-blur-xl bg-white bg-opacity-40 border border-white border-opacity-30 rounded-2xl shadow-glass-lg p-8 max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="fixed inset-0 bg-black bg-opacity-40  flex items-center justify-center z-50 p-4">
+              <div className=" bg-white border border-slate-200/80 rounded-2xl shadow-sm p-8 max-w-5xl w-full max-h-[90vh] overflow-y-auto">
                 <h2 className="text-2xl font-bold mb-4 text-black">{editingId ? 'Edit Order' : 'New Order'}</h2>
                 <form onSubmit={handleSubmit}>
                   <div className="grid grid-cols-2 gap-4 mb-4">
                     <div>
-                      <label className="block text-[#17144B] font-bold mb-2">Buyer *</label>
-                      <select value={String(formData.buyer_id)} onChange={(e) => setFormData({...formData, buyer_id: e.target.value})} className="w-full px-3 py-2 backdrop-blur-sm bg-white bg-opacity-40 border border-[#3A3F8C] rounded-lg focus:border-[#00D4FF]">
+                      <label className="block text-slate-900 font-bold mb-2">Buyer *</label>
+                      <select value={String(formData.buyer_id)} onChange={(e) => setFormData({...formData, buyer_id: e.target.value})} className="w-full px-3 py-2  bg-white border border-slate-200 rounded-lg focus:border-[#0d9488]">
                         <option value="">Select buyer</option>
                         {buyers.map(b => <option key={b.id} value={String(b.id)}>{b.company_name}</option>)}
                       </select>
                     </div>
                     <div>
-                      <label className="block text-[#17144B] font-bold mb-2">Company Name</label>
-                      <input type="text" value={formData.buyer_id ? (buyers.find(b => b.id === parseInt(formData.buyer_id))?.company_name || '') : ''} readOnly className="w-full px-3 py-2 backdrop-blur-sm bg-gray-100 border border-[#3A3F8C] rounded-lg focus:border-[#00D4FF]" />
+                      <label className="block text-slate-900 font-bold mb-2">Company Name</label>
+                      <input type="text" value={formData.buyer_id ? (buyers.find(b => b.id === parseInt(formData.buyer_id))?.company_name || '') : ''} readOnly className="w-full px-3 py-2  bg-gray-100 border border-slate-200 rounded-lg focus:border-[#0d9488]" />
                     </div>
                     <div>
-                      <label className="block text-[#17144B] font-bold mb-2">Order Date</label>
-                      <input type="date" value={formData.order_date} onChange={(e) => setFormData({...formData, order_date: e.target.value})} className="w-full px-3 py-2 backdrop-blur-sm bg-white bg-opacity-40 border border-[#3A3F8C] rounded-lg focus:border-[#00D4FF]" />
+                      <label className="block text-slate-900 font-bold mb-2">Order Date</label>
+                      <input type="date" value={formData.order_date} onChange={(e) => setFormData({...formData, order_date: e.target.value})} className="w-full px-3 py-2  bg-white border border-slate-200 rounded-lg focus:border-[#0d9488]" />
                     </div>
                     <div>
-                      <label className="block text-[#17144B] font-bold mb-2">Tax Rate (%)</label>
-                      <input type="number" step="0.01" value={formData.tax_rate} onChange={(e) => setFormData({...formData, tax_rate: parseFloat(e.target.value)})} className="w-full px-3 py-2 backdrop-blur-sm bg-white bg-opacity-40 border border-[#3A3F8C] rounded-lg focus:border-[#00D4FF]" />
+                      <label className="block text-slate-900 font-bold mb-2">Tax Rate (%)</label>
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        value={formData.tax_rate === 0 ? '' : formData.tax_rate}
+                        onChange={(e) => {
+                          const raw = e.target.value.replace(/[^0-9.]/g, '');
+                          const cleaned = raw.replace(/^0+(?=\d)/, '');
+                          setFormData({ ...formData, tax_rate: cleaned === '' ? 0 : parseFloat(cleaned) || 0 });
+                        }}
+                        placeholder="0"
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:border-indigo-500 focus:outline-none"
+                      />
                     </div>
                   </div>
 
                   <div className="mb-2">
                     <div className="flex gap-2 items-center">
                       <h3 className="font-semibold flex-1">Items</h3>
-                      <span className="text-xs font-semibold text-[#17144B] bg-white bg-opacity-60 px-2 py-1 rounded-md border border-[#3A3F8C] border-opacity-40">
-                        Cart: {cartItemCount}/{MAX_ORDER_ITEMS} items | Qty: {cartTotalQuantity}
+                      <span className="text-xs font-semibold text-slate-900 bg-white bg-opacity-60 px-2 py-1 rounded-md border border-slate-200 border-opacity-40">
+                        Cart: {cartItemCount} items | Qty: {cartTotalQuantity}
                       </span>
                       <span className="w-24 text-center font-semibold">Qty</span>
                       <span className="w-8"></span>
@@ -860,7 +861,7 @@ const OrdersPage = () => {
                                 onBlur={() => setTimeout(() => setOpenDropdownIdx(null), 300)}
                                 onKeyDown={(e) => handleItemRowKeyDown(idx, e)}
                                 placeholder="Search and select item"
-                                className="w-full px-2 py-1 border rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
+                                className="w-full px-2 py-1 border rounded text-sm focus:outline-none focus:ring-1 focus:ring-teal-400"
                               />
                               {showDropdown && suggestedItems.length > 0 && (
                                 <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded shadow-lg z-50" style={{ maxHeight: '300px', overflowY: 'auto', overflowX: 'hidden' }}>
@@ -874,7 +875,7 @@ const OrdersPage = () => {
                                         updateItemRow(idx, 'item_id', String(suggestion.id));
                                         setOpenDropdownIdx(null);
                                       }}
-                                      className="px-3 py-2 hover:bg-blue-100 cursor-pointer text-sm text-gray-800 border-b last:border-b-0"
+                                      className="px-3 py-2 hover:bg-teal-50 cursor-pointer text-sm text-gray-800 border-b last:border-b-0"
                                     >
                                       <div className="font-semibold">{suggestion.code}</div>
                                       <div className="text-xs text-gray-600">{suggestion.name}</div>
@@ -888,24 +889,24 @@ const OrdersPage = () => {
                               )}
                             </div>
                             <input type="number" step="0.01" value={item.quantity} onChange={(e) => updateItemRow(idx, 'quantity', e.target.value)} onKeyDown={(e) => handleItemRowKeyDown(idx, e)} placeholder="Qty" className="w-24 px-2 py-1 border rounded text-sm" />
-                            <button type="button" onClick={() => confirmAddItem(idx)} className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-sm font-bold">+</button>
-                            <button type="button" onClick={() => removeItemRow(idx)} className="bg-red-500 text-white px-2 py-1 rounded text-sm">×</button>
+                            <button type="button" onClick={() => confirmAddItem(idx)} className="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded text-sm font-bold">+</button>
+                            <button type="button" onClick={() => removeItemRow(idx)} className="bg-rose-600 text-white px-2 py-1 rounded text-sm">×</button>
                           </div>
                         </div>
                       );
                     })}
                   </div>
-                  <button type="button" onClick={addItemRow} disabled={formData.items.length >= MAX_ORDER_ITEMS} className={`mb-4 font-semibold text-sm ${formData.items.length >= MAX_ORDER_ITEMS ? 'text-gray-300 cursor-not-allowed' : 'text-white hover:text-gray-200'}`}>+ Add Item</button>
+                  <button type="button" onClick={addItemRow} className="mb-4 font-semibold text-sm text-indigo-700 hover:text-indigo-800">+ Add Item</button>
 
                   <div className="flex gap-4">
                     <button 
                       type="submit" 
                       disabled={submitting}
-                      className="flex-1 bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] disabled:bg-gray-400 disabled:cursor-not-allowed text-[#17144B] px-4 py-2 rounded font-semibold transition-all"
+                      className="flex-1 bg-teal-600 hover:bg-teal-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-4 py-2 rounded font-semibold transition-all"
                     >
                       {submitting ? 'Saving...' : (editingId ? 'Update Order' : 'Create Order')}
                     </button>
-                    <button type="button" onClick={() => setShowForm(false)} className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-2 rounded font-semibold transition-all duration-200">Cancel</button>
+                    <button type="button" onClick={() => setShowForm(false)} className="flex-1 bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded font-semibold transition-all duration-200">Cancel</button>
                   </div>
                 </form>
               </div>
@@ -914,38 +915,38 @@ const OrdersPage = () => {
 
           {/* Options Modal */}
           {showOptionsModal && selectedOrder && (
-            <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-              <div className="backdrop-blur-xl bg-white bg-opacity-40 border border-white border-opacity-30 rounded-2xl shadow-glass-lg p-8 max-w-md w-full">
-                <h2 className="text-2xl font-bold mb-6 text-[#17144B] text-center">Order Options</h2>
+            <div className="fixed inset-0 bg-black bg-opacity-40  flex items-center justify-center z-50 p-4">
+              <div className=" bg-white border border-slate-200/80 rounded-2xl shadow-sm p-8 max-w-md w-full">
+                <h2 className="text-2xl font-bold mb-6 text-slate-900 text-center">Order Options</h2>
                 <div className="flex flex-col gap-3">
                   <button 
                     onClick={handleGenerateInvoice}
-                    className="w-full bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] text-[#17144B] px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-[#00D4FF]/50 transform hover:scale-105 active:scale-95"
+                    className="w-full bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-sm hover:shadow-md transform  active:scale-95"
                   >
-                    📄 Sales Tax Invoice
+                    Sales Tax Invoice
                   </button>
                   <button 
                     onClick={handleGenerateBill}
-                    className="w-full bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] text-[#17144B] px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-[#00D4FF]/50 transform hover:scale-105 active:scale-95"
+                    className="w-full bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-sm hover:shadow-md transform  active:scale-95"
                   >
-                    📃 Generate Bill
+                    Generate Bill
                   </button>
                   <button 
                     onClick={handleRecordPayment}
                     disabled={isPaymentLocked(selectedOrder) && String(selectedOrder.status || '').toLowerCase() === 'paid'}
                     className={`w-full px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-lg ${
                       String(selectedOrder.status || '').toLowerCase() === 'partial'
-                        ? 'bg-gradient-to-r from-red-400 to-red-500 hover:from-red-500 hover:to-red-600 text-white hover:shadow-red-500/50 transform hover:scale-105 active:scale-95'
+                        ? 'bg-rose-600 hover:bg-rose-700 text-white hover:shadow-md active:scale-95'
                         : isPaymentLocked(selectedOrder)
                         ? 'bg-gray-400 text-white cursor-not-allowed'
-                        : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white hover:shadow-green-500/50 transform hover:scale-105 active:scale-95'
+                        : 'bg-emerald-600 hover:bg-emerald-700 text-white hover:shadow-md transform  active:scale-95'
                     }`}
                   >
                     {getPaymentButtonLabel(selectedOrder)}
                   </button>
                   <button 
                     onClick={() => setShowOptionsModal(false)}
-                    className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-red-500/50 transform hover:scale-105 active:scale-95 mt-2"
+                    className="w-full bg-rose-600 hover:bg-rose-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-sm hover:shadow-md transform  active:scale-95 mt-2"
                   >
                     Cancel
                   </button>
@@ -956,25 +957,25 @@ const OrdersPage = () => {
 
           {/* Bill Tax Options Modal */}
           {showBillTaxModal && selectedOrder && (
-            <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-              <div className="backdrop-blur-xl bg-white bg-opacity-40 border border-white border-opacity-30 rounded-2xl shadow-glass-lg p-8 max-w-md w-full">
-                <h2 className="text-2xl font-bold mb-6 text-[#17144B] text-center">Select Bill Type</h2>
+            <div className="fixed inset-0 bg-black bg-opacity-40  flex items-center justify-center z-50 p-4">
+              <div className=" bg-white border border-slate-200/80 rounded-2xl shadow-sm p-8 max-w-md w-full">
+                <h2 className="text-2xl font-bold mb-6 text-slate-900 text-center">Select Bill Type</h2>
                 <div className="flex flex-col gap-3">
                   <button 
                     onClick={handleBillWithTax}
-                    className="w-full bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] text-[#17144B] px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-[#00D4FF]/50 transform hover:scale-105 active:scale-95"
+                    className="w-full bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-sm hover:shadow-md transform  active:scale-95"
                   >
-                    📊 Bill (Including Tax)
+                    Bill (Including Tax)
                   </button>
                   <button 
                     onClick={handleBillWithoutTax}
-                    className="w-full bg-gradient-to-r from-[#00D4FF] to-[#00B8E0] hover:from-[#00B8E0] hover:to-[#00A0C8] text-[#17144B] px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-[#00D4FF]/50 transform hover:scale-105 active:scale-95"
+                    className="w-full bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-sm hover:shadow-md transform  active:scale-95"
                   >
-                    📋 Bill (Excluding Tax)
+                    Bill (Excluding Tax)
                   </button>
                   <button 
                     onClick={() => setShowBillTaxModal(false)}
-                    className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-red-500/50 transform hover:scale-105 active:scale-95 mt-2"
+                    className="w-full bg-rose-600 hover:bg-rose-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-sm hover:shadow-md transform  active:scale-95 mt-2"
                   >
                     Cancel
                   </button>
@@ -985,9 +986,9 @@ const OrdersPage = () => {
 
           {/* Record Payment Modal */}
           {showPaymentModal && selectedOrder && (
-            <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-              <div className="backdrop-blur-xl bg-white bg-opacity-40 border border-white border-opacity-30 rounded-2xl shadow-glass-lg p-8 max-w-md w-full">
-                <h2 className="text-2xl font-bold mb-6 text-[#17144B] text-center">💳 Record Payment</h2>
+            <div className="fixed inset-0 bg-black bg-opacity-40  flex items-center justify-center z-50 p-4">
+              <div className=" bg-white border border-slate-200/80 rounded-2xl shadow-sm p-8 max-w-md w-full">
+                <h2 className="text-2xl font-bold mb-6 text-slate-900 text-center">Record Payment</h2>
                 <div className="mb-4 p-4 bg-white bg-opacity-50 rounded-lg">
                   <p className="text-sm text-gray-700"><strong>Order:</strong> {selectedOrder.order_number}</p>
                   <p className="text-sm text-gray-700"><strong>Buyer:</strong> {selectedOrder.buyer_name}</p>
@@ -996,15 +997,25 @@ const OrdersPage = () => {
                 <div className="space-y-4">
                   {/* Payment Amount */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Payment Amount</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Payment Amount <span className="text-gray-400 font-normal">(max Rs. {formatRoundedAmount(paymentRemaining)})</span>
+                    </label>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="decimal"
                       value={paymentForm.amount}
-                      onChange={(e) => handlePaymentAmountChange(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/[^0-9.]/g, '');
+                        const numeric = parseFloat(raw) || 0;
+                        const capped = Math.min(numeric, roundOffAmount(paymentRemaining));
+                        handlePaymentAmountChange(raw === '' ? '' : String(capped));
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                       placeholder="0.00"
-                      step="1"
                     />
+                    {parseFloat(paymentForm.amount) > roundOffAmount(paymentRemaining) && (
+                      <p className="text-xs text-rose-600 font-medium mt-1">Amount cannot exceed remaining balance.</p>
+                    )}
                   </div>
 
                   {/* Payment Method */}
@@ -1013,12 +1024,12 @@ const OrdersPage = () => {
                     <select
                       value={paymentForm.payment_method}
                       onChange={(e) => setPaymentForm({...paymentForm, payment_method: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                     >
-                      <option value="cash">💵 Cash</option>
-                      <option value="card">💳 Card</option>
-                      <option value="bank_transfer">🏦 Bank Transfer</option>
-                      <option value="cheque">📄 Cheque</option>
+                      <option value="cash">Cash</option>
+                      <option value="card">Card</option>
+                      <option value="bank_transfer">Bank Transfer</option>
+                      <option value="cheque">Cheque</option>
                     </select>
                   </div>
 
@@ -1028,10 +1039,10 @@ const OrdersPage = () => {
                     <select
                       value={paymentForm.payment_type}
                       onChange={(e) => setPaymentForm({...paymentForm, payment_type: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                     >
-                      <option value="full">✅ Full Payment</option>
-                      <option value="partial">⚠️ Partial Payment</option>
+                      <option value="full">Full Payment</option>
+                      <option value="partial">Partial Payment</option>
                     </select>
                   </div>
 
@@ -1042,7 +1053,7 @@ const OrdersPage = () => {
                       type="date"
                       value={paymentForm.payment_date}
                       onChange={(e) => setPaymentForm({...paymentForm, payment_date: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                     />
                   </div>
 
@@ -1050,11 +1061,14 @@ const OrdersPage = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Income Tax Rate (%) - Optional</label>
                     <input
-                      type="number"
-                      step="0.01"
-                      value={paymentForm.income_tax_rate}
-                      onChange={(e) => setPaymentForm({...paymentForm, income_tax_rate: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      type="text"
+                      inputMode="decimal"
+                      value={paymentForm.income_tax_rate === 0 || paymentForm.income_tax_rate === '0' ? '' : paymentForm.income_tax_rate}
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/[^0-9.]/g, '').replace(/^0+(?=\d)/, '');
+                        setPaymentForm({...paymentForm, income_tax_rate: raw});
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                       placeholder="e.g., 1.5 for 1.5%"
                     />
                     <p className="text-xs text-gray-500 mt-1">Income tax will be calculated as: Payment Amount × Rate / 100</p>
@@ -1066,7 +1080,7 @@ const OrdersPage = () => {
                     <textarea
                       value={paymentForm.notes}
                       onChange={(e) => setPaymentForm({...paymentForm, notes: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                       rows="2"
                       placeholder="Additional notes..."
                     />
@@ -1076,17 +1090,17 @@ const OrdersPage = () => {
                   <div className="flex gap-3 mt-6">
                     <button 
                       onClick={handlePaymentSubmit}
-                      disabled={isPaymentLocked(selectedOrder)}
-                      className={`flex-1 px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-lg ${isPaymentLocked(selectedOrder)
+                      disabled={isPaymentLocked(selectedOrder) || parseFloat(paymentForm.amount) > roundOffAmount(paymentRemaining) || !paymentForm.amount || parseFloat(paymentForm.amount) <= 0}
+                      className={`flex-1 px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-lg ${(isPaymentLocked(selectedOrder) || parseFloat(paymentForm.amount) > roundOffAmount(paymentRemaining) || !paymentForm.amount || parseFloat(paymentForm.amount) <= 0)
                         ? 'bg-gray-400 text-white cursor-not-allowed'
-                        : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white hover:shadow-green-500/50 transform hover:scale-105 active:scale-95'
+                        : 'bg-indigo-600 hover:bg-indigo-700 text-white hover:shadow-md transform  active:scale-95'
                       }`}
                     >
                       {getPaymentButtonLabel(selectedOrder)}
                     </button>
                     <button 
                       onClick={() => setShowPaymentModal(false)}
-                      className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-red-500/50 transform hover:scale-105 active:scale-95"
+                      className="flex-1 bg-rose-600 hover:bg-rose-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-sm hover:shadow-md transform  active:scale-95"
                     >
                       Cancel
                     </button>
@@ -1098,26 +1112,26 @@ const OrdersPage = () => {
 
           {/* View Order Details Modal */}
           {showViewModal && viewingOrder && (
-            <div className={`fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4 ${getBackdropAnimationClass(viewModal.isClosing)}`}>
-              <div className={`backdrop-blur-xl bg-white bg-opacity-40 border border-white border-opacity-30 rounded-2xl shadow-glass-lg p-8 max-w-5xl w-full max-h-[90vh] flex flex-col overflow-hidden ${getModalAnimationClass(viewModal.isClosing, 'scale')}`}>
-                <h2 className="text-2xl font-bold mb-6 text-[#17144B]">📋 Order Details</h2>
+            <div className={`fixed inset-0 bg-black bg-opacity-40  flex items-center justify-center z-50 p-4 ${getBackdropAnimationClass(viewModal.isClosing)}`}>
+              <div className={` bg-white border border-slate-200/80 rounded-2xl shadow-sm p-8 max-w-5xl w-full max-h-[90vh] flex flex-col overflow-hidden ${getModalAnimationClass(viewModal.isClosing, 'scale')}`}>
+                <h2 className="text-2xl font-bold mb-6 text-slate-900">Order Details</h2>
                 
                 <div className="flex gap-6 flex-1 min-h-0 overflow-hidden">
                   {/* LEFT SIDE - Order Details (Scrollable) */}
-                  <div className="flex-1 flex flex-col overflow-y-auto" style={{scrollbarWidth: 'thin', scrollbarColor: '#00D4FF rgba(0,212,255,0.2)'}}>
+                  <div className="flex-1 flex flex-col overflow-y-auto" style={{scrollbarWidth: 'thin', scrollbarColor: '#0d9488 rgba(0,212,255,0.2)'}}>
                     {/* Order Header Info */}
-                    <div className="grid grid-cols-2 gap-4 p-6 backdrop-blur-sm bg-white bg-opacity-50 rounded-lg border border-white border-opacity-30 flex-shrink-0">
+                    <div className="grid grid-cols-2 gap-4 p-6  bg-white bg-opacity-50 rounded-lg border border-slate-200/80 flex-shrink-0">
                       <div>
                         <p className="text-sm text-gray-600 font-bold uppercase tracking-wide">Order ID</p>
-                        <p className="text-3xl font-bold text-[#17144B] mt-2">#{viewingOrder.id}</p>
+                        <p className="text-3xl font-bold text-slate-900 mt-2">#{viewingOrder.id}</p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-600 font-bold uppercase tracking-wide">Order Number</p>
-                        <p className="text-xl font-bold text-[#17144B] mt-2 break-words">{viewingOrder.order_number}</p>
+                        <p className="text-xl font-bold text-slate-900 mt-2 break-words">{viewingOrder.order_number}</p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-600 font-bold uppercase tracking-wide">Date</p>
-                        <p className="text-2xl font-bold text-[#17144B] mt-2">{formatDate(viewingOrder.order_date)}</p>
+                        <p className="text-2xl font-bold text-slate-900 mt-2">{formatDate(viewingOrder.order_date)}</p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-600 font-bold uppercase tracking-wide">Status</p>
@@ -1126,14 +1140,14 @@ const OrdersPage = () => {
                     </div>
 
                     {/* Buyer Info */}
-                    <div className="p-6 backdrop-blur-sm bg-white bg-opacity-50 rounded-lg border border-white border-opacity-30 mt-4 flex-shrink-0">
-                      <h3 className="font-bold text-[#17144B] mb-4 text-lg">👤 Buyer Information</h3>
+                    <div className="p-6  bg-white bg-opacity-50 rounded-lg border border-slate-200/80 mt-4 flex-shrink-0">
+                      <h3 className="font-bold text-slate-900 mb-4 text-lg">Buyer Information</h3>
                       <p className="text-base text-gray-800 mb-3"><span className="font-bold">Company:</span> {viewingOrder.buyer_name}</p>
                       <p className="text-base text-gray-800"><span className="font-bold">ID:</span> {viewingOrder.buyer_id}</p>
                     </div>
 
                     {/* Totals Section */}
-                    <div className="p-6 backdrop-blur-sm bg-white bg-opacity-50 rounded-lg border border-white border-opacity-30 mt-4 flex-shrink-0">
+                    <div className="p-6  bg-white bg-opacity-50 rounded-lg border border-slate-200/80 mt-4 flex-shrink-0">
                       <div className="space-y-3">
                         <div className="flex justify-between items-center">
                           <span className="text-base text-gray-700 font-semibold">Subtotal:</span>
@@ -1144,7 +1158,7 @@ const OrdersPage = () => {
                           <span className="font-bold text-gray-800 text-lg">₨ {formatRoundedAmount(viewingOrder.total_amount - (viewingOrder.total_amount / (1 + viewingOrder.tax_rate / 100)))}</span>
                         </div>
                         <div className="flex justify-between items-center border-t-2 border-gray-300 pt-3 mt-3">
-                          <span className="font-bold text-[#17144B] text-lg">Total:</span>
+                          <span className="font-bold text-slate-900 text-lg">Total:</span>
                           <span className="font-bold text-emerald-600 text-2xl">₨ {formatRoundedAmount(viewingOrder.total_amount)}</span>
                         </div>
                       </div>
@@ -1152,8 +1166,8 @@ const OrdersPage = () => {
 
                     {/* Notes */}
                     {viewingOrder.notes && (
-                      <div className="p-6 backdrop-blur-sm bg-white bg-opacity-50 rounded-lg border border-white border-opacity-30 mt-4 flex-shrink-0">
-                        <h3 className="font-bold text-[#17144B] mb-3 text-lg">📝 Notes</h3>
+                      <div className="p-6  bg-white bg-opacity-50 rounded-lg border border-slate-200/80 mt-4 flex-shrink-0">
+                        <h3 className="font-bold text-slate-900 mb-3 text-lg">Notes</h3>
                         <p className="text-base text-gray-800">{viewingOrder.notes}</p>
                       </div>
                     )}
@@ -1161,14 +1175,14 @@ const OrdersPage = () => {
 
                   {/* RIGHT SIDE - Items List (Scrollable) */}
                   <div className="flex-1 flex flex-col overflow-hidden">
-                    <div className="p-4 backdrop-blur-sm bg-white bg-opacity-50 rounded-lg border border-white border-opacity-30 flex-1 flex flex-col overflow-hidden">
-                      <h3 className="font-bold text-[#17144B] mb-3 flex-shrink-0">📦 Items</h3>
-                      <div className="space-y-2 overflow-y-scroll flex-1" style={{scrollbarWidth: 'thin', scrollbarColor: '#00D4FF rgba(0,212,255,0.2)'}}>
+                    <div className="p-4  bg-white bg-opacity-50 rounded-lg border border-slate-200/80 flex-1 flex flex-col overflow-hidden">
+                      <h3 className="font-bold text-slate-900 mb-3 flex-shrink-0">Items</h3>
+                      <div className="space-y-2 overflow-y-scroll flex-1" style={{scrollbarWidth: 'thin', scrollbarColor: '#0d9488 rgba(0,212,255,0.2)'}}>
                         {viewingOrder.items && viewingOrder.items.map((item, idx) => {
                           const itemSubtotal = (item.item?.unit_price || 0) * (item.quantity || 0);
                           const itemTax = itemSubtotal * ((viewingOrder.tax_rate || 0) / 100);
                           return (
-                            <div key={idx} className="flex flex-col p-3 bg-white bg-opacity-40 rounded border border-white border-opacity-20 hover:bg-opacity-60 transition-all flex-shrink-0">
+                            <div key={idx} className="flex flex-col p-3 bg-white rounded border border-slate-200  transition-all flex-shrink-0">
                               <p className="text-sm font-semibold text-gray-800">{item.item?.name || 'Item'}</p>
                               <p className="text-xs text-gray-600 mb-2">Code: {item.item?.code || 'N/A'}</p>
                               <div className="flex justify-between items-center">
@@ -1177,7 +1191,7 @@ const OrdersPage = () => {
                               </div>
                               <p className="text-xs text-gray-600 mt-1">Unit: ₨ {formatRoundedAmount(item.item?.unit_price)}</p>
                               {(viewingOrder.tax_rate > 0) && (
-                                <p className="text-xs text-blue-600 mt-1">Tax ({viewingOrder.tax_rate}%): ₨ {itemTax.toFixed(2)}</p>
+                                <p className="text-xs text-teal-700 mt-1">Tax ({viewingOrder.tax_rate}%): ₨ {itemTax.toFixed(2)}</p>
                               )}
                             </div>
                           );
@@ -1191,7 +1205,7 @@ const OrdersPage = () => {
                 <div className="mt-6 flex-shrink-0">
                   <button 
                     onClick={() => viewModal.handleClose(() => setShowViewModal(false))}
-                    className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-red-500/50 transform hover:scale-105 active:scale-95"
+                    className="w-full bg-rose-600 hover:bg-rose-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-sm hover:shadow-md transform  active:scale-95"
                   >
                     Close
                   </button>
@@ -1202,9 +1216,9 @@ const OrdersPage = () => {
 
           {/* Record Additional Payment Modal */}
           {showAdditionalPaymentModal && selectedOrder && (
-            <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-              <div className="backdrop-blur-xl bg-white bg-opacity-40 border border-white border-opacity-30 rounded-2xl shadow-glass-lg p-8 max-w-md w-full">
-                <h2 className="text-2xl font-bold mb-6 text-[#17144B] text-center">💳 Record Additional Payment</h2>
+            <div className="fixed inset-0 bg-black bg-opacity-40  flex items-center justify-center z-50 p-4">
+              <div className=" bg-white border border-slate-200/80 rounded-2xl shadow-sm p-8 max-w-md w-full">
+                <h2 className="text-2xl font-bold mb-6 text-slate-900 text-center">Record Additional Payment</h2>
                 <div className="mb-4 p-4 bg-white bg-opacity-50 rounded-lg space-y-2">
                   <p className="text-sm text-gray-700"><strong>Order:</strong> {selectedOrder.order_number}</p>
                   <p className="text-sm text-gray-700"><strong>Total Amount:</strong> ₨ {formatRoundedAmount(selectedOrder.total_amount)}</p>
@@ -1213,15 +1227,25 @@ const OrdersPage = () => {
                 <div className="space-y-4">
                   {/* Payment Amount */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Additional Amount</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Additional Amount <span className="text-gray-400 font-normal">(max Rs. {formatRoundedAmount(paymentRemaining)})</span>
+                    </label>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="decimal"
                       value={paymentForm.amount}
-                      onChange={(e) => handlePaymentAmountChange(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/[^0-9.]/g, '');
+                        const numeric = parseFloat(raw) || 0;
+                        const capped = Math.min(numeric, roundOffAmount(paymentRemaining));
+                        handlePaymentAmountChange(raw === '' ? '' : String(capped));
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                       placeholder="0.00"
-                      step="1"
                     />
+                    {parseFloat(paymentForm.amount) > roundOffAmount(paymentRemaining) && (
+                      <p className="text-xs text-rose-600 font-medium mt-1">Amount cannot exceed remaining balance.</p>
+                    )}
                   </div>
 
                   {/* Payment Portion */}
@@ -1230,10 +1254,10 @@ const OrdersPage = () => {
                     <select
                       value={paymentForm.payment_type}
                       onChange={(e) => setPaymentForm({...paymentForm, payment_type: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                     >
-                      <option value="partial">⚠️ Partial Payment</option>
-                      <option value="full">✅ Full/Complete Payment</option>
+                      <option value="partial">Partial Payment</option>
+                      <option value="full">Full/Complete Payment</option>
                     </select>
                   </div>
 
@@ -1243,12 +1267,12 @@ const OrdersPage = () => {
                     <select
                       value={paymentForm.payment_method}
                       onChange={(e) => setPaymentForm({...paymentForm, payment_method: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                     >
-                      <option value="cash">💵 Cash</option>
-                      <option value="card">💳 Card</option>
-                      <option value="bank_transfer">🏦 Bank Transfer</option>
-                      <option value="cheque">📄 Cheque</option>
+                      <option value="cash">Cash</option>
+                      <option value="card">Card</option>
+                      <option value="bank_transfer">Bank Transfer</option>
+                      <option value="cheque">Cheque</option>
                     </select>
                   </div>
 
@@ -1259,7 +1283,7 @@ const OrdersPage = () => {
                       type="date"
                       value={paymentForm.payment_date}
                       onChange={(e) => setPaymentForm({...paymentForm, payment_date: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                     />
                   </div>
 
@@ -1267,11 +1291,14 @@ const OrdersPage = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Income Tax Rate (%) - Optional</label>
                     <input
-                      type="number"
-                      step="0.01"
-                      value={paymentForm.income_tax_rate}
-                      onChange={(e) => setPaymentForm({...paymentForm, income_tax_rate: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      type="text"
+                      inputMode="decimal"
+                      value={paymentForm.income_tax_rate === 0 || paymentForm.income_tax_rate === '0' ? '' : paymentForm.income_tax_rate}
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/[^0-9.]/g, '').replace(/^0+(?=\d)/, '');
+                        setPaymentForm({...paymentForm, income_tax_rate: raw});
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                       placeholder="e.g., 1.5 for 1.5%"
                     />
                     <p className="text-xs text-gray-500 mt-1">Income tax will be calculated as: Payment Amount × Rate / 100</p>
@@ -1283,7 +1310,7 @@ const OrdersPage = () => {
                     <textarea
                       value={paymentForm.notes}
                       onChange={(e) => setPaymentForm({...paymentForm, notes: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                       rows="2"
                       placeholder="Additional notes..."
                     />
@@ -1293,13 +1320,17 @@ const OrdersPage = () => {
                   <div className="flex gap-3 mt-6">
                     <button 
                       onClick={handlePaymentSubmit}
-                      className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-blue-500/50 transform hover:scale-105 active:scale-95"
+                      disabled={parseFloat(paymentForm.amount) > roundOffAmount(paymentRemaining) || !paymentForm.amount || parseFloat(paymentForm.amount) <= 0}
+                      className={`flex-1 px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-sm ${(parseFloat(paymentForm.amount) > roundOffAmount(paymentRemaining) || !paymentForm.amount || parseFloat(paymentForm.amount) <= 0)
+                        ? 'bg-gray-400 text-white cursor-not-allowed'
+                        : 'bg-indigo-600 hover:bg-indigo-700 text-white hover:shadow-md transform active:scale-95'
+                      }`}
                     >
-                      💳 Record Payment
+                      Record Payment
                     </button>
                     <button 
                       onClick={() => setShowAdditionalPaymentModal(false)}
-                      className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-red-500/50 transform hover:scale-105 active:scale-95"
+                      className="flex-1 bg-rose-600 hover:bg-rose-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-sm hover:shadow-md transform  active:scale-95"
                     >
                       Cancel
                     </button>
