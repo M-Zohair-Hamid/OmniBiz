@@ -8,7 +8,7 @@ import BusinessSettingsModal from './BusinessSettingsModal';
 const Sidebar = ({ companyName }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout, user } = useContext(AuthContext);
+  const { logout } = useContext(AuthContext);
   const { showToast } = useContext(ToastContext);
   const [isOpen, setIsOpen] = useState(true);
   const [isBackupModalOpen, setIsBackupModalOpen] = useState(false);

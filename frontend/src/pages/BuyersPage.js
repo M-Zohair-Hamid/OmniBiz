@@ -69,12 +69,6 @@ const BuyersPage = () => {
     fetchBuyers(1, e.target.value);
   };
 
-  // Safe prefix: strips any existing prefix or N/A before applying
-  const withPrefix = (val, prefix) => {
-    const stripped = (val || '').replace(/^(GST-|NTN-)/i, '').replace(/^N\/A$/i, '').trim();
-    return prefix + stripped;
-  };
-
   const handleAddBuyer = () => {
     setFormData(freshForm()); // always a new object
     setLastFilerValues({ gst_number: 'GST-', ntn_number: 'NTN-' });

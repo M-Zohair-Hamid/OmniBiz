@@ -28,7 +28,6 @@ const OrdersPage = () => {
   const [openDropdownIdx, setOpenDropdownIdx] = useState(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [viewingOrder, setViewingOrder] = useState(null);
-  const [originalItemQuantities, setOriginalItemQuantities] = useState({});
   const [paymentForm, setPaymentForm] = useState({
     amount: '',
     payment_method: 'cash',
@@ -48,11 +47,6 @@ const OrdersPage = () => {
   
   // Modal animation hooks
   const viewModal = useModalAnimation(showViewModal);
-  const createModal = useModalAnimation();
-  const editModal = useModalAnimation();
-  const deleteModal = useModalAnimation();
-  const statusModal = useModalAnimation();
-  const billModal = useModalAnimation();
 
   const getFilteredItemsForRow = (query) => {
     if (!query.trim()) return items;
@@ -167,7 +161,6 @@ const OrdersPage = () => {
   const handleAddOrder = () => {
     setEditingId(null);
     setFormData({ buyer_id: '', order_date: getCurrentDateForInput(), status: 'pending', tax_rate: 0, notes: '', items: [{ item_id: '', quantity: 1, item_query: '' }] });
-    setOriginalItemQuantities({});
     fetchBuyersAndItems();
     setShowForm(true);
   };
@@ -207,13 +200,6 @@ const OrdersPage = () => {
       }
       
       setEditingId(order.id);
-      const originalMap = fullOrder.items.reduce((acc, item) => {
-        const key = String(item.item_id);
-        const qty = Number.isFinite(parseFloat(item.quantity)) ? parseFloat(item.quantity) : 0;
-        acc[key] = (acc[key] || 0) + qty;
-        return acc;
-      }, {});
-      setOriginalItemQuantities(originalMap);
       setFormData({
         buyer_id: String(fullOrder.buyer_id),
         order_date: formattedDate,
@@ -602,16 +588,7 @@ const OrdersPage = () => {
       return;
     }
     
-    const requestedQty = Number.isFinite(parseFloat(currentItem.quantity)) ? parseFloat(currentItem.quantity) : 0;
-    // Check if this item already exists in other rows
     const currentItemId = parseInt(currentItem.item_id, 10);
-    const otherItemsCount = formData.items.reduce((sum, item, i) => {
-      if (i !== index && parseInt(item.item_id, 10) === currentItemId) {
-        const qty = Number.isFinite(parseFloat(item.quantity)) ? parseFloat(item.quantity) : 0;
-        return sum + qty;
-      }
-      return sum;
-    }, 0);
     
     // Check if this item already exists in other rows
     const existingIndex = formData.items.findIndex((item, i) => 
