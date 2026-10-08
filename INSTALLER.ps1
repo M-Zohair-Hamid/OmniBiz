@@ -1,194 +1,270 @@
-# PaperCone Business App - Complete Installer (PowerShell)
-# Supports Windows with Python 3.11+ and Node.js 18+
+<#
+.SYNOPSIS
+    PaperCone Business App installer. Run this from inside the project folder
+    (the folder containing backend\ and frontend\).
 
-$ErrorActionPreference = "Continue"
-$Host.UI.RawUI.WindowTitle = "PaperCone Business App - Complete Installer"
+.NOTES
+    - Must be run as Administrator (needed for winget installs).
+    - Requires Windows 10 1809+ / Windows 11 (winget preinstalled).
+    - Safe to re-run: skips anything already installed/done.
+#>
 
-# Color functions for output
-function Write-Header {
-    param([string]$text)
-    Write-Host "`n========================================" -ForegroundColor Cyan
-    Write-Host " $text" -ForegroundColor Green
-    Write-Host "========================================`n" -ForegroundColor Cyan
-}
+$ErrorActionPreference = "Stop"
 
-function Write-Step {
-    param([string]$text)
-    Write-Host $text -ForegroundColor Yellow
-}
+function Write-Step($msg) { Write-Host ""; Write-Host ">> $msg" -ForegroundColor Cyan }
+function Write-Ok($msg)   { Write-Host "   [OK] $msg" -ForegroundColor Green }
+function Write-Warn($msg) { Write-Host "   [!] $msg" -ForegroundColor Yellow }
+function Write-Err($msg)  { Write-Host "   [FAIL] $msg" -ForegroundColor Red }
 
-function Write-Success {
-    param([string]$text)
-    Write-Host $text -ForegroundColor Green
-}
-
-function Write-Error-Custom {
-    param([string]$text)
-    Write-Host $text -ForegroundColor Red
-}
-
-# Main installer
-Write-Host ""
-Write-Header "PAPERCONE BUSINESS APP INSTALLER"
-
-Write-Host "This installer will set up everything needed to run the application.`n" -ForegroundColor White
-Write-Host "Installation steps:"
-Write-Host "  [1] Check Python 3.11+ (install if missing)"
-Write-Host "  [2] Check Node.js 18+ (install if missing)"
-Write-Host "  [3] Create Python virtual environment"
-Write-Host "  [4] Install backend dependencies"
-Write-Host "  [5] Install frontend dependencies"
-Write-Host "  [6] Initialize multi-company databases"
-Write-Host "  [7] Create desktop shortcut`n"
-Write-Host "Estimated time: 10-15 minutes`n"
-
-Read-Host "Press Enter to begin installation..."
-Clear-Host
-
-# Get script directory
-$SCRIPT_DIR = Split-Path -Parent $MyInvocation.MyCommand.Path
-Set-Location $SCRIPT_DIR
-
-# STEP 1: Check Python Installation
-Write-Header "[STEP 1/7] Checking Python Installation"
-
-$pythonVersion = python --version 2>&1
-if ($LASTEXITCODE -ne 0) {
-    Write-Error-Custom "ERROR: Python is not installed or not in PATH!"
-    Write-Host ""
-    Write-Host "Please install Python 3.11 or higher:"
-    Write-Host "1. Visit: https://www.python.org/downloads/"
-    Write-Host "2. Download Python 3.11+ installer"
-    Write-Host "3. IMPORTANT: Check 'Add Python to PATH' during installation"
-    Write-Host "4. After installation, run this installer again"
-    Write-Host ""
+$isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+if (-not $isAdmin) {
+    Write-Host "This installer needs Administrator rights (to install Python/Node if missing)." -ForegroundColor Red
+    Write-Host "Right-click INSTALLER.ps1 -> Run with PowerShell as Administrator." -ForegroundColor Red
     Read-Host "Press Enter to exit"
     exit 1
-} else {
-    Write-Success "Python: FOUND ($pythonVersion)"
 }
 
-# STEP 2: Check Node.js Installation
-Write-Header "[STEP 2/7] Checking Node.js Installation"
+$ProjectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+Set-Location $ProjectRoot
 
-$nodeVersion = node --version 2>&1
-if ($LASTEXITCODE -ne 0) {
-    Write-Error-Custom "ERROR: Node.js is not installed or not in PATH!"
-    Write-Host ""
-    Write-Host "Please install Node.js 18+ (LTS):"
-    Write-Host "1. Visit: https://nodejs.org/"
-    Write-Host "2. Download LTS version"
-    Write-Host "3. Install with default settings"
-    Write-Host "4. After installation, run this installer again"
-    Write-Host ""
+Write-Host "==================================================" -ForegroundColor Magenta
+Write-Host " PaperCone Business App Installer" -ForegroundColor Magenta
+Write-Host " Project folder: $ProjectRoot" -ForegroundColor Magenta
+Write-Host "==================================================" -ForegroundColor Magenta
+
+if (-not (Test-Path (Join-Path $ProjectRoot "backend")) -or -not (Test-Path (Join-Path $ProjectRoot "frontend"))) {
+    Write-Err "Could not find 'backend' and 'frontend' folders here. Make sure this script sits inside the project folder."
     Read-Host "Press Enter to exit"
     exit 1
-} else {
-    Write-Success "Node.js: FOUND ($nodeVersion)"
 }
 
-# STEP 3: Create Python Virtual Environment
-Write-Header "[STEP 3/7] Creating Python Virtual Environment"
+function Refresh-Path {
+    $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+}
 
-if (-not (Test-Path "backend\.venv")) {
-    Write-Step "Creating virtual environment in backend\.venv..."
-    python -m venv backend\.venv
-    if ($LASTEXITCODE -eq 0) {
-        Write-Success "Virtual environment created successfully"
-    } else {
-        Write-Error-Custom "Failed to create virtual environment"
+# ---------------------------------------------------------------
+# 1. winget itself
+# ---------------------------------------------------------------
+
+Write-Step "Checking winget (Windows Package Manager)"
+$wingetOk = $null -ne (Get-Command winget -ErrorAction SilentlyContinue)
+if (-not $wingetOk) {
+    Write-Warn "winget not found. Attempting automatic install..."
+    try {
+        $progressPreference = 'SilentlyContinue'
+        Install-PackageProvider -Name NuGet -Force -ErrorAction Stop | Out-Null
+        Install-Module -Name Microsoft.WinGet.Client -Force -Repository PSGallery -ErrorAction Stop
+        Repair-WinGetPackageManager -ErrorAction Stop
+    } catch {
+        Write-Err "Automatic winget install failed: $($_.Exception.Message)"
+        Write-Err "Install 'App Installer' from the Microsoft Store manually, then re-run this script."
         Read-Host "Press Enter to exit"
         exit 1
     }
+    Refresh-Path
+    $wingetOk = $null -ne (Get-Command winget -ErrorAction SilentlyContinue)
+    if (-not $wingetOk) {
+        Write-Err "winget still not found after install attempt. Close this window, open a NEW PowerShell (Admin), and re-run this script."
+        Read-Host "Press Enter to exit"
+        exit 1
+    }
+    Write-Ok "winget installed"
 } else {
-    Write-Success "Virtual environment already exists"
+    Write-Ok "winget available"
 }
 
-# Activate virtual environment
-Write-Step "Activating virtual environment..."
-& ".\backend\.venv\Scripts\Activate.ps1"
+# ---------------------------------------------------------------
+# 2. Python 3.11+
+# ---------------------------------------------------------------
 
-# STEP 4: Install Backend Dependencies
-Write-Header "[STEP 4/7] Installing Backend Dependencies"
+Write-Step "Checking Python"
 
-Write-Step "Installing Python packages from requirements.txt..."
-Set-Location backend
-pip install --upgrade pip
-pip install -r requirements.txt
-if ($LASTEXITCODE -eq 0) {
-    Write-Success "Backend dependencies installed successfully"
+function Get-PythonVersion {
+    try {
+        $v = (python -c "import sys; print(f'{sys.version_info[0]}.{sys.version_info[1]}')") 2>$null
+        return $v
+    } catch { return $null }
+}
+
+$pyVersion = Get-PythonVersion
+if ($pyVersion -and ([version]$pyVersion -ge [version]"3.11")) {
+    Write-Ok "Python $pyVersion found"
 } else {
-    Write-Error-Custom "Failed to install backend dependencies"
-    Set-Location ..
+    if ($pyVersion) {
+        Write-Warn "Python $pyVersion found, but 3.11+ is required. Installing Python 3.11..."
+    } else {
+        Write-Warn "Python not found. Installing Python 3.11..."
+    }
+    winget install --id Python.Python.3.11 -e --source winget --accept-source-agreements --accept-package-agreements
+    Refresh-Path
+    $pyVersion = Get-PythonVersion
+    if (-not $pyVersion -or [version]$pyVersion -lt [version]"3.11") {
+        Write-Err "Python install did not complete correctly. Close this window, open a NEW PowerShell (Admin), and re-run this script."
+        Read-Host "Press Enter to exit"
+        exit 1
+    }
+    Write-Ok "Python $pyVersion installed"
+}
+
+# ---------------------------------------------------------------
+# 3. Node.js LTS (18+)
+# ---------------------------------------------------------------
+
+Write-Step "Checking Node.js"
+
+function Get-NodeMajor {
+    try {
+        $v = (node -v) 2>$null
+        if ($v -match "v(\d+)\.") { return [int]$matches[1] }
+        return $null
+    } catch { return $null }
+}
+
+$nodeMajor = Get-NodeMajor
+if ($nodeMajor -and $nodeMajor -ge 18) {
+    Write-Ok "Node.js v$nodeMajor found"
+} else {
+    if ($nodeMajor) {
+        Write-Warn "Node.js v$nodeMajor found, but 18+ is required. Installing Node LTS..."
+    } else {
+        Write-Warn "Node.js not found. Installing Node LTS..."
+    }
+    winget install --id OpenJS.NodeJS.LTS -e --source winget --accept-source-agreements --accept-package-agreements
+    Refresh-Path
+    $nodeMajor = Get-NodeMajor
+    if (-not $nodeMajor -or $nodeMajor -lt 18) {
+        Write-Err "Node install did not complete correctly. Close this window, open a NEW PowerShell (Admin), and re-run this script."
+        Read-Host "Press Enter to exit"
+        exit 1
+    }
+    Write-Ok "Node.js v$nodeMajor installed"
+}
+
+# ---------------------------------------------------------------
+# 4. Python virtual environment
+# ---------------------------------------------------------------
+
+Write-Step "Creating Python virtual environment"
+$VenvDir = Join-Path $ProjectRoot '.venv'
+$VenvPy = Join-Path $VenvDir 'Scripts\python.exe'
+
+if (Test-Path $VenvPy) {
+    Write-Ok "Virtual environment already exists"
+} else {
+    python -m venv $VenvDir
+    if (-not (Test-Path $VenvPy)) {
+        Write-Err "Failed to create virtual environment"
+        Read-Host "Press Enter to exit"
+        exit 1
+    }
+    Write-Ok "Virtual environment created"
+}
+
+# ---------------------------------------------------------------
+# 5. Backend dependencies
+# ---------------------------------------------------------------
+
+Write-Step "Installing backend dependencies"
+$Requirements = Join-Path $ProjectRoot 'backend\requirements.txt'
+if (-not (Test-Path $Requirements)) {
+    Write-Err "backend\requirements.txt not found!"
     Read-Host "Press Enter to exit"
     exit 1
 }
-Set-Location ..
-
-# STEP 5: Install Frontend Dependencies
-Write-Header "[STEP 5/7] Installing Frontend Dependencies"
-
-Write-Step "Installing Node.js packages..."
-Set-Location frontend
-npm install
-if ($LASTEXITCODE -eq 0) {
-    Write-Success "Frontend dependencies installed successfully"
-} else {
-    Write-Error-Custom "Failed to install frontend dependencies"
-    Set-Location ..
+& $VenvPy -m pip install --upgrade pip --quiet
+& $VenvPy -m pip install -r $Requirements
+if ($LASTEXITCODE -ne 0) {
+    Write-Err "Failed to install backend dependencies."
     Read-Host "Press Enter to exit"
     exit 1
 }
-Set-Location ..
+Write-Ok "Backend dependencies installed"
 
-# STEP 6: Initialize Databases
-Write-Header "[STEP 6/7] Initializing Multi-Company Databases"
+# ---------------------------------------------------------------
+# 6. Frontend dependencies
+# ---------------------------------------------------------------
 
-Write-Step "Activating virtual environment..."
-& ".\backend\.venv\Scripts\Activate.ps1"
-
-Write-Step "Creating databases..."
-Set-Location backend
-python setup_databases.py
-if ($LASTEXITCODE -eq 0) {
-    Write-Success "Databases initialized successfully"
+Write-Step "Installing frontend dependencies (npm install)"
+$FrontendDir = Join-Path $ProjectRoot 'frontend'
+Push-Location $FrontendDir
+if (Test-Path 'node_modules') {
+    Write-Ok "Frontend dependencies already installed"
 } else {
-    Write-Error-Custom "Warning: Database initialization encountered an issue"
+    npm install
+    if ($LASTEXITCODE -ne 0) {
+        Write-Err "npm install failed."
+        Pop-Location
+        Read-Host "Press Enter to exit"
+        exit 1
+    }
+    Write-Ok "Frontend dependencies installed"
+}
+Pop-Location
+
+# ---------------------------------------------------------------
+# 7. Database
+# ---------------------------------------------------------------
+
+Write-Step "Preparing database"
+$InstanceDir = Join-Path $ProjectRoot 'backend\instance'
+if (-not (Test-Path $InstanceDir)) { New-Item -ItemType Directory -Path $InstanceDir | Out-Null }
+$CompanyDb = Join-Path $InstanceDir 'company.db'
+if (Test-Path $CompanyDb) {
+    Write-Ok "Company database already exists"
+} else {
+    Write-Ok "Company database will be created on first start"
 }
 
-Write-Step "Seeding initial data..."
-python seed_items.py
-if ($LASTEXITCODE -eq 0) {
-    Write-Success "Initial data seeded successfully"
+# ---------------------------------------------------------------
+# 8. Desktop shortcuts
+# ---------------------------------------------------------------
+
+Write-Step "Creating desktop shortcuts"
+
+$desktopPath = [Environment]::GetFolderPath("Desktop")
+$powershellExe = Join-Path $env:SystemRoot "System32\WindowsPowerShell\v1.0\powershell.exe"
+$wshShell = New-Object -ComObject WScript.Shell
+
+# Main app launcher - fully hidden (no console window)
+$startPs1 = Join-Path $ProjectRoot "start.ps1"
+$shortcutPath = Join-Path $desktopPath "PaperCone Business App.lnk"
+$shortcut = $wshShell.CreateShortcut($shortcutPath)
+$shortcut.TargetPath = $powershellExe
+$shortcut.Arguments = '-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "' + $startPs1 + '"'
+$shortcut.WorkingDirectory = $ProjectRoot
+$shortcut.IconLocation = "shell32.dll,220"
+$shortcut.Description = "Start PaperCone Business App"
+$shortcut.Save()
+Write-Ok "Desktop shortcut created: $shortcutPath"
+
+# Options menu - visible console, interactive
+$optionsPs1 = Join-Path $ProjectRoot "options.ps1"
+if (Test-Path $optionsPs1) {
+    $optionsShortcutPath = Join-Path $desktopPath "PaperCone Options.lnk"
+    $optionsShortcut = $wshShell.CreateShortcut($optionsShortcutPath)
+    $optionsShortcut.TargetPath = $powershellExe
+    $optionsShortcut.Arguments = '-NoProfile -ExecutionPolicy Bypass -File "' + $optionsPs1 + '"'
+    $optionsShortcut.WorkingDirectory = $ProjectRoot
+    $optionsShortcut.IconLocation = "shell32.dll,166"
+    $optionsShortcut.Description = "PaperCone database options: reset, backup, restore, stop, refresh"
+    $optionsShortcut.Save()
+    Write-Ok "Desktop shortcut created: $optionsShortcutPath"
+} else {
+    Write-Warn "options.ps1 not found next to INSTALLER.ps1 - skipping Options shortcut."
 }
 
-Set-Location ..
+# ---------------------------------------------------------------
+# Done
+# ---------------------------------------------------------------
 
-# STEP 7: Create Desktop Shortcut
-Write-Header "[STEP 7/7] Creating Desktop Shortcut"
+Write-Host ""
+Write-Host "==================================================" -ForegroundColor Green
+Write-Host " Install complete." -ForegroundColor Green
+Write-Host " Double-click 'PaperCone Business App' on the Desktop to start." -ForegroundColor Green
+Write-Host " It opens quietly in the background and launches your browser automatically." -ForegroundColor Green
+Write-Host ""
+Write-Host " Use 'PaperCone Options' on the Desktop to reset, back up, restore," -ForegroundColor Green
+Write-Host " stop, or refresh the app." -ForegroundColor Green
+Write-Host "==================================================" -ForegroundColor Green
 
-$DesktopPath = [System.IO.Path]::Combine([Environment]::GetFolderPath("Desktop"), "PaperCone.lnk")
-$StartScript = Join-Path $SCRIPT_DIR "start.ps1"
-
-try {
-    $WshShell = New-Object -ComObject WScript.Shell
-    $Shortcut = $WshShell.CreateShortcut($DesktopPath)
-    $Shortcut.TargetPath = "powershell.exe"
-    $Shortcut.Arguments = "-ExecutionPolicy Bypass -File `"$StartScript`""
-    $Shortcut.WorkingDirectory = $SCRIPT_DIR
-    $Shortcut.Description = "PaperCone Business Application"
-    $Shortcut.Save()
-    Write-Success "Desktop shortcut created successfully"
-} catch {
-    Write-Error-Custom "Warning: Could not create desktop shortcut (non-critical)"
-}
-
-# Final message
-Write-Header "INSTALLATION COMPLETE!"
-Write-Host "Next steps:`n" -ForegroundColor Green
-Write-Host "1. Run 'start.ps1' to start the application"
-Write-Host "2. Or double-click the 'PaperCone' shortcut on your desktop"
-Write-Host "3. Login with Business Company`n"
-Write-Host "Happy coding! 🚀`n" -ForegroundColor Green
-
-Read-Host "Press Enter to exit"
+Read-Host "Press Enter to close"

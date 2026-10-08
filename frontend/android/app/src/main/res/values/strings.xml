@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">PaperCone</string>
+    <string name="title_activity_main">PaperCone</string>
+    <string name="package_name">com.papercone.app</string>
+    <string name="custom_url_scheme">com.papercone.app</string>
+</resources>

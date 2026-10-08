@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { ToastContext } from '../context/ToastContext';
 import { useModalAnimation, getBackdropAnimationClass, getModalAnimationClass } from '../hooks/useModalAnimation';
+import { resolveLogoUrl } from '../utils/imageUtils';
 
 const BusinessSettingsModal = ({ isOpen, onClose }) => {
   const { showToast } = useContext(ToastContext);
@@ -78,7 +79,7 @@ const BusinessSettingsModal = ({ isOpen, onClose }) => {
           logo_placement: data.logo_placement || 'both',
           logo_as_watermark: data.logo_as_watermark !== undefined ? data.logo_as_watermark : true
         });
-        setCurrentLogoUrl(data.logo_url ? `http://localhost:5000${data.logo_url}` : null);
+        setCurrentLogoUrl(resolveLogoUrl(data.logo_url));
       }
     } catch (error) {
       console.error('Error fetching settings:', error);
@@ -148,7 +149,7 @@ const BusinessSettingsModal = ({ isOpen, onClose }) => {
 
       if (response.ok) {
         const data = await response.json();
-        setCurrentLogoUrl(`http://localhost:5000${data.logo_url}`);
+        setCurrentLogoUrl(resolveLogoUrl(data.logo_url));
         setLogoFile(null);
         setLogoPreview(null);
         setImageDimensions(null);

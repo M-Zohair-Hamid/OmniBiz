@@ -1,4 +1,6 @@
 import axios from 'axios';
+import { Capacitor } from '@capacitor/core';
+import { handleOfflineRequest } from './offlineAdapter';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
@@ -10,13 +12,53 @@ const apiClient = axios.create({
   }
 });
 
+// Configure offline standalone adapter for mobile & standalone mode
+const isNative = Capacitor.isNativePlatform();
+const isStandalone = true; // Fully functional offline standalone mode
+
+if (isNative || isStandalone) {
+  apiClient.defaults.adapter = async (config) => {
+    try {
+      let bodyData = config.data;
+      if (typeof bodyData === 'string') {
+        try {
+          bodyData = JSON.parse(bodyData);
+        } catch (e) {
+          // keep as is
+        }
+      }
+      const res = await handleOfflineRequest(
+        config.method,
+        config.url,
+        bodyData,
+        config.params || {}
+      );
+      return {
+        data: res.data,
+        status: res.status,
+        statusText: 'OK',
+        headers: { 'content-type': 'application/json' },
+        config,
+        request: {}
+      };
+    } catch (err) {
+      return Promise.reject({
+        response: {
+          status: 400,
+          data: { error: err.message || 'Offline request error' }
+        },
+        message: err.message
+      });
+    }
+  };
+}
+
 // Request interceptor - attach token to every request
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     const companyCode = localStorage.getItem('selectedCompanyCode');
     const companyId = localStorage.getItem('selectedCompanyId');
-    console.log('API Request:', config.method.toUpperCase(), config.url, 'Token:', token ? 'Present' : 'MISSING');
     if (token && !config.headers.Authorization) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -38,13 +80,11 @@ apiClient.interceptors.request.use(
 // Response interceptor - handle errors
 apiClient.interceptors.response.use(
   (response) => {
-    console.log('API Response:', response.status, response.config.url);
     return response;
   },
   (error) => {
     console.error('API Error:', error.response?.status, error.response?.data || error.message);
     if (error.response?.status === 401 || error.response?.status === 422) {
-      // Token expired or invalid
       localStorage.removeItem('token');
       window.location.href = '/login';
     }

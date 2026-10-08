@@ -1,0 +1,10 @@
+{
+  "appId": "com.papercone.app",
+  "appName": "PaperCone",
+  "webDir": "build",
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true
+  }
+}
+

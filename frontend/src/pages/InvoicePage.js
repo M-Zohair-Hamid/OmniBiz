@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getOrder } from '../services/api';
 import { ToastContext } from '../context/ToastContext';
 import { amountToWords } from '../utils/numberToWords';
+import { resolveLogoUrl } from '../utils/imageUtils';
 import './InvoicePage.css';
 
 const InvoicePage = () => {
@@ -36,7 +37,7 @@ const InvoicePage = () => {
           setCompanyData({
             name: settings.business_name || 'BUSINESS COMPANY',
             address: settings.address || 'Business District, City, Country',
-            logo: settings.logo_url ? `http://localhost:5000${settings.logo_url}` : null,
+            logo: resolveLogoUrl(settings.logo_url),
             email: settings.email || 'support@company.local',
             phone: settings.phone || '+1-800-0000000',
             whatsapp: settings.whatsapp || '+1-800-0000000'

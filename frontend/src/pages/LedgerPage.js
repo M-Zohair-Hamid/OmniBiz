@@ -83,7 +83,7 @@ const LedgerPage = () => {
         <div className="p-8">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-5xl font-bold text-slate-900 mb-2">Party Ledger</h1>
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl mb-2">Party Ledger</h1>
             <p className="text-slate-500">View totals for each buyer/party</p>
           </div>
 

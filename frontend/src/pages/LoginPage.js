@@ -2,6 +2,7 @@ import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { ToastContext } from '../context/ToastContext';
+import { resolveLogoUrl } from '../utils/imageUtils';
 
 const LoginPage = () => {
   const [businessSettings, setBusinessSettings] = useState(null);
@@ -283,7 +284,7 @@ const LoginPage = () => {
           <div className="flex justify-center mb-6">
             {businessSettings?.logo_url ? (
               <img 
-                src={`http://localhost:5000${businessSettings.logo_url}`} 
+                src={resolveLogoUrl(businessSettings.logo_url)} 
                 alt={businessSettings.business_name}
                 className="h-28 w-auto object-contain"
                 onError={(e) => {

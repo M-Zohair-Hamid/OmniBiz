@@ -27,6 +27,10 @@ backend/C:\\*
 dist/
 build/
 
+# Logs
+logs/
+*.log
+
 # Editor / OS
 .vscode/
 .DS_Store
