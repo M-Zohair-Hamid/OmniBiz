@@ -195,6 +195,7 @@ class OfflineDb {
     const paginated = list.slice(offset, offset + Number(per_page));
 
     return {
+      data: paginated,
       buyers: paginated,
       total,
       pages: Math.ceil(total / Number(per_page)) || 1,
@@ -261,6 +262,7 @@ class OfflineDb {
     const paginated = list.slice(offset, offset + Number(per_page));
 
     return {
+      data: paginated,
       items: paginated,
       total,
       pages: Math.ceil(total / Number(per_page)) || 1,
@@ -373,6 +375,7 @@ class OfflineDb {
     const paginated = enriched.slice(offset, offset + Number(per_page));
 
     return {
+      data: paginated,
       orders: paginated,
       total,
       pages: Math.ceil(total / Number(per_page)) || 1,
@@ -594,6 +597,7 @@ class OfflineDb {
     const paginated = enriched.slice(offset, offset + Number(per_page));
 
     return {
+      data: paginated,
       payments: paginated,
       total,
       pages: Math.ceil(total / Number(per_page)) || 1,
@@ -749,32 +753,81 @@ class OfflineDb {
 
   // --- DASHBOARD ---
   getDashboardData() {
-    const orders = this.data.orders;
-    const totalSales = this.roundOff(orders.reduce((acc, o) => acc + o.total_amount, 0));
+    const orders = this.data.orders || [];
+    const payments = this.data.payments || [];
 
-    const totalPaid = this.roundOff(this.data.payments.reduce((acc, p) => acc + p.amount, 0));
-    const pendingBalance = Math.max(0, totalSales - totalPaid);
+    const totalSales = this.roundOff(orders.reduce((acc, o) => acc + (Number(o.total_amount) || 0), 0));
+    const totalPaid = this.roundOff(payments.reduce((acc, p) => acc + (Number(p.amount) || 0), 0));
+    const pendingBalance = Math.max(0, this.roundOff(totalSales - totalPaid));
 
     const paidCount = orders.filter(o => o.status === 'paid').length;
     const partialCount = orders.filter(o => o.status === 'partial').length;
-    const pendingCount = orders.filter(o => o.status === 'pending').length;
+    const pendingCount = orders.filter(o => !o.status || o.status === 'pending' || o.status === 'confirmed' || o.status === 'shipped').length;
+
+    // Recent orders in last 30 days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const recentOrders30Days = orders.filter(o => {
+      const d = new Date(o.order_date || o.created_at);
+      return !isNaN(d) && d >= thirtyDaysAgo;
+    });
 
     const recentOrders = [...orders]
-      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+      .sort((a, b) => new Date(b.created_at || b.order_date || 0) - new Date(a.created_at || a.order_date || 0))
       .slice(0, 10)
       .map(o => {
         const buyer = this.getBuyer(o.buyer_id);
         return {
           id: o.id,
           order_number: o.order_number,
-          buyer_name: buyer ? buyer.company_name : 'Unknown',
-          total_amount: o.total_amount,
-          status: o.status,
+          buyer_name: buyer ? buyer.company_name : 'Unknown Buyer',
+          total_amount: Number(o.total_amount) || 0,
+          status: o.status || 'pending',
           created_at: o.order_date || o.created_at
         };
       });
 
+    // Buyer-wise sales (top 5)
+    const buyerSalesMap = {};
+    orders.forEach(o => {
+      const buyer = this.getBuyer(o.buyer_id);
+      const name = buyer ? buyer.company_name : 'Unknown Buyer';
+      buyerSalesMap[name] = (buyerSalesMap[name] || 0) + (Number(o.total_amount) || 0);
+    });
+    const buyer_wise_sales = Object.entries(buyerSalesMap)
+      .map(([name, value]) => ({ name, value: this.roundOff(value) }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5);
+
+    // Item-wise sales (top 5)
+    const itemSalesMap = {};
+    orders.forEach(o => {
+      (o.items || []).forEach(item => {
+        const stockItem = this.getItem(item.item_id);
+        const name = stockItem ? stockItem.name : (item.item_name || `Item #${item.item_id}`);
+        const lineTotal = Number(item.line_total) || ((Number(item.quantity) || 0) * (Number(item.unit_price) || 0));
+        itemSalesMap[name] = (itemSalesMap[name] || 0) + lineTotal;
+      });
+    });
+    const item_wise_sales = Object.entries(itemSalesMap)
+      .map(([name, value]) => ({ name, value: this.roundOff(value) }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5);
+
     return {
+      summary: {
+        total_sales: totalSales,
+        pending_payments: pendingBalance,
+        recent_orders_count: recentOrders30Days.length || recentOrders.length
+      },
+      payment_status: {
+        paid: paidCount,
+        partial: partialCount,
+        pending: pendingCount
+      },
+      recent_orders: recentOrders,
+      buyer_wise_sales,
+      item_wise_sales,
       total_sales: totalSales,
       pending_balance: pendingBalance,
       total_orders: orders.length,
@@ -782,8 +835,7 @@ class OfflineDb {
         paid: paidCount,
         partial: partialCount,
         pending: pendingCount
-      },
-      recent_orders: recentOrders
+      }
     };
   }
 
@@ -875,13 +927,22 @@ class OfflineDb {
   }
 
   getReportSummary() {
-    const orders = this.data.orders;
-    const totalSales = this.roundOff(orders.reduce((acc, o) => acc + o.total_amount, 0));
-    const totalPaid = this.roundOff(this.data.payments.reduce((acc, p) => acc + p.amount, 0));
-    const pendingAmount = Math.max(0, totalSales - totalPaid);
+    const orders = this.data.orders || [];
+    const totalSales = this.roundOff(orders.reduce((acc, o) => acc + (Number(o.total_amount) || 0), 0));
+    const totalPaid = this.roundOff(this.data.payments.reduce((acc, p) => acc + (Number(p.amount) || 0), 0));
+    const pendingAmount = Math.max(0, this.roundOff(totalSales - totalPaid));
+
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const recentOrders30Days = orders.filter(o => {
+      const d = new Date(o.order_date || o.created_at);
+      return !isNaN(d) && d >= thirtyDaysAgo;
+    });
 
     return {
       total_sales: totalSales,
+      pending_payments: pendingAmount,
+      recent_orders: recentOrders30Days.length,
       total_collected: totalPaid,
       pending_amount: pendingAmount,
       total_buyers: this.data.buyers.filter(b => b.is_active).length,
@@ -891,31 +952,37 @@ class OfflineDb {
   }
 
   getPaymentStatusReport() {
-    const orders = this.data.orders;
+    const orders = this.data.orders || [];
     const groups = { paid: { count: 0, total: 0 }, partial: { count: 0, total: 0 }, pending: { count: 0, total: 0 } };
     orders.forEach(o => {
       const st = o.status || 'pending';
       if (groups[st]) {
         groups[st].count++;
-        groups[st].total += o.total_amount;
+        groups[st].total += Number(o.total_amount) || 0;
       }
     });
-    return groups;
+    return {
+      ...groups,
+      paid: groups.paid.count,
+      partial: groups.partial.count,
+      pending: groups.pending.count
+    };
   }
 
   getBuyerWiseReport() {
     return this.data.buyers.filter(b => b.is_active).map(b => {
       const buyerOrders = this.data.orders.filter(o => o.buyer_id === b.id);
-      const totalAmount = this.roundOff(buyerOrders.reduce((sum, o) => sum + o.total_amount, 0));
+      const totalAmount = this.roundOff(buyerOrders.reduce((sum, o) => sum + (Number(o.total_amount) || 0), 0));
       const orderIds = new Set(buyerOrders.map(o => o.id));
-      const totalPaid = this.roundOff(this.data.payments.filter(p => orderIds.has(p.order_id)).reduce((sum, p) => sum + p.amount, 0));
+      const totalPaid = this.roundOff(this.data.payments.filter(p => orderIds.has(p.order_id)).reduce((sum, p) => sum + (Number(p.amount) || 0), 0));
       return {
         id: b.id,
         buyer_name: b.company_name,
-        total_orders: buyerOrders.length,
+        order_count: buyerOrders.length,
+        total_orders: totalAmount,
         total_amount: totalAmount,
         total_paid: totalPaid,
-        balance: Math.max(0, totalAmount - totalPaid)
+        balance: Math.max(0, this.roundOff(totalAmount - totalPaid))
       };
     });
   }
@@ -936,11 +1003,15 @@ class OfflineDb {
       const sale = itemSales[i.id] || { qty: 0, total: 0 };
       return {
         id: i.id,
+        item_name: i.name,
         name: i.name,
+        item_code: i.code,
         code: i.code,
         current_stock: i.quantity_in_stock,
+        total_quantity: sale.qty,
         units_sold: sale.qty,
-        total_revenue: sale.total
+        total_value: this.roundOff(sale.total),
+        total_revenue: this.roundOff(sale.total)
       };
     });
   }

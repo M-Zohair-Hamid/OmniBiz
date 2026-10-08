@@ -48,8 +48,8 @@ const BuyersPage = () => {
     setLoading(true);
     try {
       const response = await getBuyers(page, 10, search);
-      setBuyers(response.data.data);
-      setTotalPages(response.data.pages);
+      setBuyers(response.data?.data || response.data?.buyers || []);
+      setTotalPages(response.data?.pages || 1);
       setCurrentPage(page);
     } catch {
       showToast('Failed to load buyers', 'error');
@@ -170,8 +170,8 @@ const BuyersPage = () => {
     <div className="flex min-h-screen bg-slate-50">
       <Sidebar companyName={user?.company_name || 'Business'} />
 
-      <div className="flex-1 ml-64">
-        <div className="p-8">
+      <div className="flex-1 min-w-0 ml-0 lg:ml-64 pt-14 lg:pt-0">
+        <div className="p-4 sm:p-8">
           <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Buyers</h1>

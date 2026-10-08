@@ -10,10 +10,21 @@ const Sidebar = ({ companyName }) => {
   const location = useLocation();
   const { logout } = useContext(AuthContext);
   const { showToast } = useContext(ToastContext);
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(window.innerWidth >= 1024);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
   const [isBackupModalOpen, setIsBackupModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [businessName, setBusinessName] = useState(companyName || 'Business');
+
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 1024;
+      setIsMobile(mobile);
+      if (!mobile) setIsOpen(true);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const fetchBusinessName = async () => {
@@ -77,12 +88,53 @@ const Sidebar = ({ companyName }) => {
     navigate('/login');
   };
 
+  const handleNavigate = (path) => {
+    if (isMobile) setIsOpen(false);
+    navigate(path);
+  };
+
   const isActive = (path) => location.pathname === path;
 
   return (
     <>
+      {/* Mobile Top Bar */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-slate-900 border-b border-white/10 z-40 flex items-center justify-between px-4">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-500 text-xs font-bold text-white">
+            {(businessName || 'B').charAt(0).toUpperCase()}
+          </div>
+          <span className="text-white text-sm font-semibold truncate">{businessName || 'Business'}</span>
+        </div>
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="p-2 text-slate-300 hover:text-white rounded-lg hover:bg-white/10"
+          aria-label="Toggle menu"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {isOpen ? (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            ) : (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            )}
+          </svg>
+        </button>
+      </div>
+
+      {/* Backdrop for mobile */}
+      {isMobile && isOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black/60 z-40 backdrop-blur-sm"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
+      {/* Sidebar drawer */}
       <div
-        className={`sidebar fixed left-0 top-0 h-screen bg-slate-900 border-r border-white/5 transition-all duration-200 ${isOpen ? 'w-64' : 'w-20'} z-50`}
+        className={`sidebar fixed left-0 top-0 h-screen bg-slate-900 border-r border-white/5 transition-transform lg:transition-all duration-200 z-50 ${
+          isMobile
+            ? (isOpen ? 'w-64 translate-x-0 shadow-2xl' : 'w-64 -translate-x-full')
+            : (isOpen ? 'w-64 translate-x-0' : 'w-20 translate-x-0')
+        }`}
       >
         {/* Brand */}
         <div className="p-4 border-b border-white/10">
@@ -113,7 +165,7 @@ const Sidebar = ({ companyName }) => {
           {menuItems.map(item => (
             <button
               key={item.id}
-              onClick={() => navigate(item.path)}
+              onClick={() => handleNavigate(item.path)}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-all duration-150 text-sm font-medium ${
                 isActive(item.path)
                   ? 'bg-indigo-600 border-indigo-400/40 text-white shadow-sm'
@@ -130,7 +182,10 @@ const Sidebar = ({ companyName }) => {
         {/* Bottom actions */}
         <div className="absolute bottom-4 left-3 right-3 space-y-1">
           <button
-            onClick={() => setIsSettingsModalOpen(true)}
+            onClick={() => {
+              if (isMobile) setIsOpen(false);
+              setIsSettingsModalOpen(true);
+            }}
             className={`w-full flex items-center gap-3 px-3 py-2.5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white hover:border-white/20 rounded-xl transition-all duration-150 text-sm font-medium ${isOpen ? '' : 'justify-center'}`}
             title="Settings"
           >
@@ -138,7 +193,10 @@ const Sidebar = ({ companyName }) => {
             {isOpen && <span className="truncate">Settings</span>}
           </button>
           <button
-            onClick={() => setIsBackupModalOpen(true)}
+            onClick={() => {
+              if (isMobile) setIsOpen(false);
+              setIsBackupModalOpen(true);
+            }}
             className={`w-full flex items-center gap-3 px-3 py-2.5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white hover:border-white/20 rounded-xl transition-all duration-150 text-sm font-medium ${isOpen ? '' : 'justify-center'}`}
             title="Backup"
           >

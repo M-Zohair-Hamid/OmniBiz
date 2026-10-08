@@ -63,8 +63,8 @@ const PaymentsPage = () => {
     setLoading(true);
     try {
       const response = await getPayments(currentPage, 10);
-      setPayments(response.data.data);
-      setTotalPages(response.data.pages);
+      setPayments(response.data?.data || response.data?.payments || []);
+      setTotalPages(response.data?.pages || 1);
     } catch (error) {
       showToast('Failed to load payments', 'error');
     }
@@ -203,8 +203,8 @@ const PaymentsPage = () => {
       <div className="absolute inset-0 bg-slate-50 opacity-80"></div>
       <Sidebar companyName={user?.company_name || 'Business'} />
       
-      <div className="flex-1 ml-64 relative z-10">
-        <div className="p-8">
+      <div className="flex-1 min-w-0 ml-0 lg:ml-64 pt-14 lg:pt-0 relative z-10">
+        <div className="p-4 sm:p-8">
           <div className="mb-8">
             <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Payments</h1>
           </div>

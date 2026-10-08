@@ -38,7 +38,7 @@ const ItemsPage = () => {
     setLoading(true);
     try {
       const response = await getItems(1, 1000, search);
-      setItems(response.data.data);
+      setItems(response.data?.data || response.data?.items || []);
     } catch {
       showToast('Failed to load items', 'error');
     } finally {
@@ -122,8 +122,8 @@ const ItemsPage = () => {
     <div className="flex min-h-screen bg-slate-50">
       <Sidebar companyName={user?.company_name || 'Business'} />
 
-      <div className="flex-1 ml-64">
-        <div className="p-8">
+      <div className="flex-1 min-w-0 ml-0 lg:ml-64 pt-14 lg:pt-0">
+        <div className="p-4 sm:p-8">
           <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Items</h1>

@@ -61,9 +61,10 @@ const OrdersPage = () => {
     setLoading(true);
     try {
       const response = await getOrders(page, 10);
-      setOrders(response.data.data);
-      applyFilters(response.data.data, searchTerm);
-      setTotalPages(response.data.pages);
+      const ordersList = response.data?.data || response.data?.orders || [];
+      setOrders(ordersList);
+      applyFilters(ordersList, searchTerm);
+      setTotalPages(response.data?.pages || 1);
       setCurrentPage(page);
     } catch (error) {
       showToast('Failed to load orders', 'error');
@@ -99,8 +100,8 @@ const OrdersPage = () => {
     try {
       const buyersRes = await getBuyers(1, 500);
       const itemsRes = await getItems(1, 500);
-      setBuyers(buyersRes.data.data);
-      setItems(itemsRes.data.data);
+      setBuyers(buyersRes.data?.data || buyersRes.data?.buyers || []);
+      setItems(itemsRes.data?.data || itemsRes.data?.items || []);
     } catch (error) {
       showToast('Failed to load buyers or items', 'error');
     }
@@ -655,8 +656,8 @@ const OrdersPage = () => {
       <div className="absolute inset-0 bg-slate-50 opacity-80"></div>
       <Sidebar companyName={user?.company_name || 'Business'} />
       
-      <div className="flex-1 ml-64 relative z-10">
-        <div className="p-8">
+      <div className="flex-1 min-w-0 ml-0 lg:ml-64 pt-14 lg:pt-0 relative z-10">
+        <div className="p-4 sm:p-8">
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Orders</h1>
             <button onClick={handleAddOrder} className="bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-xl font-bold transition-all duration-200 shadow-sm hover:shadow-md transform  active:scale-95 border border-[#0d9488] border-opacity-30">+ New Order</button>

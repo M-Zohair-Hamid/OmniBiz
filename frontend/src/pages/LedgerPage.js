@@ -39,7 +39,7 @@ const LedgerPage = () => {
   const fetchBuyers = async () => {
     try {
       const response = await getBuyers(1, 100);
-      setBuyers(response.data.data);
+      setBuyers(response.data?.data || response.data?.buyers || []);
     } catch (error) {
       showToast('Failed to load buyers', 'error');
     }
@@ -79,8 +79,8 @@ const LedgerPage = () => {
       <div className="absolute inset-0 bg-slate-50 opacity-80"></div>
       <Sidebar companyName={user?.company_name || 'Business'} />
       
-      <div className="flex-1 ml-64 relative z-10">
-        <div className="p-8">
+      <div className="flex-1 min-w-0 ml-0 lg:ml-64 pt-14 lg:pt-0 relative z-10">
+        <div className="p-4 sm:p-8">
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl mb-2">Party Ledger</h1>

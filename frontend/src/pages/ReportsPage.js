@@ -31,9 +31,9 @@ const ReportsPage = () => {
         getBuyerWiseReport(),
         getItemWiseReport()
       ]);
-      setReportData(summary.data);
-      setBuyerData(buyers.data);
-      setItemData(items.data);
+      setReportData(summary.data || {});
+      setBuyerData(Array.isArray(buyers.data) ? buyers.data : (buyers.data?.data || []));
+      setItemData(Array.isArray(items.data) ? items.data : (items.data?.data || []));
     } catch (error) {
       showToast('Failed to load reports', 'error');
     } finally {
@@ -60,7 +60,7 @@ const ReportsPage = () => {
       const response = await api.get('/buyers', {
         params: { page: 1, per_page: 1000, search: '' },
       });
-      setBuyersList(response.data.data || []);
+      setBuyersList(response.data?.data || response.data?.buyers || (Array.isArray(response.data) ? response.data : []));
     } catch (error) {
       showToast('Failed to load buyers list', 'error');
     } finally {
@@ -117,7 +117,7 @@ const ReportsPage = () => {
     return (
       <div className="flex min-h-screen bg-slate-50">
         <Sidebar companyName={user?.company_name || 'Business'} />
-        <div className="flex-1 ml-64 p-8 relative z-10"><div className="text-center text-[#0d9488] font-semibold">Loading reports...</div></div>
+        <div className="flex-1 min-w-0 ml-0 lg:ml-64 pt-14 lg:pt-0 p-8 relative z-10"><div className="text-center text-[#0d9488] font-semibold">Loading reports...</div></div>
       </div>
     );
   }
@@ -127,8 +127,8 @@ const ReportsPage = () => {
       <div className="absolute inset-0 bg-slate-50 opacity-80"></div>
       <Sidebar companyName={user?.company_name || 'Business'} />
       
-      <div className="flex-1 ml-64 relative z-10">
-        <div className="p-8">
+      <div className="flex-1 min-w-0 ml-0 lg:ml-64 pt-14 lg:pt-0 relative z-10">
+        <div className="p-4 sm:p-8">
           <div className="flex items-center justify-between mb-8">
             <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Reports & Analytics</h1>
             <button
@@ -143,11 +143,11 @@ const ReportsPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <div className="rounded-2xl border border-slate-200/80 bg-white shadow-sm p-6">
               <h3 className="text-[#0d9488] text-sm font-bold mb-3 uppercase tracking-wide">Total Sales</h3>
-              <p className="text-3xl font-bold text-teal-700">₨ {reportData.total_sales.toLocaleString('en-PK', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+              <p className="text-3xl font-bold text-teal-700">₨ {Number(reportData.total_sales || 0).toLocaleString('en-PK', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
             </div>
             <div className="rounded-2xl border border-slate-200/80 bg-white shadow-sm p-6">
               <h3 className="text-[#0f172a] text-sm font-bold mb-3 uppercase tracking-wide">Pending Payments</h3>
-              <p className="text-3xl font-bold text-[#0f172a]">₨ {reportData.pending_payments.toLocaleString('en-PK', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+              <p className="text-3xl font-bold text-[#0f172a]">₨ {Number(reportData.pending_payments || 0).toLocaleString('en-PK', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
             </div>
             <div className="rounded-2xl border border-slate-200/80 bg-white shadow-sm p-6">
               <h3 className="text-emerald-700 text-sm font-bold mb-3 uppercase tracking-wide">Recent Orders</h3>
@@ -155,7 +155,7 @@ const ReportsPage = () => {
             </div>
             <div className="rounded-2xl border border-slate-200/80 bg-white shadow-sm p-6">
               <h3 className="text-indigo-700 text-sm font-bold mb-3 uppercase tracking-wide">Total Buyers</h3>
-              <p className="text-3xl font-bold text-indigo-700">{buyerData.length}</p>
+              <p className="text-3xl font-bold text-indigo-700">{(buyerData || []).length}</p>
             </div>
           </div>
 

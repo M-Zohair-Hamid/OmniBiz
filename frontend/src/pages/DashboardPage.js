@@ -83,8 +83,8 @@ const DashboardPage = () => {
     <div className="flex min-h-screen bg-slate-50">
       <Sidebar companyName={user?.company_name || 'Business'} />
 
-      <div className="flex-1 ml-64">
-        <div className="p-8">
+      <div className="flex-1 min-w-0 ml-0 lg:ml-64 pt-14 lg:pt-0">
+        <div className="p-4 sm:p-8">
 
           {/* Header */}
           <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -114,19 +114,19 @@ const DashboardPage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-4">
             <StatCard
               label="Total Sales"
-              value={`Rs. ${dashboardData.summary.total_sales.toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+              value={`Rs. ${(dashboardData.summary?.total_sales ?? 0).toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
               hint="All time"
               accent="indigo"
             />
             <StatCard
               label="Pending Payments"
-              value={`Rs. ${dashboardData.summary.pending_payments.toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+              value={`Rs. ${(dashboardData.summary?.pending_payments ?? 0).toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
               hint="Outstanding"
               accent="amber"
             />
             <StatCard
               label="Recent Orders"
-              value={dashboardData.summary.recent_orders_count}
+              value={dashboardData.summary?.recent_orders_count ?? 0}
               hint="Last 30 days"
               accent="emerald"
             />
@@ -205,13 +205,13 @@ const DashboardPage = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {dashboardData.buyer_wise_sales.length === 0 ? (
+                    {(dashboardData.buyer_wise_sales || []).length === 0 ? (
                       <tr><td colSpan={2} className="px-4 py-6 text-sm text-slate-400">No sales data yet.</td></tr>
-                    ) : dashboardData.buyer_wise_sales.map((b, i) => (
+                    ) : (dashboardData.buyer_wise_sales || []).map((b, i) => (
                       <tr key={i} className="border-b border-slate-50 last:border-0">
                         <td className="px-4 py-3 align-middle font-medium text-slate-900">{b.name}</td>
                         <td className="px-4 py-3 align-middle text-slate-700 text-right">
-                          {Number(b.value).toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          {Number(b.value || 0).toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
                       </tr>
                     ))}
@@ -235,13 +235,13 @@ const DashboardPage = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {dashboardData.item_wise_sales.length === 0 ? (
+                    {(dashboardData.item_wise_sales || []).length === 0 ? (
                       <tr><td colSpan={2} className="px-4 py-6 text-sm text-slate-400">No item data yet.</td></tr>
-                    ) : dashboardData.item_wise_sales.map((item, i) => (
+                    ) : (dashboardData.item_wise_sales || []).map((item, i) => (
                       <tr key={i} className="border-b border-slate-50 last:border-0">
                         <td className="px-4 py-3 align-middle font-medium text-slate-900">{item.name}</td>
                         <td className="px-4 py-3 align-middle text-slate-700 text-right">
-                          {Number(item.value).toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          {Number(item.value || 0).toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
                       </tr>
                     ))}
@@ -271,14 +271,14 @@ const DashboardPage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {dashboardData.recent_orders.length === 0 ? (
+                  {(dashboardData.recent_orders || []).length === 0 ? (
                     <tr><td colSpan={5} className="px-4 py-6 text-sm text-slate-400">No recent orders.</td></tr>
-                  ) : dashboardData.recent_orders.map(order => (
+                  ) : (dashboardData.recent_orders || []).map(order => (
                     <tr key={order.id} className="border-b border-slate-50 last:border-0">
                       <td className="px-4 py-3 align-middle font-medium text-slate-900">{order.order_number}</td>
                       <td className="px-4 py-3 align-middle text-slate-700">{order.buyer_name}</td>
                       <td className="px-4 py-3 align-middle text-slate-700">
-                        Rs. {order.total_amount.toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        Rs. {Number(order.total_amount || 0).toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                       <td className="px-4 py-3 align-middle">
                         <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${statusBadge(order.status)}`}>
